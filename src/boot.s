@@ -31,5 +31,5 @@ _start:
   
 .hang:
   hlt
-  jmp hang
+  jmp .hang
   
