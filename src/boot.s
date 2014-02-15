@@ -29,4 +29,7 @@ _start:
   inc edi
   mov [edi], bl
   
+.hang:
   hlt
+  jmp hang
+  
