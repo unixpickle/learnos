@@ -1,3 +1,5 @@
+bits 32
+
 ; these are multiboot flags
 MBALIGN equ 1<<0
 MEMINFO equ 1<<1
@@ -43,16 +45,22 @@ start:
   popf
 
   ; this *should* print the letter `h` to the damn screen
-  mov ah, 0xa0
+  mov ah, 0x0a
   mov al, 'h'
   mov edi, 0xb8000
+  mov word [edi], ax
+  add edi, 2
+  mov al, 'e'
+  mov word [edi], ax
+  add edi, 2
+  mov al, 'y'
   mov word [edi], ax
 
 ; this is how I know VirtualBox is running *something*. When I remove the
 ; hlt instruction, the thread uses 100% CPU, otherwise it uses none at all.
-.hang:
+hang:
   hlt
-  jmp .hang
+  jmp hang
 
 ; yeah i know, this is somewhat pointless but whatevs man
 align 4
