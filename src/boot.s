@@ -10,9 +10,9 @@ MAGIC equ 0x1BADB002
 CHECKSUM equ -(MAGIC + FLAGS)
 CUROFFSET equ 0x100000
 PML4_START equ 0x110000
-PDPT_START equ 0x120000
-PDT_START equ 0x130000
-PT_START equ 0x140000
+PDPT_START equ 0x111000
+PDT_START equ 0x112000
+PT_START equ 0x113000
 LOADBASE equ 0x320000
 
 org LOADBASE
@@ -69,6 +69,10 @@ getAvailable:
   mov eax, [esi + 8]
   push eax
 
+  mov eax, cr0
+  and eax, 01111111111111111111111111111111b
+  mov cr0, eax
+
   ; zero the PML4, PDPT, PDT, PT
   mov edi, PML4_START
   xor eax, eax
@@ -82,6 +86,7 @@ zeroPages:
   ; create page tables
   mov eax, [esp] ; eax will be our pages remaining in physical memory counter
   shr eax, 2 ; 4k blocks instead of 1k blocks
+  add eax, 1 << 8 ; there are 2^8 pages in the first 1MB
   mov edi, PT_START ; pointer to our place in page table
   mov esi, 3 ; pointer to physical memory + flags
   mov ebx, PDT_START ; pointer to PDT offset
@@ -90,6 +95,7 @@ loopPDT:
   mov ecx, 0x200 ; create 512 entries, 8 bytes each
   mov [ebx], edi
   or byte [ebx], 3
+  add ebx, 8
 
   pushad
   push loadingPageMessage
@@ -114,6 +120,10 @@ doneCreatingPages:
   ; put in the appropriate addresses
   mov dword [PML4_START], PDPT_START + 3
   mov dword [PDPT_START], PDT_START + 3
+  ; enable PAE-paging
+  mov eax, cr4
+  or eax, 1 << 5
+  mov cr4, eax
   ; set LM bit
   mov ecx, 0xC0000080 ; EFER MSR
   rdmsr
