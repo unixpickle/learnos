@@ -8,6 +8,9 @@ LINKINFO equ 1<<16
 FLAGS equ LINKINFO
 MAGIC equ 0x1BADB002
 CHECKSUM equ -(MAGIC + FLAGS)
+
+; these are offsets in physical memory that learnos
+; uses for various information
 CUROFFSET equ 0x100000
 PML4_START equ 0x110000
 PDPT_START equ 0x111000
@@ -15,15 +18,10 @@ PDT_START equ 0x112000
 PT_START equ 0x113000
 LOADBASE equ 0x320000
 
-org LOADBASE
 section .text
 
-; incase for *some reason* something jumps to the *start* of this file
-regular_main:
-  mov edi, start
-  jmp edi
-
 align 4
+global multiboot_header
 multiboot_header:
   dd MAGIC
   dd FLAGS
@@ -39,7 +37,7 @@ start:
   ; I figure I might as well *know* the ESP will point to my data
   mov esp, _endstack
   mov ebp, esp
-  ; these are supposedly inputs from GRUB, but I don't use them yet
+  ; ebx is a pointer to useful information, eax is multiboot magic
   push ebx
   push eax
   ; zero our flags
@@ -51,37 +49,35 @@ start:
   mov [CUROFFSET], edi
   mov dword [CUROFFSET + 4], 0
 
-  ; this *should* print the letter `h` to the damn screen
+  ; print our initialization message
   push startedMessage
   call print
   add esp, 4
 
+configurePages:
   ; make sure memory information flag is set
   mov esi, [ebp - 4]
   mov eax, [esi]
   or eax, 1
-  jnz getAvailable
+  jnz .getAvailable
   push noMemoryFlagMessage
   call print
-  jmp hang,
+  jmp hang
 
-getAvailable:
+.getAvailable:
+  ; pushes the amount of 1024 byte blocks (after 1MB) to the stack
   mov eax, [esi + 8]
   push eax
-
-  mov eax, cr0
-  and eax, 01111111111111111111111111111111b
-  mov cr0, eax
 
   ; zero the PML4, PDPT, PDT, PT
   mov edi, PML4_START
   xor eax, eax
   mov ecx, 0x3000 + 0x200000
   ; TODO: figure out how to use rep here
-zeroPages:
+.zeroPages:
   mov [edi], al
   inc edi
-  loop zeroPages
+  loop .zeroPages
 
   ; create page tables
   mov eax, [esp] ; eax will be our pages remaining in physical memory counter
@@ -90,7 +86,7 @@ zeroPages:
   mov edi, PT_START ; pointer to our place in page table
   mov esi, 3 ; pointer to physical memory + flags
   mov ebx, PDT_START ; pointer to PDT offset
-loopPDT:
+.loopPDT:
   ; create a PDT entry
   mov ecx, 0x200 ; create 512 entries, 8 bytes each
   mov [ebx], edi
@@ -103,15 +99,16 @@ loopPDT:
   add esp, 4
   popad
 
-loopPT:
+.loopPT:
   ; create page table entries until we run out of memory
   mov [edi], esi
   add edi, 8
   add esi, 0x1000
   sub eax, 1
   jz doneCreatingPages
-  loop loopPT
-  jmp loopPDT
+  loop .loopPT
+  jmp .loopPDT
+
 doneCreatingPages:
   push donePagesMessage
   call print
@@ -140,9 +137,9 @@ doneCreatingPages:
   call print
   add esp, 4
 
-  ; we are now in compatibility mode
-  lgdt [GDT64.Pointer]
-  jmp GDT64.Code:_entry64
+  ; load our GDT and jump!
+  lgdt [GDT64.pointer]
+  jmp GDT64.code:_entry64
 
 hang:
   hlt
@@ -195,72 +192,49 @@ _endstack:
 align 8
 ; from http://wiki.osdev.org/User:Stephanvanschaik/Setting_Up_Long_Mode
 GDT64:                           ; Global Descriptor Table (64-bit).
-    .Null: equ $ - GDT64         ; The null descriptor.
+    .null: equ $ - GDT64         ; The null descriptor.
     dw 0                         ; Limit (low).
     dw 0                         ; Base (low).
     db 0                         ; Base (middle)
     db 0                         ; Access.
     db 0                         ; Granularity.
     db 0                         ; Base (high).
-    .Code: equ $ - GDT64         ; The code descriptor.
+    .code: equ $ - GDT64         ; The code descriptor.
     dw 0                         ; Limit (low).
     dw 0                         ; Base (low).
     db 0                         ; Base (middle)
     db 10011000b                 ; Access.
     db 00100000b                 ; Granularity.
     db 0                         ; Base (high).
-    .Data: equ $ - GDT64         ; The data descriptor.
+    .data: equ $ - GDT64         ; The data descriptor.
     dw 0                         ; Limit (low).
     dw 0                         ; Base (low).
     db 0                         ; Base (middle)
     db 10010000b                 ; Access.
     db 00000000b                 ; Granularity.
     db 0                         ; Base (high).
-    .Pointer:                    ; The GDT-pointer.
+    .pointer:                    ; The GDT-pointer.
     dw $ - GDT64 - 1             ; Limit.
     dq GDT64                     ; Base.
 
 bits 64
 
+extern hang64
+extern print64
+extern configureAPIC
+
 _entry64:
   cli
-  mov ax, GDT64.Data
+  mov ax, GDT64.data
   mov ds, ax
   mov es, ax
   mov fs, ax
   mov gs, ax
-  push qword inLongModeMessage
+  mov rdi, inLongModeMessage
   call print64
-  add rsp, 4
-  ; mov rdi, 0xb8000
-  ; mov word [rdi], 0x0a61
-
-hang64:
-  hlt
-  jmp hang64
+  call configureAPIC
+  call hang64
 
 inLongModeMessage:
   db 'Entered long mode', 0
 
-print64:
-  push rbp
-  mov rbp, rsp
-  mov rsi, [rbp + 16]
-  mov rdi, [CUROFFSET]
-  mov ah, 0x0a
-  mov rcx, 160
-_printLoop64:
-  mov al, [rsi]
-  cmp al, 0
-  je _printEnd64
-  mov word [rdi], ax
-  add rdi, 2
-  inc rsi
-  sub rcx, 2
-  jmp _printLoop64
-_printEnd64:
-  add rdi, rcx
-  mov [CUROFFSET], rdi
-  xor rax, rax
-  leave
-  ret
