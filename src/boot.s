@@ -9,13 +9,12 @@ CHECKSUM equ -(MAGIC + FLAGS)
 ; I saw http://forum.osdev.org/viewtopic.php?f=1&t=21260 and he used this addr
 LOADBASE equ 0x100000
 
-org 0x0
+org LOADBASE
 section .text
 
 ; incase for *some reason* something jumps to the *start* of this file
 regular_main:
   mov edi, start
-  add edi, LOADBASE
   jmp edi
 
 align 4
@@ -23,16 +22,16 @@ multiboot_header:
   dd MAGIC
   dd FLAGS
   dd CHECKSUM
-  dd LOADBASE + multiboot_header ; header pointer
+  dd multiboot_header ; header pointer
   dd LOADBASE                    ; base pointer
   dd 0                           ; loadEndAddr - can be 0 to default
   dd 0                           ; bssEndAddr, 0 = no BSS segment
-  dd LOADBASE + start            ; entry point
+  dd start            ; entry point
 
 ; this should be jumped to by GRUB2
 start:
   ; I figure I might as well *know* the ESP will point to my data
-  mov esp, _endstack + LOADBASE
+  mov esp, _endstack
   mov ebp, esp
   ; these are supposedly inputs from GRUB, but I don't use them yet
   push ebx
