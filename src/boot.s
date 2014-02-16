@@ -1,10 +1,11 @@
 MBALIGN equ 1<<0
 MEMINFO equ 1<<1
+VIDEOINFO equ 1<<2
 LINKINFO equ 1<<16
-FLAGS equ MBALIGN | MEMINFO | LINKINFO
+FLAGS equ LINKINFO
 MAGIC equ 0x1BADB002
 CHECKSUM equ -(MAGIC + FLAGS)
-LOADBASE equ 0x10000
+LOADBASE equ 0x100000
 
 org 0x0
 section .text
@@ -26,29 +27,18 @@ multiboot_header:
   dd LOADBASE + start
 
 start:
-  mov esp, _stack + 4096 + LOADBASE
-  push 0
-  popf
+  mov esp, _endstack + LOADBASE
+  mov ebp, esp
   push ebx
   push eax
+  mov esi, 0
+  push esi
+  popf
 
-  mov bl, 0x07
-  
-  ; output the letter h
+  mov ah, 0xa0
   mov al, 'h'
-  call .print
-  mov al, 'e'
-  call .print
-  mov al, 'y'
-  call .print
-  jmp .hang
-
-.print:
-  mov [edi], al
-  inc edi
-  mov [edi], bl
-  inc edi
-  ret
+  mov edi, 0xb8000
+  mov word [edi], ax
 
 .hang:
   hlt
@@ -57,4 +47,4 @@ start:
 align 4
 _stack:
   times 4096 db 0
-
+_endstack:
