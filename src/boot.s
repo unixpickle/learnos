@@ -134,7 +134,7 @@ doneCreatingPages:
   mov cr3, esi
   mov eax, cr0
   or eax, 1 << 31
-  mov eax, cr0
+  mov cr0, eax
 
   push compatibilityMessage
   call print
@@ -229,9 +229,9 @@ _entry64:
   mov es, ax
   mov fs, ax
   mov gs, ax
-  ;push qword inLongModeMessage
-  ;call print64
-  ;add rsp, 4
+  push qword inLongModeMessage
+  call print64
+  add rsp, 4
   ; mov rdi, 0xb8000
   ; mov word [rdi], 0x0a61
 
