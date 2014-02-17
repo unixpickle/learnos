@@ -1,9 +1,13 @@
 include ../directives.mk
 
-all: build/stdio.o
+CSOURCES=stdio.c kernpage.c
 
-build/stdio.o: build/basic.o
-	gcc -c stdio.c -I../ -m64 $(DISABLE_OPTIONS) -o build/stdio.o
+all: csources
+
+csources: build/basic.o
+	for file in $(CSOURCES); do\
+		gcc -c $$file -I../ -m64 $(DISABLE_OPTIONS) -o build/`basename $$file .c`.o;\
+	done
 
 build/basic.o: build
 	nasm -f elf64 basic.s -o build/basic.o

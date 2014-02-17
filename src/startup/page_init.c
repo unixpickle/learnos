@@ -1,23 +1,23 @@
 #include <libkern32/stdio.h>
-
-#define PML4_START 0x300000
+#include <shared/addresses.h>
+#include <shared/types.h>
 
 static unsigned int roundUpDiv(unsigned int num, unsigned int denom);
-
-typedef unsigned long long uint64_t;
 
 /**
  * Creates page tables that map all physical memory into
  * the same virtual addresses.
  * @param the KBs used in upper memory, taken from multiboot
- * @return The pointer to the end of reserved memory
+ * @return The number of bytes used by tables
  */
-void * configurePages(unsigned int kbCount) {
+unsigned int configurePages(unsigned int kbCount) {
+  // Overflow is possible in storing the number of pages this way, in fact
+  // we can only have 1TB of RAM. This is fine, man.
   unsigned int i, j;
   unsigned int pageCount = (kbCount >> 2) + 0x100;
   unsigned int ptCount = roundUpDiv(pageCount, 0x200);
-  unsigned int pdtCount = roundUpDiv(pageCount, 0x40000);
-  unsigned int pdptCount = roundUpDiv(pageCount, 0x8000000);
+  unsigned int pdtCount = roundUpDiv(ptCount, 0x200);
+  unsigned int pdptCount = roundUpDiv(pdtCount, 0x200);
 
   print32("there are ");
   printHex32(pageCount);
@@ -71,7 +71,7 @@ void * configurePages(unsigned int kbCount) {
     addr += 0x1000;
   }
 
-  return ptEntries + (ptCount * 0x200);
+  return totalCount * 0x1000;
 }
 
 static unsigned int roundUpDiv(unsigned int num, unsigned int denom) {

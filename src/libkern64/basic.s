@@ -14,3 +14,48 @@ outb64:
   pop rdx
   ret
 
+global cpuid
+cpuid:
+  push rbx
+  push rbp
+  mov rbp, rsp
+
+  ; push arguments to stack
+  push rcx
+  push rdx
+  push rsi
+
+  xor rax, rax
+  mov eax, edi ; argument 1, selector
+  cpuid
+
+  ; output registers to destinations
+  mov rdi, [rsp] ; argument 2, ebx out
+  mov [rdi], ebx
+  mov rdi, [rsp+8] ; argument 3, ecx out
+  mov [rdi], ecx
+  mov rdi, [rsp+16] ; argument 4, edx out
+  mov [rdi], edx
+
+  leave
+  pop rbx ; this register has to be preserved, apparently
+  ret
+
+global readMSR
+readMSR:
+  mov ecx, edi
+  xor rax, rax
+  rdmsr ; input ecx, output edx:eax
+  shl rdx, 32
+  or rax, rdx
+  ret
+
+global writeMSR
+writeMSR:
+  mov rdx, rsi ; upper half of value
+  shr rdx, 32
+  mov eax, esi ; lower half of value
+  mov ecx, edi ; selector
+  wrmsr
+  ret
+

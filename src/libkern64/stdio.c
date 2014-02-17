@@ -35,7 +35,7 @@ void print64(const char * str) {
   setPosition(x, y);
 }
 
-void printHex64(unsigned int number) {
+void printHex64(unsigned long number) {
   const char * chars = "0123456789ABCDEF";
   unsigned char buf[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   unsigned char len = 0, i;
