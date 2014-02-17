@@ -1,0 +1,4 @@
+#define SCREEN_WIDTH 80
+#define SCREEN_HEIGHT 25
+#define SCREEN_BUFFER 0xb8000
+

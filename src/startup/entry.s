@@ -1,3 +1,11 @@
+extern print32
+extern hang32
+extern configurePages
+
+extern print64
+extern hang64
+extern configureAPIC
+
 bits 32
 
 ; these are multiboot flags
@@ -9,14 +17,10 @@ FLAGS equ LINKINFO
 MAGIC equ 0x1BADB002
 CHECKSUM equ -(MAGIC + FLAGS)
 
-; these are offsets in physical memory that learnos
-; uses for various information
-CUROFFSET equ 0x100000
-PML4_START equ 0x110000
-PDPT_START equ 0x111000
-PDT_START equ 0x112000
-PT_START equ 0x113000
-LOADBASE equ 0x320000
+LOADBASE equ 0x100000
+CUROFFSET equ 0x200000
+END_PAGE_INFO equ 0x200004
+PML4_START equ 0x300000
 
 section .text
 
@@ -45,78 +49,34 @@ start:
   push esi
   popf
 
-  mov edi, 0xb8000
-  mov [CUROFFSET], edi
-  mov dword [CUROFFSET + 4], 0
+  mov dword [CUROFFSET], 0
 
   ; print our initialization message
   push startedMessage
-  call print
+  call print32
   add esp, 4
 
-configurePages:
   ; make sure memory information flag is set
   mov esi, [ebp - 4]
   mov eax, [esi]
   or eax, 1
-  jnz .getAvailable
+  jnz .setupPages
   push noMemoryFlagMessage
-  call print
-  jmp hang
+  call print32
+  call hang32
 
-.getAvailable:
+.setupPages:
   ; pushes the amount of 1024 byte blocks (after 1MB) to the stack
   mov eax, [esi + 8]
   push eax
+  call configurePages
+  mov [END_PAGE_INFO], eax
+  pop eax
 
-  ; zero the PML4, PDPT, PDT, PT
-  mov edi, PML4_START
-  xor eax, eax
-  mov ecx, 0x3000 + 0x200000
-  ; TODO: figure out how to use rep here
-.zeroPages:
-  mov [edi], al
-  inc edi
-  loop .zeroPages
-
-  ; create page tables
-  mov eax, [esp] ; eax will be our pages remaining in physical memory counter
-  shr eax, 2 ; 4k blocks instead of 1k blocks
-  add eax, 1 << 8 ; there are 2^8 pages in the first 1MB
-  mov edi, PT_START ; pointer to our place in page table
-  mov esi, 3 ; pointer to physical memory + flags
-  mov ebx, PDT_START ; pointer to PDT offset
-.loopPDT:
-  ; create a PDT entry
-  mov ecx, 0x200 ; create 512 entries, 8 bytes each
-  mov [ebx], edi
-  or byte [ebx], 3
-  add ebx, 8
-
-  pushad
-  push loadingPageMessage
-  call print
-  add esp, 4
-  popad
-
-.loopPT:
-  ; create page table entries until we run out of memory
-  mov [edi], esi
-  add edi, 8
-  add esi, 0x1000
-  sub eax, 1
-  jz doneCreatingPages
-  loop .loopPT
-  jmp .loopPDT
-
-doneCreatingPages:
   push donePagesMessage
-  call print
+  call print32
   add esp, 4
 
-  ; put in the appropriate addresses
-  mov dword [PML4_START], PDPT_START + 3
-  mov dword [PDPT_START], PDT_START + 3
   ; enable PAE-paging
   mov eax, cr4
   or eax, 1 << 5
@@ -134,59 +94,32 @@ doneCreatingPages:
   mov cr0, eax
 
   push compatibilityMessage
-  call print
+  call print32
   add esp, 4
 
   ; load our GDT and jump!
   lgdt [GDT64.pointer]
   jmp GDT64.code:_entry64
 
-hang:
-  hlt
-  jmp hang
-
-print:
-  push ebp
-  mov ebp, esp
-  mov esi, [ebp + 8]
-  mov edi, [CUROFFSET]
-  mov ah, 0x0a
-  mov ecx, 160
-_printLoop:
-  mov al, [esi]
-  cmp al, 0
-  je _printEnd
-  mov word [edi], ax
-  add edi, 2
-  inc esi
-  sub ecx, 2
-  jmp _printLoop
-_printEnd:
-  add edi, ecx
-  mov [CUROFFSET], edi
-  xor eax, eax
-  leave
-  ret
-
 startedMessage:
-  db 'Creating page tables', 0
+  db 'Creating page tables', 10, 0
 
 noMemoryFlagMessage:
-  db 'GRUB did not set the memory flag', 0
+  db 'GRUB did not set the memory flag', 10, 0
 
 donePagesMessage:
-  db 'Created page tables in memory', 0
+  db 'Created page tables in memory', 10, 0
 
 compatibilityMessage:
-  db 'Entered compatibility mode', 0
+  db 'Entered compatibility mode', 10, 0
 
 loadingPageMessage:
-  db 'Loading another page', 0
+  db 'Loading another page', 10, 0
 
 ; yeah i know, this is somewhat pointless but whatevs man
 align 4
 _stack:
-  times 4096 db 0
+  times 0x2000 db 0
 _endstack:
 
 align 8
@@ -219,10 +152,6 @@ GDT64:                           ; Global Descriptor Table (64-bit).
 
 bits 64
 
-extern hang64
-extern print64
-extern configureAPIC
-
 _entry64:
   cli
   mov ax, GDT64.data
@@ -236,5 +165,5 @@ _entry64:
   call hang64
 
 inLongModeMessage:
-  db 'Entered long mode', 0
+  db 'Entered long mode', 10, 0
 
