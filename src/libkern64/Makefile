@@ -1,4 +1,4 @@
-DISABLE_OPTIONS=-ffreestanding --no-builtin -fno-stack-protector
+include ../directives.mk
 
 all: build/stdio.o
 

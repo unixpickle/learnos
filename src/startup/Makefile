@@ -1,6 +1,7 @@
 C32FILES=page_init.c
 C64FILES=apic.c
-DISABLE_OPTIONS=-ffreestanding --no-builtin -fno-stack-protector
+
+include ../directives.mk
 
 all: build/entry.o
 
@@ -10,7 +11,7 @@ build/entry.o: c32sources c64sources
 c32sources: build
 	for file in $(C32FILES); do\
 		gcc -c $$file -I./../ -m32 $(DISABLE_OPTIONS) -o build/`basename $$file .c`_32.o;\
-		objcopy -O elf64-x86-64 build/`basename $$file .c`_32.o build/`basename $$file .c`.o;\
+		objcopy -O $(DESTARCH) build/`basename $$file .c`_32.o build/`basename $$file .c`.o;\
 		rm build/`basename $$file .c`_32.o;\
 	done
 
