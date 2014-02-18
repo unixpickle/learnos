@@ -12,6 +12,9 @@ static bool supportsAPIC();
 static unsigned char * getAPICBase();
 static void setAPICBase(unsigned char * base);
 
+static uint32_t readIOAPIC(uint32_t * ptr, uint32_t reg);
+static void writeIOAPIC(uint32_t * ptr, uint32_t reg, uint32_t value);
+
 void configureAPIC() {
   print64("configuring APIC...\n");
   if (!supportsAPIC()) {
@@ -19,11 +22,12 @@ void configureAPIC() {
     return;
   }
 
+  void * addr = getAPICBase();
   print64("APIC base set to: ");
-  printHex64((uint64_t)getAPICBase());
+  printHex64((uint64_t)addr);
   print64("\n");
 
-  unsigned int page = ((uint64_t)getAPICBase() >> 12);
+  unsigned int page = ((uint64_t)addr >> 12);
   if (!kernpage_is_mapped(page)) {
     print64("mapping page... ");
     kernpage_create_identity_map(page);
@@ -32,8 +36,13 @@ void configureAPIC() {
     print64("the page is already mapped\n");
   }
 
-  setAPICBase(getAPICBase());
-  print64("APIC enabled\n");
+  print64("enabling APIC... ");
+  setAPICBase(addr);
+  print64("APIC address enabled, ");
+
+  // apparently this is the Spourious Interrupt Vector Register
+  writeIOAPIC(addr, 0xf0, readIOAPIC(addr, 0xf0) | 0x100);
+  print64("done.\n");
 }
 
 static bool supportsAPIC() {
@@ -49,5 +58,17 @@ static unsigned char * getAPICBase() {
 
 static void setAPICBase(unsigned char * base) {
   writeMSR(IA32_APIC_BASE_MSR, (uint64_t)base | IA32_APIC_BASE_MSR_ENABLE);
+}
+
+static uint32_t readIOAPIC(uint32_t * _ptr, uint32_t reg) {
+  volatile uint32_t * ptr = (volatile uint32_t *) _ptr;
+  ptr[0] = reg & 0xff;
+  return ptr[4];
+}
+
+static void writeIOAPIC(uint32_t * _ptr, uint32_t reg, uint32_t value) {
+  volatile uint32_t * ptr = (volatile uint32_t *) _ptr;
+  ptr[0] = reg & 0xff;
+  ptr[4] = value;
 }
 

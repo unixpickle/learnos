@@ -15,6 +15,7 @@ unsigned int configurePages(unsigned int kbCount) {
   // we can only have 1TB of RAM. This is fine, man.
   unsigned int i, j;
   unsigned int pageCount = (kbCount >> 2) + 0x100;
+  *((unsigned int *)PHYSICAL_PAGES_ADDR) = pageCount;
   unsigned int ptCount = roundUpDiv(pageCount, 0x200);
   unsigned int pdtCount = roundUpDiv(ptCount, 0x200);
   unsigned int pdptCount = roundUpDiv(pdtCount, 0x200);
