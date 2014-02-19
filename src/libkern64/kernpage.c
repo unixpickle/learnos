@@ -20,7 +20,11 @@ void kernpage_initialize() {
   KERNPAGE_ENABLED = 1;
   _kernpage_initialize_mapping();
   _kernpage_page_physical();
-  print64("initialized page tables and everything, wow");
+  print64("last pages: virtual=0x");
+  printHex64((uint64_t)LAST_VPAGE);
+  print64(" physical=0x");
+  printHex64((uint64_t)LAST_PAGE);
+  print64("\n");
   hang64();
 }
 
@@ -96,7 +100,8 @@ uint64_t kernpage_allocate_contiguous(uint64_t count) {
     }
   }
   if (result == 0) return result;
-  return (LAST_PAGE = result + count - 1);
+  LAST_PAGE = result + count - 1;
+  return result;
 }
 
 bool kernpage_is_mapped(uint64_t page) {
@@ -105,14 +110,16 @@ bool kernpage_is_mapped(uint64_t page) {
 
   // check if it's set in the page table
   uint64_t indexInPT = page % 0x200;
-  uint64_t indexInPDT = (page >> 12) % 0x200;
-  uint64_t indexInPDPT = (page >> 24) % 0x200;
-  uint64_t indexInPML4 = (page >> 32) % 0x200;
+  uint64_t indexInPDT = (page >> 9) % 0x200;
+  uint64_t indexInPDPT = (page >> 18) % 0x200;
+  uint64_t indexInPML4 = (page >> 27) % 0x200;
   uint64_t indices[4] = {indexInPML4, indexInPDPT, indexInPDT, indexInPT};
   uint64_t * tablePtr = (uint64_t *)PML4_START;
   for (i = 0; i < 4; i++) {
     uint64_t value = tablePtr[indices[i]];
-    if (!(value & 0x03)) return false;
+    if (!(value & 0x03)) {
+      return false;
+    }
     uint64_t physPage = value >> 12;
     uint64_t virPage = kernpage_calculate_virtual(physPage);
     tablePtr = (uint64_t *)(virPage << 12);
@@ -124,9 +131,9 @@ bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage) {
   // check if it's set in the page table
   int i;
   uint64_t indexInPT = virtualPage % 0x200;
-  uint64_t indexInPDT = (virtualPage >> 12) % 0x200;
-  uint64_t indexInPDPT = (virtualPage >> 24) % 0x200;
-  uint64_t indexInPML4 = (virtualPage >> 32) % 0x200;
+  uint64_t indexInPDT = (virtualPage >> 9) % 0x200;
+  uint64_t indexInPDPT = (virtualPage >> 18) % 0x200;
+  uint64_t indexInPML4 = (virtualPage >> 27) % 0x200;
   uint64_t indices[4] = {indexInPML4, indexInPDPT, indexInPDT, indexInPT};
   volatile uint64_t * tablePtr = (uint64_t *)PML4_START;
   for (i = 0; i < 3; i++) {
@@ -180,7 +187,7 @@ static void _kernpage_initialize_mapping() {
     // This list will not be perfectly 1-to-1 because we identity map
     // some lower memory from page_init.c, so here we need to make sure
     // we respect that
-    if (mmap->base_addr + mmap->length < 0x100000) continue;
+    if (mmap->base_addr + mmap->length <= 0x100000) continue;
 
     // make sure that the memory is page aligned
     uint64_t start = mmap->base_addr;
@@ -195,15 +202,20 @@ static void _kernpage_initialize_mapping() {
     len >>= 12;
     start >>= 12;
 
-    if (count == 0) {
+    if (start <= 0x100) {
       // the first physical segment must map the lower 1MB at least
       len += start;
       start = 0;
     }
     kernpage_info info = {start, len};
+    print64("adding info {");
+    printHex64(info.start);
+    print64(", ");
+    printHex64(info.length);
+    print64("}\n");
 
     // insert the kernpage_info where it fits
-    int insIndex = count - 1;
+    int insIndex = count;
     for (i = 0; i < count; i++) {
       if (destMap[i].start > start) {
         insIndex = i;
@@ -223,7 +235,7 @@ static void _kernpage_initialize_mapping() {
   PHYSICAL_MAP_COUNT = (uint8_t)count;
   print64("There are ");
   printHex64(count);
-  print64(" memory maps:\n");
+  print64(" memory maps: ");
   for (i = 0; i < count; i++) {
     if (i != 0) print64(", ");
     print64("0x");
@@ -232,36 +244,31 @@ static void _kernpage_initialize_mapping() {
     printHex64(destMap[i].length);
   }
   print64("\n");
-  hang64();
 }
 
 static void _kernpage_page_physical() {
-  print64("creating physical map\n");
+  print64("expanding physical map...\n");
   // map pages
   int i;
   uint64_t j;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
-  uint64_t virtual = 0;
+  uint64_t virtual = 0, created = 0;
+  print64("last page (initial) = ");
+  printHex64(LAST_PAGE);
+  print64(", vpage = ");
+  printHex64(LAST_VPAGE);
+  print64("\n");
   for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
-    /*
-    print64("_kernpage_page_physical - map start: 0x");
-    printHex64(maps[i].start);
-    print64(", length: 0x");
-    printHex64(maps[i].length);
-    print64("\n");
-    */
     for (j = maps[i].start; j < maps[i].length + maps[i].start; j++) {
       if (!kernpage_is_mapped(virtual)) {
-        
-        print64("actually mapping something: 0x");
-        printHex64(virtual);
-        print64("\n");
-        hang64();
-        
         kernpage_map(virtual, j);
+        created++;
       }
       virtual++;
     }
   }
+  print64("mapped 0x");
+  printHex64(created);
+  print64(" new pages to virtual memory\n");
 }
 
