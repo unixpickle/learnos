@@ -2,14 +2,13 @@
 #include "basic.h"
 #include "stdio.h"
 
-#define cursorInfo ((unsigned short *)CURSOR_INFO)
 #define buffer ((unsigned char *)SCREEN_BUFFER)
 
 static void setPosition(unsigned short x, unsigned short y);
 static void scrollUp();
 
 void print64(const char * str) {
-  unsigned short x = cursorInfo[0], y = cursorInfo[1];
+  unsigned short x = CURSOR_INFO[0], y = CURSOR_INFO[1];
   // print each character like it might be your last!
   while (str[0]) {
     unsigned char theChar = str[0];
@@ -37,7 +36,7 @@ void print64(const char * str) {
 
 void printHex64(unsigned long number) {
   const char * chars = "0123456789ABCDEF";
-  unsigned char buf[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  unsigned char buf[32];
   unsigned char len = 0, i;
   do {
     unsigned char nextDig = (unsigned char)(number & 0xf);
@@ -49,12 +48,13 @@ void printHex64(unsigned long number) {
     buf[len - i - 1] = buf[i];
     buf[i] = a;
   }
+  buf[len] = 0;
   print64(buf);
 }
 
 static void setPosition(unsigned short x, unsigned short y) {
-  cursorInfo[0] = x;
-  cursorInfo[1] = y;
+  CURSOR_INFO[0] = x;
+  CURSOR_INFO[1] = y;
   unsigned short position = (y * SCREEN_WIDTH) + x;
   // tell the VGA index register we are sending the `low` byte
   outb64(0x3D4, 0x0f);
@@ -68,7 +68,7 @@ static void scrollUp() {
   // copy the buffer into itself, one line up
   int i;
   for (i = 0; i < 2 * SCREEN_WIDTH * (SCREEN_HEIGHT - 1); i++) {
-    buffer[i] = buffer[i + SCREEN_WIDTH];
+    buffer[i] = buffer[i + SCREEN_WIDTH * 2];
   }
   // clear the bottom line
   // TODO: see if i can do for (; ...)

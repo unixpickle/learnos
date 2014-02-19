@@ -2,14 +2,13 @@
 #include "basic.h"
 #include "stdio.h"
 
-#define cursorInfo ((unsigned short *)CURSOR_INFO)
 #define buffer ((unsigned char *)SCREEN_BUFFER)
 
 static void setPosition(unsigned short x, unsigned short y);
 static void scrollUp();
 
 void print32(const char * str) {
-  unsigned short x = cursorInfo[0], y = cursorInfo[1];
+  unsigned short x = CURSOR_INFO[0], y = CURSOR_INFO[1];
   // print each character like it might be your last!
   while (str[0]) {
     unsigned char theChar = str[0];
@@ -53,8 +52,8 @@ void printHex32(unsigned int number) {
 }
 
 static void setPosition(unsigned short x, unsigned short y) {
-  cursorInfo[0] = x;
-  cursorInfo[1] = y;
+  CURSOR_INFO[0] = x;
+  CURSOR_INFO[1] = y;
   unsigned short position = (y * SCREEN_WIDTH) + x;
   // tell the VGA index register we are sending the `low` byte
   outb32(0x3D4, 0x0f);
@@ -68,7 +67,7 @@ static void scrollUp() {
   // copy the buffer into itself, one line up
   int i;
   for (i = 0; i < 2 * SCREEN_WIDTH * (SCREEN_HEIGHT - 1); i++) {
-    buffer[i] = buffer[i + SCREEN_WIDTH];
+    buffer[i] = buffer[i + SCREEN_WIDTH * 2];
   }
   // clear the bottom line
   // TODO: see if i can do for (; ...)
