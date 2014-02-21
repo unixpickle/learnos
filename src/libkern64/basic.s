@@ -41,8 +41,8 @@ cpuid:
   pop rbx ; this register has to be preserved, apparently
   ret
 
-global readMSR
-readMSR:
+global msr_read
+msr_read:
   mov ecx, edi
   xor rax, rax
   rdmsr ; input ecx, output edx:eax
@@ -50,12 +50,28 @@ readMSR:
   or rax, rdx
   ret
 
-global writeMSR
-writeMSR:
+global msr_write
+msr_write:
   mov rdx, rsi ; upper half of value
   shr rdx, 32
   mov eax, esi ; lower half of value
   mov ecx, edi ; selector
   wrmsr
+  ret
+
+global invalidate_page
+invalidate_page:
+  shl rdi, 12
+  invlpg [rdi]
+  ret
+
+global enable_interrupts
+enable_interrupts:
+  sti
+  ret
+
+global disable_interrupts
+disable_interrupts:
+  cli
   ret
 

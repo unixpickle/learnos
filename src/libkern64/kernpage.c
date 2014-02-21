@@ -25,7 +25,6 @@ void kernpage_initialize() {
   print64(" physical=0x");
   printHex64((uint64_t)LAST_PAGE);
   print64("\n");
-  hang64();
 }
 
 void kernpage_lockdown() {
@@ -157,6 +156,7 @@ bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage) {
     }
   }
   tablePtr[indices[3]] = (physicalPage << 12) | 3;
+  invalidate_page(virtualPage);
   if (virtualPage > LAST_VPAGE) LAST_VPAGE = virtualPage;
   return true;
 }

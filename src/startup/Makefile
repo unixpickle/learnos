@@ -1,5 +1,5 @@
 C32FILES=page_init.c
-C64FILES=apic.c
+C64FILES=apic_init.c
 
 include ../directives.mk
 

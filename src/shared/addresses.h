@@ -6,7 +6,7 @@
 /**
  * Contains a pointer to the Multiboot information data structure
  */
-#define MBOOT_INFO (*((volatile uint32_t **)0x200004))
+#define MBOOT_INFO (*((uint32_t **)0x200004))
 
 /**
  * The highest physical page that is mapped.
@@ -39,9 +39,25 @@
 #define PHYSICAL_MAP_ADDR 0x20001e
 
 /**
- * The (virtual kernpage) address used to control the APIC.
+ * The (virtual kernpage) address which 0xFEE... is mapped to
  */
-#define APIC_PTR (*((volatile void **)0x201016))
+#define LAPIC_PTR (*((volatile void **)0x20101e))
+
+/**
+ * The (virtual kernpage) address which 0xFEC... is mapped to
+ */
+#define IOAPIC_PTR (*((volatile void **)0x20101e))
+
+/**
+ * The address which contains the "IDTR" to load with lidt
+ */
+#define IDTR_PTR 0x20102e
+
+/**
+ * The address pointing to the IDT to be used by the whole system.
+ * 16*256 = 4096 bytes, so one page for this table is reserved.
+ */
+#define IDT_PTR 0x201038
 
 /**
  * Set CR3=PML4_START to enable kernel paging.

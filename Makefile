@@ -1,5 +1,5 @@
-SOURCE_DIRS=src/startup src/libkern32 src/libkern64
-BUILD_FILES=src/startup/build/*.o src/libkern32/build/*.o src/libkern64/build/*.o
+SOURCE_DIRS=src/startup src/libkern32 src/libkern64 src/interrupts
+BUILD_FILES=src/startup/build/*.o src/libkern32/build/*.o src/libkern64/build/*.o src/interrupts/build/*.o
 
 learnos.bin: objects
 	ld $(BUILD_FILES) -Ttext 0x100000 -e multiboot_header --oformat binary -s -o learnos.bin

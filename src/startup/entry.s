@@ -1,11 +1,11 @@
 extern print32
 extern hang32
-extern configurePages
+extern basepage_initialize
 
 extern print64
 extern hang64
 extern kernpage_initialize
-extern configureAPIC
+extern apic_initialize
 
 bits 32
 
@@ -60,7 +60,7 @@ start:
   call print32
   add esp, 4
 
-  call configurePages
+  call basepage_initialize
   push donePagesMessage
   call print32
   add esp, 4
@@ -154,7 +154,7 @@ _entry64:
   mov rdi, inLongModeMessage
   call print64
   call kernpage_initialize
-  call configureAPIC
+  call apic_initialize
   call hang64
 
 inLongModeMessage:

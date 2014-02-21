@@ -8,7 +8,7 @@ static uint32_t roundUpDiv(uint32_t num, uint32_t denom);
  * Creates page tables that map the first contiguous physical memory
  * to virtual memory. This may not include all system memory.
  */
-uint32_t configurePages() {
+uint32_t basepage_initialize() {
   uint32_t flags = MBOOT_INFO[0];
   if (!(flags | 1)) {
     print32("ERROR: No memory information present\n");
