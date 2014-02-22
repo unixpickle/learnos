@@ -9,6 +9,10 @@ static uint32_t roundUpDiv(uint32_t num, uint32_t denom);
  * to virtual memory. This may not include all system memory.
  */
 uint32_t basepage_initialize() {
+  if ((uint32_t)MBOOT_INFO >= 0x100000) {
+    print32("[ERROR] Multiboot info expected in lower 1MB");
+    hang32();
+  }
   uint32_t flags = MBOOT_INFO[0];
   if (!(flags | 1)) {
     print32("ERROR: No memory information present\n");

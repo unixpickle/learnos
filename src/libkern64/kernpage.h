@@ -55,6 +55,18 @@ bool kernpage_is_mapped(uint64_t virtualPage);
 bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage);
 
 /**
+ * Finds the virtual address which maps to a physical address
+ * if one is mapped at all.
+ */
+uint64_t kernpage_lookup_virtual(uint64_t physical);
+
+/**
+ * Copies a piece of data from physical memory to virtual memory.
+ * This may be slow, so watch out.
+ */
+void kernpage_copy_physical(void * dest, const void * physical, uint64_t len);
+
+/**
  * Returns the next virtual page that is not mapped.
  */
 uint64_t kernpage_next_virtual();

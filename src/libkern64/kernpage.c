@@ -15,6 +15,7 @@ typedef struct {
 
 static void _kernpage_initialize_mapping();
 static void _kernpage_page_physical();
+static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t depth, uint64_t base);
 
 void kernpage_initialize() {
   KERNPAGE_ENABLED = 1;
@@ -161,6 +162,53 @@ bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage) {
   return true;
 }
 
+uint64_t kernpage_lookup_virtual(uint64_t physical) {
+  uint64_t quickResult = kernpage_calculate_virtual(physical);
+  if (quickResult) return quickResult;
+
+  uint64_t * tablePtr = (uint64_t *)PML4_START;
+  return _kernpage_find_physical(tablePtr, physical, 3, 0);
+}
+
+void kernpage_copy_physical(void * _dest, const void * physical, uint64_t len) {
+  if (len == 0) return;
+  unsigned char * dest = _dest;
+  uint64_t pageOffset = ((uint64_t)physical) & 0xfff;
+
+  // make sure each page is mapped
+  uint64_t minPage = ((uint64_t)physical) >> 12;
+  uint64_t maxPage = ((uint64_t)physical + len - 1) >> 12;
+  uint64_t curPage;
+  for (curPage = minPage; curPage <= maxPage; curPage++) {
+    uint64_t virPage = kernpage_lookup_virtual(curPage);
+    if (!virPage) {
+      virPage = kernpage_next_virtual();
+      if (!kernpage_map(virPage, curPage)) {
+        die("Failed to map page for kernpage_copy_physical");
+      }
+    }
+    unsigned char * virPtr = (unsigned char *)(virPage << 12);
+    unsigned char * destPtr = NULL;
+    uint64_t copyLen = 0, i;
+    if (curPage == minPage) {
+      copyLen = len;
+      if (copyLen > 0x1000 - pageOffset) {
+        copyLen = 0x1000 - pageOffset;
+      }
+      virPtr = &virPtr[pageOffset];
+      destPtr = dest;
+    } else if (curPage == maxPage) {
+      copyLen = (len + pageOffset) & 0xfff;
+      destPtr = &dest[len - copyLen];
+    } else {
+      // copy the entire page
+      destPtr = &dest[((curPage - minPage) << 12) - pageOffset];
+      copyLen = 0x1000;
+    }
+    for (i = 0; i < copyLen; i++) destPtr[i] = virPtr[i];
+  }
+}
+
 uint64_t kernpage_next_virtual() {
   return LAST_VPAGE + 1;
 }
@@ -168,6 +216,10 @@ uint64_t kernpage_next_virtual() {
 static void _kernpage_initialize_mapping() {
   uint32_t mmapLength = MBOOT_INFO[11];
   uint64_t mmapAddr = (uint64_t)MBOOT_INFO[12];
+
+  if ((uint64_t)mmapAddr >= 0x100000) {
+    die("maps expected in lower-memory");
+  }
 
   // By this point, startup/page_init.c has already given us access
   // to enough physical memory that we should definitely be able
@@ -229,8 +281,7 @@ static void _kernpage_initialize_mapping() {
     count++;
   }
   if (count < 1) {
-    print64("[ERROR]: no immediate upper memory\n");
-    hang64();
+    die("no immediate upper memory");
   }
   PHYSICAL_MAP_COUNT = (uint8_t)count;
   print64("There are ");
@@ -270,5 +321,27 @@ static void _kernpage_page_physical() {
   print64("mapped 0x");
   printHex64(created);
   print64(" new pages to virtual memory\n");
+}
+
+static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t depth, uint64_t base) {
+  int i;
+  if (depth == 0) {
+    for (i = 0x1ff; i >= 0; i--) {
+      if (!(table[i] & 0x3)) continue;
+      if (table[i] >> 12 == page) return base + i;
+    }
+    return 0;
+  }
+
+  // recursive search
+  uint64_t eachSize = 1 << (9 * depth);
+  for (i = 0x1ff; i >= 0; i--) {
+    if (!(table[i] & 0x3)) continue;
+    uint64_t virPage = kernpage_calculate_virtual(table[i] >> 12);
+    uint64_t * nextTable = (uint64_t *)(virPage << 12);
+    uint64_t result = _kernpage_find_physical(nextTable, page, depth - 1,
+                                              base + (eachSize * i));
+    if (result) return result;
+  }
 }
 

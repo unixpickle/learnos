@@ -52,6 +52,12 @@ void printHex64(unsigned long number) {
   print64(buf);
 }
 
+void die(const char * msg) {
+  print64("[ERROR] ");
+  print64(msg);
+  hang64();
+}
+
 static void setPosition(unsigned short x, unsigned short y) {
   CURSOR_INFO[0] = x;
   CURSOR_INFO[1] = y;

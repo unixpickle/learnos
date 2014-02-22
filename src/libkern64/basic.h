@@ -24,7 +24,7 @@ unsigned long msr_read(unsigned int selector);
 /**
  * Write a model specific register.
  */
-void msr_write(unsigned int selector, unsigned long value);
+void msr_write(unsigned int selector, unsigned long long value);
 
 /**
  * Calls invlpg on a virtual page.

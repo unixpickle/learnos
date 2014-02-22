@@ -1,6 +1,6 @@
 include ../directives.mk
 
-CSOURCES=stdio.c kernpage.c
+CSOURCES=stdio.c kernpage.c string.c
 
 all: csources
 

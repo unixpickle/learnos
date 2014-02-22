@@ -1,5 +1,6 @@
 #include <shared/screen.h>
 
-extern void print64(const char * buffer);
-extern void printHex64(unsigned long number);
+void print64(const char * buffer);
+void printHex64(unsigned long number);
+void die(const char * buffer);
 

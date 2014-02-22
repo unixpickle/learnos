@@ -5,6 +5,7 @@ extern basepage_initialize
 extern print64
 extern hang64
 extern kernpage_initialize
+extern kernpage_lockdown
 extern apic_initialize
 
 bits 32
@@ -155,6 +156,7 @@ _entry64:
   call print64
   call kernpage_initialize
   call apic_initialize
+  call kernpage_lockdown
   call hang64
 
 inLongModeMessage:

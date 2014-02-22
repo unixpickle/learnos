@@ -1,6 +1,7 @@
 #include "ioapic.h"
 #include <libkern64/kernpage.h>
 #include <shared/addresses.h>
+#include "acpi.h"
 
 #define IOAPIC_BASE 0xfec00000L
 
@@ -11,15 +12,15 @@ static void _ioapic_stop_pic();
 static void _ioapic_start_receiving();
 
 void ioapic_initialize() {
+  if (!acpi_count_ioapics()) {
+    die("No I/O APICs exist");
+  }
   _ioapic_stop_pic();
 
   print64("mapping I/O APIC page... ");
   uint64_t page = (uint64_t)(IOAPIC_BASE >> 12);
   uint64_t virtualPage = kernpage_next_virtual();
-  if (!kernpage_map(virtualPage, page)) {
-    print64("[FAIL]\n");
-    hang64();
-  }
+  if (!kernpage_map(virtualPage, page)) die("failed to map");
   IOAPIC_PTR = (void *)(virtualPage << 12);
   print64("[OK]\n");
 

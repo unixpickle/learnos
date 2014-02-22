@@ -54,10 +54,15 @@
 #define IDTR_PTR 0x20102e
 
 /**
- * The address pointing to the IDT to be used by the whole system.
+ * The address of the IDT to be used by the whole system.
  * 16*256 = 4096 bytes, so one page for this table is reserved.
  */
 #define IDT_PTR 0x201038
+
+/**
+ * One 0x1000 byte page, containing the MADT data structure.
+ */
+#define ACPI_MADT_PTR 0x202038
 
 /**
  * Set CR3=PML4_START to enable kernel paging.
