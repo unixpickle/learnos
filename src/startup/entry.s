@@ -152,6 +152,11 @@ _entry64:
   mov es, ax
   mov fs, ax
   mov gs, ax
+
+  ; if I don't set SS=0, iret causes a #GP
+  xor ax, ax
+  mov ss, ax
+
   mov rdi, inLongModeMessage
   call print64
   call kernpage_initialize
