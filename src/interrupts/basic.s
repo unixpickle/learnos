@@ -1,6 +1,25 @@
 bits 64
 
 extern int_keyboard
+extern int_div_zero
+extern int_debugger
+extern int_nmi
+extern int_breakpoint
+extern int_overflow
+extern int_bounds
+extern int_invalid_opcode
+extern int_coprocessor_not_available
+extern int_double_fault
+extern int_coprocessor_segment_overrun
+extern int_invalid_tss
+extern int_segmentation_fault
+extern int_stack_fault
+extern int_general_protection_fault
+extern int_page_fault
+extern int_math_fault
+extern int_alignment_check
+extern int_machine_check
+extern int_simd_exception
 extern int_unknown_exception
 
 %macro pushaq 0
@@ -25,6 +44,139 @@ global handle_keyboard_exception
 handle_keyboard_exception:
   pushaq
   call int_keyboard
+  popaq
+  iretq
+
+global handle_div_zero
+handle_div_zero:
+  pushaq
+  call int_div_zero
+  popaq
+  iretq
+
+global handle_debugger
+handle_debugger:
+  pushaq
+  call int_debugger
+  popaq
+  iretq
+
+global handle_nmi
+handle_nmi:
+  pushaq
+  call int_nmi
+  popaq
+  iretq
+
+global handle_breakpoint
+handle_breakpoint:
+  pushaq
+  call int_breakpoint
+  popaq
+  iretq
+
+global handle_overflow
+handle_overflow:
+  pushaq
+  call int_overflow
+  popaq
+  iretq
+
+global handle_bounds
+handle_bounds:
+  pushaq
+  call int_bounds
+  popaq
+  iretq
+
+global handle_invalid_opcode
+handle_invalid_opcode:
+  pushaq
+  call int_invalid_opcode
+  popaq
+  iretq
+
+global handle_coprocessor_not_available
+handle_coprocessor_not_available:
+  pushaq
+  call int_coprocessor_not_available
+  popaq
+  iretq
+
+global handle_double_fault
+handle_double_fault:
+  pushaq
+  call int_double_fault
+  popaq
+  iretq
+
+global handle_coprocessor_segment_overrun
+handle_coprocessor_segment_overrun:
+  pushaq
+  call int_coprocessor_segment_overrun
+  popaq
+  iretq
+
+global handle_invalid_tss
+handle_invalid_tss:
+  pushaq
+  call int_invalid_tss
+  popaq
+  iretq
+
+global handle_segmentation_fault
+handle_segmentation_fault:
+  pushaq
+  call int_segmentation_fault
+  popaq
+  iretq
+
+global handle_stack_fault
+handle_stack_fault:
+  pushaq
+  call int_stack_fault
+  popaq
+  iretq
+
+global handle_general_protection_fault
+handle_general_protection_fault:
+  pushaq
+  call int_general_protection_fault
+  popaq
+  iretq
+
+global handle_page_fault
+handle_page_fault:
+  pushaq
+  call int_page_fault
+  popaq
+  iretq
+
+global handle_math_fault
+handle_math_fault:
+  pushaq
+  call int_math_fault
+  popaq
+  iretq
+
+global handle_alignment_check
+handle_alignment_check:
+  pushaq
+  call int_alignment_check
+  popaq
+  iretq
+
+global handle_machine_check
+handle_machine_check:
+  pushaq
+  call int_machine_check
+  popaq
+  iretq
+
+global handle_simd_exception
+handle_simd_exception:
+  pushaq
+  call int_simd_exception
   popaq
   iretq
 

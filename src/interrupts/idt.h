@@ -18,6 +18,26 @@ typedef struct {
 } __attribute__((packed)) idt_entry;
 
 void configure_global_idt();
+
 void int_keyboard();
+void int_div_zero();
+void int_debugger();
+void int_nmi();
+void int_breakpoint();
+void int_overflow();
+void int_bounds();
+void int_invalid_opcode();
+void int_coprocessor_not_available();
+void int_double_fault();
+void int_coprocessor_segment_overrun();
+void int_invalid_tss();
+void int_segmentation_fault();
+void int_stack_fault();
+void int_general_protection_fault();
+void int_page_fault();
+void int_math_fault();
+void int_alignment_check();
+void int_machine_check();
+void int_simd_exception();
 void int_unknown_exception();
 

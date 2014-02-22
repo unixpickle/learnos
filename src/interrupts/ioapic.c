@@ -22,7 +22,9 @@ void ioapic_initialize() {
   uint64_t virtualPage = kernpage_next_virtual();
   if (!kernpage_map(virtualPage, page)) die("failed to map");
   IOAPIC_PTR = (void *)(virtualPage << 12);
-  print64("[OK]\n");
+  print64("mapped to 0x");
+  printHex64((uint64_t)IOAPIC_PTR);
+  print64(" [OK]\n");
 
   _ioapic_configure_irqs();
   _ioapic_configure_pci();

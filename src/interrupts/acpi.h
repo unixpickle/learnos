@@ -24,6 +24,18 @@ typedef struct {
   uint8_t checksum;
   char oemid[6];
   uint64_t oemTableId;
+  uint32_t oemRev;
+  uint32_t creatorId;
+  uint32_t creatorRev;
+} __attribute__((packed)) acpi_rsdt;
+
+typedef struct {
+  uint32_t signature;
+  uint32_t length;
+  uint8_t revision;
+  uint8_t checksum;
+  char oemid[6];
+  uint64_t oemTableId;
   uint32_t oemRevision;
   uint32_t creatorId;
   uint32_t creatorRev;

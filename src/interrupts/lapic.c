@@ -9,13 +9,15 @@ void lapic_initialize() {
   if (!acpi_count_lapics()) {
     die("No LAPICs exist");
   }
-  // TODO: don't depend on this
-  if (!lapic_is_available()) {
-    die("x2APIC not available");
+
+  if (!lapic_is_x2_available()) {
+    if (!lapic_is_available()) {
+      die("Local APIC not available");
+    }
   }
 
   // map the memory for the page
-  print64("mapping I/O APIC page... ");
+  print64("mapping Local APIC page... ");
   uint64_t page = (uint64_t)(LAPIC_BASE_ADDR >> 12);
   uint64_t virtualPage = kernpage_next_virtual();
   if (!kernpage_map(virtualPage, page)) die("failed to map");
@@ -27,19 +29,25 @@ void lapic_initialize() {
   lapic_enable();
 }
 
+bool lapic_is_x2_available() {
+  // ebx, ecx, edx
+  uint32_t ebx, ecx, edx;
+  cpuid(1, &ebx, &ecx, &edx);
+  return (ecx & (1 << 21)) != 0;
+}
+
 bool lapic_is_available() {
   // ebx, ecx, edx
   uint32_t ebx, ecx, edx;
   cpuid(1, &ebx, &ecx, &edx);
-  print64("  ecx: ");
-  printHex64(ecx);
-  print64("\n");
-  return (ecx & (1 << 21)) != 0;
+  return (edx & (1 << 9)) != 0;
 }
 
 void lapic_enable() {
   // set enable x2 and regular
-  uint64_t flags = msr_read(0x1b) & (0b11111 << 8);
-  msr_write(0x1b, LAPIC_BASE_ADDR | flags | (3 << 10));
+  uint64_t flags = msr_read(0x1b) & (0xf00);
+  flags |= (uint64_t)lapic_is_x2_available() << 10;
+  flags |= 1 << 11;
+  msr_write(0x1b, LAPIC_BASE_ADDR | flags);
 }
 

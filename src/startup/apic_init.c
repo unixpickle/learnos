@@ -11,5 +11,6 @@ void apic_initialize() {
   configure_global_idt();
   enable_interrupts();
   print64("now accepting interrupts.\n");
+  //asm("int $0x40");
 }
 
