@@ -112,7 +112,7 @@ loadingPageMessage:
 ; yeah i know, this is somewhat pointless but whatevs man
 align 4
 _stack:
-  times 0x8000 db 0
+  times 0xa000 db 0
 _endstack:
 
 align 8

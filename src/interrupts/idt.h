@@ -39,5 +39,5 @@ void int_math_fault();
 void int_alignment_check();
 void int_machine_check();
 void int_simd_exception();
-void int_unknown_exception();
+void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags);
 

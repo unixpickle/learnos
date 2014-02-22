@@ -94,9 +94,14 @@ void int_simd_exception() {
   print64("got simd exception\n");
 }
 
-void int_unknown_exception() {
-  print64("Got unknown interrupt.\n");
-  lapic_send_eoi();
+void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
+  print64("INT, retAddr=");
+  printHex64(retAddr);
+  print64(", codeSeg=");
+  printHex64(codeSeg);
+  print64(", flags=");
+  printHex64(flags);
+  print64("\n");
 }
 
 static void _initialize_idt(idt_entry * ptr) {

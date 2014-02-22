@@ -29,9 +29,17 @@ extern int_unknown_exception
   push rbx
   push rsi
   push rdi
+  push r12
+  push r13
+  push r14
+  push r15
 %endmacro
 
 %macro popaq 0
+  pop r15
+  pop r14
+  pop r13
+  pop r12
   pop rdi
   pop rsi
   pop rbx
@@ -182,9 +190,18 @@ handle_simd_exception:
 
 global handle_unknown_exception
 handle_unknown_exception:
+  push rsp
+  mov rbp, rsp
   pushaq
+
+  mov rdi, [rbp + 8]
+  xor rsi, rsi
+  mov si, [rbp + 16]
+  mov rdx, [rbp + 18]
   call int_unknown_exception
+
   popaq
+  leave
   iretq
 
 global load_idtr
