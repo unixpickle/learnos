@@ -31,4 +31,5 @@ void lapic_initialize();
 bool lapic_is_available();
 bool lapic_is_x2_available();
 void lapic_enable();
+void lapic_send_eoi();
 

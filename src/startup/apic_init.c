@@ -5,12 +5,13 @@
 
 void apic_initialize() {
   print64("configuring APIC...\n");
+  configure_global_idt();
+  asm("int $0x40");
+  hang64();
   if (!acpi_find_madt()) die("Failed to find MADT");
   lapic_initialize();
   ioapic_initialize();
-  configure_global_idt();
-  enable_interrupts();
+  //enable_interrupts();
   print64("now accepting interrupts.\n");
-  //asm("int $0x40");
 }
 

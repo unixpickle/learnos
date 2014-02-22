@@ -96,6 +96,7 @@ void int_simd_exception() {
 
 void int_unknown_exception() {
   print64("Got unknown interrupt.\n");
+  lapic_send_eoi();
 }
 
 static void _initialize_idt(idt_entry * ptr) {

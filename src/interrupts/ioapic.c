@@ -39,17 +39,15 @@ void ioapic_initialize() {
 }
 
 void ioapic_write_reg(uint8_t reg, uint32_t val) {
-  volatile uint8_t * regSelect = (volatile uint8_t *)IOAPIC_PTR;
-  volatile uint32_t * regOutput = (volatile uint32_t *)IOAPIC_PTR;
-  regSelect[0] = reg;
-  regOutput[4] = val;
+  volatile uint32_t * regs = (volatile uint32_t *)IOAPIC_PTR;
+  regs[0] = (uint32_t)reg;
+  regs[4] = val;
 }
 
 uint32_t ioapic_read_reg(uint8_t reg) {
-  volatile uint8_t * regSelect = (volatile uint8_t *)IOAPIC_PTR;
-  volatile uint32_t * regInput = (volatile uint32_t *)IOAPIC_PTR;
-  regSelect[0] = reg;
-  return regInput[4];
+  volatile uint32_t * regs = (volatile uint32_t *)IOAPIC_PTR;
+  regs[0] = (uint32_t)reg;
+  return regs[4];
 }
 
 uint32_t ioapic_get_version() {

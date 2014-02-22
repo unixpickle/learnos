@@ -51,3 +51,8 @@ void lapic_enable() {
   msr_write(0x1b, LAPIC_BASE_ADDR | flags);
 }
 
+void lapic_send_eoi() {
+  volatile uint32_t * addr = (uint32_t *)((uint64_t)LAPIC_PTR + LAPIC_REG_EOI);
+  addr[0] = 0;
+}
+
