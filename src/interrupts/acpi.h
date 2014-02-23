@@ -75,5 +75,6 @@ typedef struct {
 bool acpi_find_madt();
 int acpi_count_lapics();
 int acpi_count_ioapics();
+bool acpi_has_pic();
 void acpi_get_lapics(acpi_entry_lapic * output);
 

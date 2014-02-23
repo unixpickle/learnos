@@ -32,6 +32,11 @@ int acpi_count_ioapics() {
   return _acpi_count_type(1);
 }
 
+bool acpi_has_pic() {
+  acpi_madt * madt = (acpi_madt *)ACPI_MADT_PTR;
+  return madt->flags & 1;
+}
+
 void acpi_get_lapics(acpi_entry_lapic * output) {
   // TODO: nyi
 }

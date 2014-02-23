@@ -15,7 +15,10 @@ void ioapic_initialize() {
   if (!acpi_count_ioapics()) {
     die("No I/O APICs exist");
   }
-  _ioapic_stop_pic();
+  if (acpi_has_pic()) {
+    print64("Disabling PIC...\n");
+    _ioapic_stop_pic();
+  }
 
   print64("mapping I/O APIC page... ");
   uint64_t page = (uint64_t)(IOAPIC_BASE >> 12);
@@ -123,6 +126,7 @@ static void _ioapic_stop_pic() {
 }
 
 static void _ioapic_start_receiving() {
+  // apparently this is a motherboard thing
   outb64(0x22, 0x70);
   outb64(0x23, 0x01);
 }

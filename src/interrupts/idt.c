@@ -128,6 +128,6 @@ static void _make_entry(idt_entry * out, void (* ptr)()) {
   out->code_segment = 0x8;
   out->reserved1 = 0;
   out->reserved2 = 0;
-  out->flags = 0x8e; // make this a trap gate because i'm trapped in this silly OS
+  out->flags = 0x8f; // make this a trap gate because i'm trapped in this silly OS
 }
 

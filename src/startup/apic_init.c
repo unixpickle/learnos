@@ -8,6 +8,7 @@ void apic_initialize() {
   lapic_initialize();
   ioapic_initialize();
   configure_global_idt();
+  print64("enabling interrupts...\n");
   enable_interrupts();
   print64("now accepting interrupts.\n");
 }
