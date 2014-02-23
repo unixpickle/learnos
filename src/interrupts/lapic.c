@@ -26,7 +26,20 @@ void lapic_initialize() {
   printHex64((uint64_t)LAPIC_PTR);
   print64(" [OK]\n");
 
+  lapic_set_defaults();
+  lapic_set_priority(0x0);
   lapic_enable();
+}
+
+void lapic_set_defaults() {
+  uint64_t base = (uint64_t)LAPIC_PTR;
+  *((volatile uint32_t *)(base + LAPIC_REG_TASKPRIOR)) = 0x20; // stop softint deliv
+  *((volatile uint32_t *)(base + LAPIC_REG_LVT_TMR)) = 0x10000; // disable timer
+  *((volatile uint32_t *)(base + LAPIC_REG_LVT_PERF)) = 0x10000; // disable perf ints
+  *((volatile uint32_t *)(base + LAPIC_REG_LVT_LINT0)) = 0x8700; // normal ext ints
+  *((volatile uint32_t *)(base + LAPIC_REG_LVT_LINT1)) = 0x40; // normal NMI proc
+  *((volatile uint32_t *)(base + LAPIC_REG_LVT_ERR)) = 0x10000; // disable error ints
+  *((volatile uint32_t *)(base + LAPIC_REG_SPURIOUS)) = 0x10f; // spurious vec=15
 }
 
 bool lapic_is_x2_available() {
@@ -54,5 +67,10 @@ void lapic_enable() {
 void lapic_send_eoi() {
   volatile uint32_t * addr = (uint32_t *)((uint64_t)LAPIC_PTR + LAPIC_REG_EOI);
   addr[0] = 0;
+}
+
+void lapic_set_priority(uint8_t pri) {
+  volatile uint32_t * addr = (uint32_t *)((uint64_t)LAPIC_PTR + LAPIC_REG_TASKPRIOR);
+  addr[0] = (uint32_t)pri;
 }
 

@@ -28,8 +28,10 @@
 #define LAPIC_SETTING_TMR_BASEDIV (1 << 20)
 
 void lapic_initialize();
+void lapic_set_defaults();
 bool lapic_is_available();
 bool lapic_is_x2_available();
 void lapic_enable();
 void lapic_send_eoi();
+void lapic_set_priority(uint8_t pri);
 

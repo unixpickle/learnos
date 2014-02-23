@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "basic.h"
+#include "lapic.h"
 
 static void _initialize_idt(idt_entry * ptr);
 static void _make_entry(idt_entry * out, void (* ptr)());
@@ -129,6 +130,7 @@ void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
   print64(", flags=");
   printHex64(flags);
   print64("\n");
+  lapic_send_eoi();
 }
 
 static void _initialize_idt(idt_entry * ptr) {

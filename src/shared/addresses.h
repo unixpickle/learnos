@@ -46,7 +46,7 @@
 /**
  * The (virtual kernpage) address which 0xFEC... is mapped to
  */
-#define IOAPIC_PTR (*((volatile void **)0x20101e))
+#define IOAPIC_PTR (*((volatile void **)0x201026))
 
 /**
  * The address which contains the "IDTR" to load with lidt

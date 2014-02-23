@@ -77,6 +77,8 @@ static void _ioapic_configure_irqs() {
   // TODO: properly address these vectors so that the priorities are good
   for (i = 0; i < 0x10; i++) {
     entry.vector = i + 0x30;
+    if (i == 0) entry.imask = 1;
+    else entry.imask = 0;
     ioapic_set_red_table(i, entry);
   }
 }
