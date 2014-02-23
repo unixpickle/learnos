@@ -11,6 +11,11 @@ void outb64(unsigned int port, unsigned char byte);
 void hang64();
 
 /**
+ * hlt - wait for next interrupt
+ */
+void halt64();
+
+/**
  * Get the CPUID information
  */
 unsigned int cpuid(unsigned int level, unsigned int * ebx, unsigned int * ecx, unsigned int * edx);

@@ -20,9 +20,25 @@ void handle_alignment_check();
 void handle_machine_check();
 void handle_simd_exception();
 
-void handle_keyboard_interrupt();
 void handle_dummy_lower();
 void handle_dummy_upper();
+
+void handle_irq0();
+void handle_irq1();
+void handle_irq2();
+void handle_irq3();
+void handle_irq4();
+void handle_irq5();
+void handle_irq6();
+void handle_irq7();
+void handle_irq8();
+void handle_irq9();
+void handle_irq10();
+void handle_irq11();
+void handle_irq12();
+void handle_irq13();
+void handle_irq14();
+void handle_irq15();
 
 /*
  * Run lidt

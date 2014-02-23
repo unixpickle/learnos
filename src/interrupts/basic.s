@@ -1,6 +1,5 @@
 bits 64
 
-extern int_keyboard
 extern int_div_zero
 extern int_debugger
 extern int_nmi
@@ -21,6 +20,22 @@ extern int_alignment_check
 extern int_machine_check
 extern int_simd_exception
 extern int_unknown_exception
+extern int_irq0
+extern int_irq1
+extern int_irq2
+extern int_irq3
+extern int_irq4
+extern int_irq5
+extern int_irq6
+extern int_irq7
+extern int_irq8
+extern int_irq9
+extern int_irq10
+extern int_irq11
+extern int_irq12
+extern int_irq13
+extern int_irq14
+extern int_irq15
 
 %macro pushaq 0
   push rax
@@ -47,15 +62,6 @@ extern int_unknown_exception
   pop rcx
   pop rax
 %endmacro
-
-global handle_keyboard_exception
-handle_keyboard_exception:
-  cli
-  pushaq
-  call int_keyboard
-  popaq
-  sti
-  iretq
 
 global handle_div_zero
 handle_div_zero:
@@ -214,6 +220,118 @@ handle_unknown_exception:
 
   popaq
   leave
+  iretq
+
+global handle_irq0
+handle_irq0:
+  pushaq
+  call int_irq0
+  popaq
+  iretq
+
+global handle_irq1
+handle_irq1:
+  pushaq
+  call int_irq1
+  popaq
+  iretq
+
+global handle_irq2
+handle_irq2:
+  pushaq
+  call int_irq2
+  popaq
+  iretq
+
+global handle_irq3
+handle_irq3:
+  pushaq
+  call int_irq3
+  popaq
+  iretq
+
+global handle_irq4
+handle_irq4:
+  pushaq
+  call int_irq4
+  popaq
+  iretq
+
+global handle_irq5
+handle_irq5:
+  pushaq
+  call int_irq5
+  popaq
+  iretq
+
+global handle_irq6
+handle_irq6:
+  pushaq
+  call int_irq6
+  popaq
+  iretq
+
+global handle_irq7
+handle_irq7:
+  pushaq
+  call int_irq7
+  popaq
+  iretq
+
+global handle_irq8
+handle_irq8:
+  pushaq
+  call int_irq8
+  popaq
+  iretq
+
+global handle_irq9
+handle_irq9:
+  pushaq
+  call int_irq9
+  popaq
+  iretq
+
+global handle_irq10
+handle_irq10:
+  pushaq
+  call int_irq10
+  popaq
+  iretq
+
+global handle_irq11
+handle_irq11:
+  pushaq
+  call int_irq11
+  popaq
+  iretq
+
+global handle_irq12
+handle_irq12:
+  pushaq
+  call int_irq12
+  popaq
+  iretq
+
+global handle_irq13
+handle_irq13:
+  pushaq
+  call int_irq13
+  popaq
+  iretq
+
+global handle_irq14
+handle_irq14:
+  pushaq
+  call int_irq14
+  popaq
+  iretq
+
+global handle_irq15
+handle_irq15:
+  pushaq
+  call int_irq15
+  popaq
   iretq
 
 global load_idtr

@@ -5,6 +5,11 @@ hang64:
   hlt
   jmp hang64
 
+global halt64
+halt64:
+  hlt
+  ret
+
 global outb64
 outb64:
   push rdx

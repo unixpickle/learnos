@@ -54,6 +54,12 @@
 #define IDTR_PTR 0x20102e
 
 /**
+ * A counter which the PIT will increment 100 times a second
+ * during boot in order to keep the system time.
+ */
+#define PIT_TICK_COUNT (*((volatile uint64_t *)0x201036))
+
+/**
  * The address of the IDT to be used by the whole system.
  * 16*256 = 4096 bytes, so one page for this table is reserved.
  */

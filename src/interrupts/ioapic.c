@@ -65,7 +65,7 @@ uint32_t ioapic_set_red_table(uint8_t index, ioapic_redirection entry) {
 
 static void _ioapic_configure_irqs() {
   // this idea was from http://www.osdever.net/tutorials/pdf/apic.pdf
-  uint8_t vectors[] = {0xec, 0xe4, 0, 0x94, 0x8c, 0x84, 0x7c, 0x74, 0xd4, 0xcc, 0xc4, 0xbc, 0xb4, 0xac, 0xa4, 0x9c};
+  uint8_t vectors[] = IOAPIC_IRQ_VECTORS;
 
   ioapic_redirection entry;
   entry.delmode = 0; // fixed
@@ -78,7 +78,7 @@ static void _ioapic_configure_irqs() {
   uint8_t i;
 
   for (i = 0; i < 0x10; i++) {
-    entry.vector = vectors[i];;
+    entry.vector = vectors[i];
     if (i == 2) entry.imask = 1;
     else entry.imask = 0;
 

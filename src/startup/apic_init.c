@@ -20,5 +20,7 @@ void apic_initialize() {
   print64("enabling interrupts...\n");
   enable_interrupts();
   print64("now accepting interrupts.\n");
+
+  pit_set_divisor(11932);
 }
 

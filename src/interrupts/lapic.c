@@ -75,10 +75,11 @@ void lapic_set_register(uint16_t reg, uint64_t value) {
     msr_write(reg + 0x800, value);
   } else {
     uint64_t base = (uint64_t)LAPIC_PTR;
-    if (reg == 0x30) {
-      *((volatile uint64_t *)(base + (reg * 0x10))) = value;
-    } else {
+    if (reg != 0x30) {
       *((volatile uint32_t *)(base + (reg * 0x10))) = (uint32_t)(value & 0xffffffff);
+    } else {
+      *((volatile uint32_t *)(base + 0x300)) = (uint32_t)(value & 0xffffffff);
+      *((volatile uint32_t *)(base + 0x310)) = (uint32_t)(value >> 0x20);
     }
   }
 }
@@ -88,10 +89,12 @@ uint64_t lapic_get_register(uint16_t reg) {
     return msr_read(reg + 0x800);
   } else {
     uint64_t base = (uint64_t)LAPIC_PTR;
-    if (reg == 0x30) {
-      return *((volatile uint64_t *)(base + (reg * 0x10)));
+    if (reg != 0x30) {
+      return (uint64_t)(*((volatile uint32_t *)(base + (reg * 0x10))));
     } else {
-      return (uint32_t)(*((volatile uint32_t *)(base + (reg * 0x10))));
+      uint32_t lower = *((volatile uint32_t *)(base + 0x300));
+      uint32_t upper = *((volatile uint32_t *)(base + 0x310));
+      return ((uint64_t)lower) | ((uint64_t)upper << 0x20);
     }
   }
 }

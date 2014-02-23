@@ -1,8 +1,10 @@
 #include "idt.h"
 #include "basic.h"
 #include "lapic.h"
+#include "ioapic.h"
 
 static void _initialize_idt(idt_entry * ptr);
+static void _set_irqs(idt_entry * ptr);
 static void _make_entry(idt_entry * out, void (* ptr)());
 
 void configure_dummy_idt() {
@@ -32,6 +34,7 @@ void configure_global_idt() {
   idtr->limit = 0x1000 - 1;
   idtr->virtualAddress = IDT_PTR;
   _initialize_idt((idt_entry *)IDT_PTR);
+  _set_irqs((idt_entry *)IDT_PTR);
   // TODO: add handlers
   load_idtr((void *)idtr);
 }
@@ -133,6 +136,93 @@ void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
   lapic_send_eoi();
 }
 
+void int_irq0() {
+  print64("hey there brosepher\n");
+  PIT_TICK_COUNT++;
+  if (PIT_TICK_COUNT % 200 == 0) {
+    print64("tick ");
+  } else if (PIT_TICK_COUNT % 200 == 100) {
+    print64("tock ");
+  }
+  lapic_send_eoi();
+}
+
+void int_irq1() {
+  print64("got IRQ1\n");
+  lapic_send_eoi();
+}
+
+void int_irq2() {
+  int_irq0();
+  //print64("got IRQ2\n");
+  //lapic_send_eoi();
+}
+
+void int_irq3() {
+  print64("got IRQ3\n");
+  lapic_send_eoi();
+}
+
+void int_irq4() {
+  print64("got IRQ4\n");
+  lapic_send_eoi();
+}
+
+void int_irq5() {
+  print64("got IRQ5\n");
+  lapic_send_eoi();
+}
+
+void int_irq6() {
+  print64("got IRQ6\n");
+  lapic_send_eoi();
+}
+
+void int_irq7() {
+  print64("got IRQ7\n");
+  lapic_send_eoi();
+}
+
+void int_irq8() {
+  print64("got IRQ8\n");
+  lapic_send_eoi();
+}
+
+void int_irq9() {
+  print64("got IRQ9\n");
+  lapic_send_eoi();
+}
+
+void int_irq10() {
+  print64("got IRQ10\n");
+  lapic_send_eoi();
+}
+
+void int_irq11() {
+  print64("got IRQ11\n");
+  lapic_send_eoi();
+}
+
+void int_irq12() {
+  print64("got IRQ12\n");
+  lapic_send_eoi();
+}
+
+void int_irq13() {
+  print64("got IRQ13\n");
+  lapic_send_eoi();
+}
+
+void int_irq14() {
+  print64("got IRQ14\n");
+  lapic_send_eoi();
+}
+
+void int_irq15() {
+  print64("got IRQ15\n");
+  lapic_send_eoi();
+}
+
 static void _initialize_idt(idt_entry * ptr) {
   void (* functions[])() = {handle_div_zero, handle_debugger, handle_nmi, handle_breakpoint, handle_overflow, handle_bounds, handle_invalid_opcode, handle_coprocessor_not_available, handle_double_fault, handle_coprocessor_segment_overrun, handle_invalid_tss, handle_segmentation_fault, handle_stack_fault, handle_general_protection_fault, handle_page_fault, handle_unknown_exception, handle_math_fault, handle_alignment_check, handle_machine_check, handle_simd_exception};
   idt_entry def;
@@ -148,6 +238,15 @@ static void _initialize_idt(idt_entry * ptr) {
   }
 }
 
+static void _set_irqs(idt_entry * ptr) {
+  uint8_t vectors[] = IOAPIC_IRQ_VECTORS;
+  void (* functions[])() = {handle_irq0, handle_irq1, handle_irq2, handle_irq3, handle_irq4, handle_irq5, handle_irq6, handle_irq7, handle_irq8, handle_irq9, handle_irq10, handle_irq11, handle_irq12, handle_irq13, handle_irq14, handle_irq15};
+  uint8_t i;
+  for (i = 0; i < 0x10; i++) {
+    _make_entry(&ptr[vectors[i]], functions[i]);
+  }
+}
+
 static void _make_entry(idt_entry * out, void (* ptr)()) {
   uint64_t excAddress = (uint64_t)ptr;
   out->low_offset = excAddress & 0xffff;
@@ -157,6 +256,6 @@ static void _make_entry(idt_entry * out, void (* ptr)()) {
   out->code_segment = 0x8;
   out->reserved1 = 0;
   out->reserved2 = 0;
-  out->flags = 0x8f; // make this a trap gate because i'm trapped in this silly OS
+  out->flags = 0x8e; // make this a long mode interrupt gate
 }
 

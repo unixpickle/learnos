@@ -20,7 +20,6 @@ typedef struct {
 void configure_dummy_idt();
 void configure_global_idt();
 
-void int_keyboard();
 void int_div_zero();
 void int_debugger();
 void int_nmi();
@@ -41,4 +40,21 @@ void int_alignment_check();
 void int_machine_check();
 void int_simd_exception();
 void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags);
+
+void int_irq0();
+void int_irq1();
+void int_irq2();
+void int_irq3();
+void int_irq4();
+void int_irq5();
+void int_irq6();
+void int_irq7();
+void int_irq8();
+void int_irq9();
+void int_irq10();
+void int_irq11();
+void int_irq12();
+void int_irq13();
+void int_irq14();
+void int_irq15();
 
