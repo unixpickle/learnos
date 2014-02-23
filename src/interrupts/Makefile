@@ -1,6 +1,6 @@
 include ../directives.mk
 
-CSOURCES=idt.c ioapic.c lapic.c acpi.c
+CSOURCES=idt.c ioapic.c lapic.c acpi.c pic.c
 
 all: csources
 

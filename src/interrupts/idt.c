@@ -4,6 +4,28 @@
 static void _initialize_idt(idt_entry * ptr);
 static void _make_entry(idt_entry * out, void (* ptr)());
 
+void configure_dummy_idt() {
+  volatile idt_pointer * idtr = (idt_pointer *)IDTR_PTR;
+  idtr->limit = 0x1000 - 1;
+  idtr->virtualAddress = IDT_PTR;
+
+  // create entries for low IRQs
+  volatile idt_entry * table = (idt_entry *)IDT_PTR;
+  idt_entry entry;
+  int i;
+  _initialize_idt((idt_entry *)table);
+  _make_entry(&entry, handle_dummy_lower);
+  for (i = 0x8; i <= 0xf; i++) {
+    table[i] = entry;
+  }
+  _make_entry(&entry, handle_dummy_upper);
+  for (i = 0x70; i <= 0x78; i++) {
+    table[i] = entry;
+  }
+
+  load_idtr((void *)idtr);
+}
+
 void configure_global_idt() {
   volatile idt_pointer * idtr = (volatile idt_pointer *)IDTR_PTR;
   idtr->limit = 0x1000 - 1;
@@ -41,16 +63,21 @@ void int_bounds() {
   print64("got bounds\n");
 }
 
-void int_invalid_opcode() {
-  print64("got invalid opcode\n");
+void int_invalid_opcode(uint64_t ptr) {
+  print64("got invalid opcode: ");
+  printHex64(ptr);
+  print64("\n");
+  hang64();
 }
 
 void int_coprocessor_not_available() {
   print64("got coprocessor not available\n");
 }
 
-void int_double_fault() {
-  print64("got double fault\n");
+void int_double_fault(uint64_t error) {
+  print64("got double fault: ");
+  printHex64(error);
+  print64("\n");
 }
 
 void int_coprocessor_segment_overrun() {

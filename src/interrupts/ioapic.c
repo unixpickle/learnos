@@ -8,16 +8,11 @@
 static void _ioapic_configure_irqs();
 static void _ioapic_configure_pci();
 static void _ioapic_disable_others();
-static void _ioapic_stop_pic();
 static void _ioapic_start_receiving();
 
 void ioapic_initialize() {
   if (!acpi_count_ioapics()) {
     die("No I/O APICs exist");
-  }
-  if (acpi_has_pic()) {
-    print64("Disabling PIC...\n");
-    _ioapic_stop_pic();
   }
 
   print64("mapping I/O APIC page... ");
@@ -63,13 +58,14 @@ uint32_t ioapic_get_pin_count() {
 
 uint32_t ioapic_set_red_table(uint8_t index, ioapic_redirection entry) {
   const uint32_t * valPtr = (const uint32_t *)(&entry);
-  ioapic_write_reg(0x10 + (index * 2), valPtr[0]);
+  ioapic_write_reg(0x10 + (index * 2), 0x10000); // disable the entry
   ioapic_write_reg(0x11 + (index * 2), valPtr[1]);
+  ioapic_write_reg(0x10 + (index * 2), valPtr[0]);
 }
 
 static void _ioapic_configure_irqs() {
   ioapic_redirection entry;
-  entry.delmode = 1; // lowest priority processor receives interrupt
+  entry.delmode = 0; // fixed
   entry.destmode = 0; // single CPU
   entry.intpol = 0; // high active
   entry.triggermode = 0; // edge trigger
@@ -88,7 +84,7 @@ static void _ioapic_configure_irqs() {
 static void _ioapic_configure_pci() {
   // configure the 4 PCI interrupts according to http://www.osdever.net/tutorials/pdf/apic.pdf
   ioapic_redirection entry;
-  entry.delmode = 1; // lowest priority processor receives interrupt
+  entry.delmode = 0; // fixed
   entry.destmode = 0; // single APIC
   entry.intpol = 1; // low active
   entry.triggermode = 1; // level trigger
@@ -118,11 +114,6 @@ static void _ioapic_disable_others() {
   for (i = 0x14; i < 0x18; i++) {
     ioapic_set_red_table(i, entry);
   }
-}
-
-static void _ioapic_stop_pic() {
-  outb64(0x21, 0xff);
-  outb64(0xa1, 0xff);
 }
 
 static void _ioapic_start_receiving() {

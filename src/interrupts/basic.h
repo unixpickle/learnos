@@ -21,8 +21,11 @@ void handle_machine_check();
 void handle_simd_exception();
 
 void handle_keyboard_interrupt();
+void handle_dummy_lower();
+void handle_dummy_upper();
 
 /*
  * Run lidt
  */
 void load_idtr(void * idtr);
+

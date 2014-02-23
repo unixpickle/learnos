@@ -17,6 +17,7 @@ typedef struct {
   uint32_t reserved2;
 } __attribute__((packed)) idt_entry;
 
+void configure_dummy_idt();
 void configure_global_idt();
 
 void int_keyboard();
@@ -26,9 +27,9 @@ void int_nmi();
 void int_breakpoint();
 void int_overflow();
 void int_bounds();
-void int_invalid_opcode();
+void int_invalid_opcode(uint64_t ptr);
 void int_coprocessor_not_available();
-void int_double_fault();
+void int_double_fault(uint64_t error);
 void int_coprocessor_segment_overrun();
 void int_invalid_tss();
 void int_segmentation_fault();

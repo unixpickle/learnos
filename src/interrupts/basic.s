@@ -99,9 +99,15 @@ handle_bounds:
 
 global handle_invalid_opcode
 handle_invalid_opcode:
+  push rsp
+  mov rbp, rsp
   pushaq
+
+  mov rdi, [rbp + 8]
   call int_invalid_opcode
+
   popaq
+  leave
   iretq
 
 global handle_coprocessor_not_available
@@ -113,9 +119,13 @@ handle_coprocessor_not_available:
 
 global handle_double_fault
 handle_double_fault:
+  push rbp
+  mov rbp, rsp
   pushaq
+  mov rdi, [rbp + 18]
   call int_double_fault
   popaq
+  leave
   iretq
 
 global handle_coprocessor_segment_overrun
@@ -208,3 +218,15 @@ global load_idtr
 load_idtr:
   lidt [rdi]
   ret
+
+; these two functions are pretty straight forward
+global handle_dummy_lower
+global handle_dummy_upper
+handle_dummy_upper:
+  mov al, 0x20
+  out 0xa0, al
+handle_dummy_lower:
+  mov al, 0x20
+  out 0x20, al
+  iretq
+
