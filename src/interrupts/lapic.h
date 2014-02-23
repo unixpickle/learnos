@@ -1,27 +1,27 @@
 #include <shared/types.h>
 
-#define LAPIC_REG_APICID 0x20
-#define LAPIC_REG_APICVER 0x30
-#define LAPIC_REG_TASKPRIOR 0x80
-#define LAPIC_REG_EOI 0xb0
-#define LAPIC_REG_LDR 0xd0
-#define LAPIC_REG_DFR 0xe0
-#define LAPIC_REG_SPURIOUS 0xf0
-#define LAPIC_REG_ESR 0x280
-#define LAPIC_REG_ICRL 0x300
-#define LAPIC_REG_ICRH 0x310
-#define LAPIC_REG_LVT_TMR 0x320
-#define LAPIC_REG_LVT_PERF 0x340
-#define LAPIC_REG_LVT_LINT0 0x350
-#define LAPIC_REG_LVT_LINT1 0x360
-#define LAPIC_REG_LVT_ERR 0x370
-#define LAPIC_REG_TMRINITCNT 0x380
-#define LAPIC_REG_TMRCURRCNT 0x390
-#define LAPIC_REG_TMRDIV 0x3e0
-#define LAPIC_REG_LAST 0x38f
-#define LAPIC_REG_SW_ENABLE 0x100
-#define LAPIC_REG_CPUFOCUS 0x200
+#define LAPIC_REG_APICID 0x2
+#define LAPIC_REG_APICVER 0x3
+#define LAPIC_REG_TASKPRIOR 0x8
+#define LAPIC_REG_EOI 0xb
+#define LAPIC_REG_LDR 0xd
+#define LAPIC_REG_DFR 0xe
+#define LAPIC_REG_SPURIOUS 0xf
+#define LAPIC_REG_ESR 0x28
+#define LAPIC_REG_ICRL 0x30
+#define LAPIC_REG_ICRH 0x31
+#define LAPIC_REG_LVT_TMR 0x32
+#define LAPIC_REG_LVT_PERF 0x34
+#define LAPIC_REG_LVT_LINT0 0x35
+#define LAPIC_REG_LVT_LINT1 0x36
+#define LAPIC_REG_LVT_ERR 0x37
+#define LAPIC_REG_TMRINITCNT 0x38
+#define LAPIC_REG_TMRCURRCNT 0x39
+#define LAPIC_REG_TMRDIV 0x3e
 
+#define LAPIC_SETTING_LAST 0x38f
+#define LAPIC_SETTING_SW_ENABLE 0x100
+#define LAPIC_SETTING_CPUFOCUS 0x200
 #define LAPIC_SETTING_DISABLE 0x1000
 #define LAPIC_SETTING_NMI (4 << 8)
 #define LAPIC_SETTING_TMR_PERIODIC 0x20000
@@ -32,6 +32,9 @@ void lapic_set_defaults();
 bool lapic_is_available();
 bool lapic_is_x2_available();
 void lapic_enable();
+
 void lapic_send_eoi();
 void lapic_set_priority(uint8_t pri);
+void lapic_set_register(uint16_t reg, uint64_t value);
+uint64_t lapic_get_register(uint16_t reg);
 

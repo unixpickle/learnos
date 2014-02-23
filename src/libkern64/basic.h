@@ -19,7 +19,7 @@ unsigned int cpuid(unsigned int level, unsigned int * ebx, unsigned int * ecx, u
  * Read a model-specific register.
  * The result is technically EDX:EAX
  */
-unsigned long msr_read(unsigned int selector);
+unsigned long long msr_read(unsigned int selector);
 
 /**
  * Write a model specific register.

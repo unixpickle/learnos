@@ -64,6 +64,9 @@ uint32_t ioapic_set_red_table(uint8_t index, ioapic_redirection entry) {
 }
 
 static void _ioapic_configure_irqs() {
+  // this idea was from http://www.osdever.net/tutorials/pdf/apic.pdf
+  uint8_t vectors[] = {0xec, 0xe4, 0, 0x94, 0x8c, 0x84, 0x7c, 0x74, 0xd4, 0xcc, 0xc4, 0xbc, 0xb4, 0xac, 0xa4, 0x9c};
+
   ioapic_redirection entry;
   entry.delmode = 0; // fixed
   entry.destmode = 0; // single CPU
@@ -74,11 +77,11 @@ static void _ioapic_configure_irqs() {
   entry.destfield = 0; // TODO: figure out how to address more proc's
   uint8_t i;
 
-  // TODO: properly address these vectors so that the priorities are good
   for (i = 0; i < 0x10; i++) {
-    entry.vector = i + 0x30;
-    if (i == 0) entry.imask = 1;
+    entry.vector = vectors[i];;
+    if (i == 2) entry.imask = 1;
     else entry.imask = 0;
+
     ioapic_set_red_table(i, entry);
   }
 }
@@ -90,7 +93,7 @@ static void _ioapic_configure_pci() {
   entry.destmode = 0; // single APIC
   entry.intpol = 1; // low active
   entry.triggermode = 1; // level trigger
-  entry.imask = 0;
+  entry.imask = 1; // PCI won't be supported for now
   entry.reserved = 0;
   entry.destfield = 0; // TODO: figure out how to address more proc's
   uint8_t i;

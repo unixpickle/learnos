@@ -14,17 +14,16 @@ void lapic_initialize() {
     if (!lapic_is_available()) {
       die("Local APIC not available");
     }
+    // map the memory for the page
+    print64("mapping Local APIC page... ");
+    uint64_t page = (uint64_t)(LAPIC_BASE_ADDR >> 12);
+    uint64_t virtualPage = kernpage_next_virtual();
+    if (!kernpage_map(virtualPage, page)) die("failed to map");
+    LAPIC_PTR = (void *)(virtualPage << 12);
+    print64("mapped to 0x");
+    printHex64((uint64_t)LAPIC_PTR);
+    print64(" [OK]\n");
   }
-
-  // map the memory for the page
-  print64("mapping Local APIC page... ");
-  uint64_t page = (uint64_t)(LAPIC_BASE_ADDR >> 12);
-  uint64_t virtualPage = kernpage_next_virtual();
-  if (!kernpage_map(virtualPage, page)) die("failed to map");
-  LAPIC_PTR = (void *)(virtualPage << 12);
-  print64("mapped to 0x");
-  printHex64((uint64_t)LAPIC_PTR);
-  print64(" [OK]\n");
 
   lapic_set_defaults();
   lapic_set_priority(0x0);
@@ -32,14 +31,13 @@ void lapic_initialize() {
 }
 
 void lapic_set_defaults() {
-  uint64_t base = (uint64_t)LAPIC_PTR;
-  *((volatile uint32_t *)(base + LAPIC_REG_TASKPRIOR)) = 0x20; // stop softint deliv
-  *((volatile uint32_t *)(base + LAPIC_REG_LVT_TMR)) = 0x10000; // disable timer
-  *((volatile uint32_t *)(base + LAPIC_REG_LVT_PERF)) = 0x10000; // disable perf ints
-  *((volatile uint32_t *)(base + LAPIC_REG_LVT_LINT0)) = 0x8700; // normal ext ints
-  *((volatile uint32_t *)(base + LAPIC_REG_LVT_LINT1)) = 0x40; // normal NMI proc
-  *((volatile uint32_t *)(base + LAPIC_REG_LVT_ERR)) = 0x10000; // disable error ints
-  *((volatile uint32_t *)(base + LAPIC_REG_SPURIOUS)) = 0x10f; // spurious vec=15
+  lapic_set_register(LAPIC_REG_TASKPRIOR, 0x20);
+  lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
+  lapic_set_register(LAPIC_REG_LVT_PERF, 0x10000);
+  lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
+  lapic_set_register(LAPIC_REG_LVT_LINT1, 0x40);
+  lapic_set_register(LAPIC_REG_LVT_ERR, 0x10000);
+  lapic_set_register(LAPIC_REG_SPURIOUS, 0x10f);
 }
 
 bool lapic_is_x2_available() {
@@ -65,12 +63,36 @@ void lapic_enable() {
 }
 
 void lapic_send_eoi() {
-  volatile uint32_t * addr = (uint32_t *)((uint64_t)LAPIC_PTR + LAPIC_REG_EOI);
-  addr[0] = 0;
+  lapic_set_register(LAPIC_REG_EOI, 0);
 }
 
 void lapic_set_priority(uint8_t pri) {
-  volatile uint32_t * addr = (uint32_t *)((uint64_t)LAPIC_PTR + LAPIC_REG_TASKPRIOR);
-  addr[0] = (uint32_t)pri;
+  lapic_set_register(LAPIC_REG_TASKPRIOR, pri);
+}
+
+void lapic_set_register(uint16_t reg, uint64_t value) {
+  if (lapic_is_x2_available()) {
+    msr_write(reg + 0x800, value);
+  } else {
+    uint64_t base = (uint64_t)LAPIC_PTR;
+    if (reg == 0x30) {
+      *((volatile uint64_t *)(base + (reg * 0x10))) = value;
+    } else {
+      *((volatile uint32_t *)(base + (reg * 0x10))) = (uint32_t)(value & 0xffffffff);
+    }
+  }
+}
+
+uint64_t lapic_get_register(uint16_t reg) {
+  if (lapic_is_x2_available()) {
+    return msr_read(reg + 0x800);
+  } else {
+    uint64_t base = (uint64_t)LAPIC_PTR;
+    if (reg == 0x30) {
+      return *((volatile uint64_t *)(base + (reg * 0x10)));
+    } else {
+      return (uint32_t)(*((volatile uint32_t *)(base + (reg * 0x10))));
+    }
+  }
 }
 

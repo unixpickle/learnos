@@ -50,9 +50,11 @@ extern int_unknown_exception
 
 global handle_keyboard_exception
 handle_keyboard_exception:
+  cli
   pushaq
   call int_keyboard
   popaq
+  sti
   iretq
 
 global handle_div_zero
