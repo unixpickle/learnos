@@ -78,11 +78,19 @@ static void _ioapic_configure_irqs() {
   uint8_t i;
 
   for (i = 0; i < 0x10; i++) {
+    if (!vectors[i]) continue;
+    acpi_entry_iso * iso = acpi_iso_lookup(i);
     entry.vector = vectors[i];
-    if (i == 2) entry.imask = 1;
-    else entry.imask = 0;
-
-    ioapic_set_red_table(i, entry);
+    if (iso) {
+      // Interrupt Source Override allows us to get more info about this IRQ
+      if (iso->flags & 0x3 == 0x3) entry.intpol = 1;
+      if ((iso->flags >> 2) & 0x3 == 3) entry.triggermode = 1;
+      ioapic_set_red_table(iso->interrupt, entry);
+      entry.intpol = 0;
+      entry.triggermode = 0;
+    } else {
+      ioapic_set_red_table(i, entry);
+    }
   }
 }
 

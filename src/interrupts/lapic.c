@@ -32,12 +32,19 @@ void lapic_initialize() {
 
 void lapic_set_defaults() {
   lapic_set_register(LAPIC_REG_TASKPRIOR, 0x20);
-  lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
+  //lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
   lapic_set_register(LAPIC_REG_LVT_PERF, 0x10000);
   lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
-  lapic_set_register(LAPIC_REG_LVT_LINT1, 0x40);
+  lapic_set_register(LAPIC_REG_LVT_LINT1, 0x400);
   lapic_set_register(LAPIC_REG_LVT_ERR, 0x10000);
-  lapic_set_register(LAPIC_REG_SPURIOUS, 0x10f);
+  lapic_set_register(LAPIC_REG_SPURIOUS, 0x1ff);
+
+  // reset might have shut them off
+  lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
+  lapic_set_register(LAPIC_REG_LVT_LINT1, 0x400);
+  print64("SIV is ");
+  printHex64(lapic_get_register(LAPIC_REG_SPURIOUS));
+  print64("\n");
 }
 
 bool lapic_is_x2_available() {

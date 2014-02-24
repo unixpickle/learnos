@@ -72,9 +72,19 @@ typedef struct {
   uint32_t gsib; // global system interrupt base
 } __attribute__((packed)) acpi_entry_ioapic;
 
+typedef struct {
+  uint8_t type;
+  uint8_t length;
+  uint8_t bus;
+  uint8_t source;
+  uint32_t interrupt;
+  uint16_t flags;
+} __attribute__((packed)) acpi_entry_iso;
+
 bool acpi_find_madt();
 int acpi_count_lapics();
 int acpi_count_ioapics();
 bool acpi_has_pic();
 void acpi_get_lapics(acpi_entry_lapic * output);
+acpi_entry_iso * acpi_iso_lookup(uint8_t physicalIRQ);
 

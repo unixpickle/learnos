@@ -41,6 +41,23 @@ void acpi_get_lapics(acpi_entry_lapic * output) {
   // TODO: nyi
 }
 
+acpi_entry_iso * acpi_iso_lookup(uint8_t physicalIRQ) {
+  uint64_t fieldPtr = ACPI_MADT_PTR + 0x2c;
+  uint64_t fieldMax = ACPI_MADT_PTR + ((const uint32_t *)ACPI_MADT_PTR)[1];
+  while (fieldPtr < fieldMax) {
+    uint8_t aType = *((uint8_t *)(fieldPtr));
+    uint8_t len = *((uint8_t *)(fieldPtr + 1));
+    if (aType != 2) {
+      fieldPtr += len;
+      continue;
+    }
+    acpi_entry_iso * iso = (acpi_entry_iso *)fieldPtr;
+    if (iso->source == physicalIRQ && iso->bus == 0) return iso;
+    fieldPtr += len;
+  }
+  return NULL;
+}
+
 static void * _acpi_find_rsdp() {
   // scan the address space
 

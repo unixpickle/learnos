@@ -9,7 +9,8 @@ void apic_initialize() {
   // suck away all the dummy interrupts
   pic_disable();
   configure_dummy_idt();
-  asm("sti\nnop\ncli");
+  // do a few nops to make sure we catch all interrupts
+  asm("sti\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\ncli");
 
   // initialize the good hardware
   lapic_initialize();

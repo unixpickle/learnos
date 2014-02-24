@@ -137,7 +137,6 @@ void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
 }
 
 void int_irq0() {
-  print64("hey there brosepher\n");
   PIT_TICK_COUNT++;
   if (PIT_TICK_COUNT % 200 == 0) {
     print64("tick ");
@@ -149,13 +148,13 @@ void int_irq0() {
 
 void int_irq1() {
   print64("got IRQ1\n");
+  lapic_set_priority(0);
   lapic_send_eoi();
 }
 
 void int_irq2() {
-  int_irq0();
-  //print64("got IRQ2\n");
-  //lapic_send_eoi();
+  print64("got IRQ2\n");
+  lapic_send_eoi();
 }
 
 void int_irq3() {
