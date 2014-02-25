@@ -32,7 +32,7 @@ void lapic_initialize() {
 
 void lapic_set_defaults() {
   lapic_set_register(LAPIC_REG_TASKPRIOR, 0x20);
-  //lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
+  lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
   lapic_set_register(LAPIC_REG_LVT_PERF, 0x10000);
   lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
   lapic_set_register(LAPIC_REG_LVT_LINT1, 0x400);
@@ -48,6 +48,7 @@ void lapic_set_defaults() {
 }
 
 bool lapic_is_x2_available() {
+  return false; // for now, x2APIC will not be supported :\
   // ebx, ecx, edx
   uint32_t ebx, ecx, edx;
   cpuid(1, &ebx, &ecx, &edx);
@@ -63,7 +64,7 @@ bool lapic_is_available() {
 
 void lapic_enable() {
   // set enable x2 and regular
-  uint64_t flags = msr_read(0x1b) & (0xf00);
+  uint64_t flags = msr_read(0x1b) & 0xf00;
   flags |= (uint64_t)lapic_is_x2_available() << 10;
   flags |= 1 << 11;
   msr_write(0x1b, LAPIC_BASE_ADDR | flags);
