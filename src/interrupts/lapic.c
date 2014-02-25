@@ -25,9 +25,9 @@ void lapic_initialize() {
     print64(" [OK]\n");
   }
 
+  lapic_enable();
   lapic_set_defaults();
   lapic_set_priority(0x0);
-  lapic_enable();
 }
 
 void lapic_set_defaults() {
@@ -42,13 +42,9 @@ void lapic_set_defaults() {
   // reset might have shut them off
   lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
   lapic_set_register(LAPIC_REG_LVT_LINT1, 0x400);
-  print64("SIV is ");
-  printHex64(lapic_get_register(LAPIC_REG_SPURIOUS));
-  print64("\n");
 }
 
 bool lapic_is_x2_available() {
-  return false; // for now, x2APIC will not be supported :\
   // ebx, ecx, edx
   uint32_t ebx, ecx, edx;
   cpuid(1, &ebx, &ecx, &edx);
