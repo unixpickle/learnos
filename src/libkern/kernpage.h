@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <anpages.h>
 
 typedef struct {
   uint32_t size;
@@ -55,6 +54,16 @@ uint64_t kernpage_alloc_virtual();
  * Uses the underlying anpages structure to free a virtual page of memory.
  */
 void kernpage_free_virtual(uint64_t virt);
+
+/**
+ * Uses the underlying anlock_t structure to lock kernpage.
+ */
+void kernpage_lock();
+
+/**
+ * See kernpage_lock().
+ */
+void kernpage_unlock();
 
 /**
  * Copies a piece of data from physical memory to virtual memory. This may be

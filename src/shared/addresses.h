@@ -76,6 +76,11 @@
 #define ANPAGES_STRUCT 0x204000
 
 /**
+ * The global anlock_t for paging. (8 bytes)
+ */
+#define ANPAGES_LOCK 0x204020
+
+/**
  * Set CR3=PML4_START to enable kernel paging.
  */
 #define PML4_START 0x300000

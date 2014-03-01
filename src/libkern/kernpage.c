@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <libkern_base.h>
 #include <shared/addresses.h>
+#include <anpages.h>
+#include <anlock.h>
 
 static void _kernpage_get_regions();
 static void _kernpage_make_mapping();
@@ -144,6 +146,14 @@ uint64_t kernpage_alloc_virtual() {
 void kernpage_free_virtual(uint64_t virt) {
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   return anpages_free(pages, virt);
+}
+
+void kernpage_lock() {
+  anlock_lock((anlock_t)ANPAGES_LOCK);
+}
+
+void kernpage_unlock() {
+  anlock_unlock((anlock_t)ANPAGES_LOCK);
 }
 
 void kernpage_copy_physical(void * _dest,
@@ -314,6 +324,7 @@ static void _kernpage_configure_anpages() {
 
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   anpages_initialize(pages, firstVpage, vpageLen);
+  anlock_initialize((anlock_t)ANPAGES_LOCK);
 }
 
 /************************
