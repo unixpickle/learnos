@@ -2,6 +2,8 @@
 #include "basic.h"
 #include "lapic.h"
 #include "ioapic.h"
+#include <stdio.h>
+#include <libkern_base.h>
 
 static void _initialize_idt(idt_entry * ptr);
 static void _set_irqs(idt_entry * ptr);

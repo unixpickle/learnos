@@ -18,7 +18,6 @@ bool strequal(const char * str1, const char * str2) {
 bool memequal(const void * b1, const void * b2, uint64_t len) {
   const uint8_t * a = (const uint8_t *)b1;
   const uint8_t * b = (const uint8_t *)b2;
-  uint64_t i;
   while (len--) {
     if (a[0] != b[0]) return false;
     a++;

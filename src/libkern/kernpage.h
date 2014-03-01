@@ -1,4 +1,7 @@
-#include <shared/types.h>
+#ifndef __LIBKERN_KERNPAGE_H__
+#define __LIBKERN_KERNPAGE_H__
+
+#include <stdint.h>
 
 /**
  * This must be called during initialization of the kernel and never again.
@@ -71,3 +74,4 @@ void kernpage_copy_physical(void * dest, const void * physical, uint64_t len);
  */
 uint64_t kernpage_next_virtual();
 
+#endif

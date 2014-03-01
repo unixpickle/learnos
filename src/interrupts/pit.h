@@ -1,4 +1,4 @@
-#include <shared/types.h>
+#include <stdint.h>
 
 /**
  * Driver for the global Programmable Interval Timer.

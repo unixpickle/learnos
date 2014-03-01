@@ -1,4 +1,4 @@
-#include <shared/types.h>
+#include <stdint.h>
 
 #define IOAPIC_REG_VER 0x1
 #define IOAPIC_IRQ_VECTORS {0xec, 0xe4, 0, 0x94, 0x8c, 0x84, 0x7c, 0x74, 0xd4, 0xcc, 0xc4, 0xbc, 0xb4, 0xac, 0xa4, 0x9c}
@@ -23,5 +23,5 @@ uint32_t ioapic_read_reg(uint8_t reg);
 
 uint32_t ioapic_get_version();
 uint32_t ioapic_get_pin_count();
-uint32_t ioapic_set_red_table(uint8_t index, ioapic_redirection entry);
+void ioapic_set_red_table(uint8_t index, ioapic_redirection entry);
 

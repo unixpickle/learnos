@@ -1,6 +1,7 @@
 #include "acpi.h"
-#include <libkern64/string.h>
-#include <libkern64/kernpage.h>
+#include <string.h>
+#include <kernpage.h>
+#include <stdio.h>
 
 static void * _acpi_find_rsdp();
 static uint8_t _acpi_mem_checksum(uint8_t * ptr, int len);
@@ -62,7 +63,7 @@ static void * _acpi_find_rsdp() {
   // scan the address space
 
   const char * signature = "RSD PTR ";
-  uint64_t ptr, i;
+  uint64_t ptr;
   // the whole potential EBDA
   for (ptr = 0x80000; ptr < 0x9fc00; ptr++) {
     if (memequal(signature, (void *)ptr, 8)) {
@@ -80,7 +81,7 @@ static void * _acpi_find_rsdp() {
 }
 
 static uint8_t _acpi_mem_checksum(uint8_t * ptr, int len) {
-  uint8_t sum;
+  uint8_t sum = 0;
   while (len-- > 0) {
     sum += (*ptr);
     ptr++;

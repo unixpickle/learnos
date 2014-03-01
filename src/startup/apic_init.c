@@ -1,7 +1,12 @@
-#include <libkern64/stdio.h>
+#include <stdio.h>
+#include <libkern_base.h>
+#include <interrupts/pic.h>
 #include <interrupts/idt.h>
 #include <interrupts/ioapic.h>
+#include <interrupts/lapic.h>
 #include <interrupts/acpi.h>
+#include <interrupts/pit.h>
+#include <interrupts/basic.h>
 
 void apic_initialize() {
   if (!acpi_find_madt()) die("Failed to find MADT");

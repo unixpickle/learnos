@@ -1,9 +1,11 @@
-include ../directives.mk
+PROJECT_ROOT=../../..
+
+include ../../directives.mk
 
 all: build/stdio.o
 
 build/stdio.o: build/basic.o
-	gcc -c stdio.c -I../ -m32 $(DISABLE_OPTIONS) -o build/stdio_32.o
+	gcc -c stdio.c $(INCLUDES_32) -m32 $(DISABLE_OPTIONS) -o build/stdio_32.o
 	objcopy -O $(DESTARCH) build/stdio_32.o build/stdio.o
 	rm build/stdio_32.o
 

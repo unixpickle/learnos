@@ -1,5 +1,6 @@
 #include "pic.h"
-#include <libkern64/stdio.h>
+#include <stdio.h>
+#include <libkern_base.h>
 #include "acpi.h"
 
 void pic_disable() {

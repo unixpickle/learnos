@@ -1,24 +1,22 @@
-C32FILES=page_init.c
-C64FILES=apic_init.c
+CSOURCES32=page_init.c
+CSOURCES=apic_init.c
+PROJECT_ROOT=../..
 
 include ../directives.mk
 
 all: build/entry.o
 
-build/entry.o: c32sources c64sources
+build/entry.o: csources32 csources
 	nasm -f elf64 entry.s -o build/entry.o
 
-c32sources: build
-	for file in $(C32FILES); do\
+csources32: build
+	for file in $(CSOURCES32); do\
 		gcc -c $$file -I./../ -m32 $(DISABLE_OPTIONS) -o build/`basename $$file .c`_32.o;\
 		objcopy -O $(DESTARCH) build/`basename $$file .c`_32.o build/`basename $$file .c`.o;\
 		rm build/`basename $$file .c`_32.o;\
 	done
 
-c64sources: build
-	for file in $(C64FILES); do\
-		gcc -c $$file -I./../ -m64 $(DISABLE_OPTIONS) -o build/`basename $$file .c`.o;\
-	done
+include ../csources.mk
 
 build:
 	mkdir build

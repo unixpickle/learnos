@@ -1,6 +1,6 @@
-#include <libkern32/stdio.h>
+#include "libkern32/stdio.h"
 #include <shared/addresses.h>
-#include <shared/types.h>
+#include <libkern/stdint.h>
 
 static uint32_t roundUpDiv(uint32_t num, uint32_t denom);
 
@@ -27,7 +27,7 @@ uint32_t basepage_initialize() {
     kbCount = 1 << 22;
   }
 
-  uint32_t i, j;
+  uint32_t i;
   uint32_t pageCount = (kbCount >> 2) + 0x100;
   uint32_t ptCount = roundUpDiv(pageCount, 0x200);
   uint32_t pdtCount = roundUpDiv(ptCount, 0x200);

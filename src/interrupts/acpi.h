@@ -3,7 +3,7 @@
  */
 
 #include <shared/addresses.h>
-#include <shared/types.h>
+#include <stdint.h>
 
 typedef struct {
   uint64_t signature;

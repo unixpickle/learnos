@@ -1,3 +1,6 @@
+#ifndef __LIBKERN_STDINT_H__
+#define __LIBKERN_STDINT_H__
+
 // these are standard for Linux, Mac, and Windows
 typedef unsigned char bool;
 typedef unsigned char uint8_t;
@@ -9,3 +12,5 @@ typedef unsigned long long uint64_t;
 #define true 1
 #define false 0
 #define NULL (void *)0
+
+#endif

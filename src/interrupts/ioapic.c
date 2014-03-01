@@ -1,7 +1,9 @@
 #include "ioapic.h"
-#include <libkern64/kernpage.h>
-#include <shared/addresses.h>
 #include "acpi.h"
+#include <kernpage.h>
+#include <stdio.h>
+#include <libkern_base.h>
+#include <shared/addresses.h>
 
 #define IOAPIC_BASE 0xfec00000L
 
@@ -56,7 +58,7 @@ uint32_t ioapic_get_pin_count() {
   return ((ioapic_read_reg(IOAPIC_REG_VER) >> 16) & 0xff) + 1;
 }
 
-uint32_t ioapic_set_red_table(uint8_t index, ioapic_redirection entry) {
+void ioapic_set_red_table(uint8_t index, ioapic_redirection entry) {
   const uint32_t * valPtr = (const uint32_t *)(&entry);
   ioapic_write_reg(0x10 + (index * 2), 0x10000); // disable the entry
   ioapic_write_reg(0x11 + (index * 2), valPtr[1]);
@@ -83,8 +85,8 @@ static void _ioapic_configure_irqs() {
     entry.vector = vectors[i];
     if (iso) {
       // Interrupt Source Override allows us to get more info about this IRQ
-      if (iso->flags & 0x3 == 0x3) entry.intpol = 1;
-      if ((iso->flags >> 2) & 0x3 == 3) entry.triggermode = 1;
+      if ((iso->flags & 0x3) == 0x3) entry.intpol = 1;
+      if (((iso->flags >> 2) & 0x3) == 3) entry.triggermode = 1;
       ioapic_set_red_table(iso->interrupt, entry);
       entry.intpol = 0;
       entry.triggermode = 0;

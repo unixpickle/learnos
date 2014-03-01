@@ -1,5 +1,5 @@
 #include "pit.h"
-#include <libkern64/basic.h>
+#include <libkern_base.h>
 #include <shared/addresses.h>
 
 void pit_set_divisor(uint16_t div) {

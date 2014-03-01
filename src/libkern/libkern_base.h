@@ -1,9 +1,12 @@
-#include <shared/types.h>
+#ifndef __LIBKERN_BASE_H__
+#define __LIBKERN_BASE_H__
+
+#include "stdint.h"
 
 /**
  * Output to a processor pin
  */
-void outb64(unsigned int port, unsigned char byte);
+void outb64(uint32_t port, uint8_t byte);
 
 /**
  * Infinite hlt loop.
@@ -18,18 +21,18 @@ void halt64();
 /**
  * Get the CPUID information
  */
-unsigned int cpuid(unsigned int level, unsigned int * ebx, unsigned int * ecx, unsigned int * edx);
+uint32_t cpuid(uint32_t level, uint32_t * ebx, uint32_t * ecx, uint32_t * edx);
 
 /**
  * Read a model-specific register.
  * The result is technically EDX:EAX
  */
-unsigned long long msr_read(unsigned int selector);
+unsigned long long msr_read(uint32_t selector);
 
 /**
  * Write a model specific register.
  */
-void msr_write(unsigned int selector, unsigned long long value);
+void msr_write(uint32_t selector, uint64_t value);
 
 /**
  * Calls invlpg on a virtual page.
@@ -46,3 +49,4 @@ void enable_interrupts();
  */
 void disable_interrupts();
 
+#endif

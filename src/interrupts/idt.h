@@ -1,6 +1,5 @@
-#include <shared/types.h>
+#include <stdint.h>
 #include <shared/addresses.h>
-#include <libkern64/stdio.h>
 
 typedef struct {
   uint16_t limit;

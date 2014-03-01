@@ -1,5 +1,7 @@
 #include "kernpage.h"
 #include <shared/addresses.h>
+#include "stdio.h"
+#include "libkern_base.h"
 
 typedef struct {
   uint32_t size;
@@ -343,5 +345,7 @@ static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t
                                               base + (eachSize * i));
     if (result) return result;
   }
+  
+  return 0;
 }
 

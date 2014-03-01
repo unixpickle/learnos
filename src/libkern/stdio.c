@@ -1,5 +1,5 @@
 #include <shared/addresses.h>
-#include "basic.h"
+#include "libkern_base.h"
 #include "stdio.h"
 
 #define buffer ((unsigned char *)SCREEN_BUFFER)
@@ -49,7 +49,7 @@ void printHex64(unsigned long number) {
     buf[i] = a;
   }
   buf[len] = 0;
-  print64(buf);
+  print64((const char *)buf);
 }
 
 void die(const char * msg) {
@@ -77,8 +77,7 @@ static void scrollUp() {
     buffer[i] = buffer[i + SCREEN_WIDTH * 2];
   }
   // clear the bottom line
-  // TODO: see if i can do for (; ...)
-  for (i = i; i < 2 * SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
+  for (; i < 2 * SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
     buffer[i] = 0;
   }
 }
