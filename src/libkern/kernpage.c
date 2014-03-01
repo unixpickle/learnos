@@ -23,11 +23,11 @@ void kernpage_initialize() {
   KERNPAGE_ENABLED = 1;
   _kernpage_initialize_mapping();
   _kernpage_page_physical();
-  print64("last pages: virtual=0x");
-  printHex64((uint64_t)LAST_VPAGE);
-  print64(" physical=0x");
-  printHex64((uint64_t)LAST_PAGE);
-  print64("\n");
+  print("last pages: virtual=0x");
+  printHex((uint64_t)LAST_VPAGE);
+  print(" physical=0x");
+  printHex((uint64_t)LAST_PAGE);
+  print("\n");
 }
 
 void kernpage_lockdown() {
@@ -262,11 +262,11 @@ static void _kernpage_initialize_mapping() {
       start = 0;
     }
     kernpage_info info = {start, len};
-    print64("adding info {");
-    printHex64(info.start);
-    print64(", ");
-    printHex64(info.length);
-    print64("}\n");
+    print("adding info {");
+    printHex(info.start);
+    print(", ");
+    printHex(info.length);
+    print("}\n");
 
     // insert the kernpage_info where it fits
     int insIndex = count;
@@ -286,31 +286,31 @@ static void _kernpage_initialize_mapping() {
     die("no immediate upper memory");
   }
   PHYSICAL_MAP_COUNT = (uint8_t)count;
-  print64("There are ");
-  printHex64(count);
-  print64(" memory maps: ");
+  print("There are ");
+  printHex(count);
+  print(" memory maps: ");
   for (i = 0; i < count; i++) {
-    if (i != 0) print64(", ");
-    print64("0x");
-    printHex64(destMap[i].start);
-    print64(":");
-    printHex64(destMap[i].length);
+    if (i != 0) print(", ");
+    print("0x");
+    printHex(destMap[i].start);
+    print(":");
+    printHex(destMap[i].length);
   }
-  print64("\n");
+  print("\n");
 }
 
 static void _kernpage_page_physical() {
-  print64("expanding physical map...\n");
+  print("expanding physical map...\n");
   // map pages
   int i;
   uint64_t j;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
   uint64_t virtual = 0, created = 0;
-  print64("last page (initial) = ");
-  printHex64(LAST_PAGE);
-  print64(", vpage = ");
-  printHex64(LAST_VPAGE);
-  print64("\n");
+  print("last page (initial) = ");
+  printHex(LAST_PAGE);
+  print(", vpage = ");
+  printHex(LAST_VPAGE);
+  print("\n");
   for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
     for (j = maps[i].start; j < maps[i].length + maps[i].start; j++) {
       if (!kernpage_is_mapped(virtual)) {
@@ -320,9 +320,9 @@ static void _kernpage_page_physical() {
       virtual++;
     }
   }
-  print64("mapped 0x");
-  printHex64(created);
-  print64(" new pages to virtual memory\n");
+  print("mapped 0x");
+  printHex(created);
+  print(" new pages to virtual memory\n");
 }
 
 static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t depth, uint64_t base) {

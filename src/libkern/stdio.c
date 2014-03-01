@@ -7,7 +7,7 @@
 static void setPosition(unsigned short x, unsigned short y);
 static void scrollUp();
 
-void print64(const char * str) {
+void print(const char * str) {
   unsigned short x = CURSOR_INFO[0], y = CURSOR_INFO[1];
   // print each character like it might be your last!
   while (str[0]) {
@@ -34,7 +34,7 @@ void print64(const char * str) {
   setPosition(x, y);
 }
 
-void printHex64(unsigned long number) {
+void printHex(unsigned long number) {
   const char * chars = "0123456789ABCDEF";
   unsigned char buf[32];
   unsigned char len = 0, i;
@@ -49,13 +49,13 @@ void printHex64(unsigned long number) {
     buf[i] = a;
   }
   buf[len] = 0;
-  print64((const char *)buf);
+  print((const char *)buf);
 }
 
 void die(const char * msg) {
-  print64("[ERROR] ");
-  print64(msg);
-  hang64();
+  print("[ERROR] ");
+  print(msg);
+  hang();
 }
 
 static void setPosition(unsigned short x, unsigned short y) {
@@ -63,11 +63,11 @@ static void setPosition(unsigned short x, unsigned short y) {
   CURSOR_INFO[1] = y;
   unsigned short position = (y * SCREEN_WIDTH) + x;
   // tell the VGA index register we are sending the `low` byte
-  outb64(0x3D4, 0x0f);
-  outb64(0x3D5, (unsigned char)(position & 0xff));
+  outb(0x3D4, 0x0f);
+  outb(0x3D5, (unsigned char)(position & 0xff));
   // and now send the `high` byte
-  outb64(0x3D4, 0x0e);
-  outb64(0x3D5, (unsigned char)((position >> 8) & 0xff));
+  outb(0x3D4, 0x0e);
+  outb(0x3D5, (unsigned char)((position >> 8) & 0xff));
 }
 
 static void scrollUp() {

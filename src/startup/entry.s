@@ -2,8 +2,8 @@ extern print32
 extern hang32
 extern basepage_initialize
 
-extern print64
-extern hang64
+extern print
+extern hang
 extern kernpage_initialize
 extern kernpage_lockdown
 extern apic_initialize
@@ -158,11 +158,11 @@ _entry64:
   mov ss, ax
 
   mov rdi, inLongModeMessage
-  call print64
+  call print
   call kernpage_initialize
   call apic_initialize
   call kernpage_lockdown
-  call hang64
+  call hang
 
 inLongModeMessage:
   db 'Entered long mode', 10, 0

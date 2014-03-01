@@ -42,185 +42,185 @@ void configure_global_idt() {
 }
 
 void int_keyboard() {
-  print64("Got keyboard interrupt.\n");
+  print("Got keyboard interrupt.\n");
 }
 
 void int_div_zero() {
-  print64("got div zero\n");
+  print("got div zero\n");
 }
 
 void int_debugger() {
-  print64("got debugger\n");
+  print("got debugger\n");
 }
 
 void int_nmi() {
-  print64("got nmi\n");
+  print("got nmi\n");
 }
 
 void int_breakpoint() {
-  print64("got breakpoint\n");
+  print("got breakpoint\n");
 }
 
 void int_overflow() {
-  print64("got overflow\n");
+  print("got overflow\n");
 }
 
 void int_bounds() {
-  print64("got bounds\n");
+  print("got bounds\n");
 }
 
 void int_invalid_opcode(uint64_t ptr) {
-  print64("got invalid opcode: ");
-  printHex64(ptr);
-  print64("\n");
-  hang64();
+  print("got invalid opcode: ");
+  printHex(ptr);
+  print("\n");
+  hang();
 }
 
 void int_coprocessor_not_available() {
-  print64("got coprocessor not available\n");
+  print("got coprocessor not available\n");
 }
 
 void int_double_fault(uint64_t error) {
-  print64("got double fault: ");
-  printHex64(error);
-  print64("\n");
+  print("got double fault: ");
+  printHex(error);
+  print("\n");
 }
 
 void int_coprocessor_segment_overrun() {
-  print64("got coprocessor segment overrun\n");
+  print("got coprocessor segment overrun\n");
 }
 
 void int_invalid_tss() {
-  print64("got invalid tss\n");
+  print("got invalid tss\n");
 }
 
 void int_segmentation_fault() {
-  print64("got segmentation fault\n");
+  print("got segmentation fault\n");
 }
 
 void int_stack_fault() {
-  print64("got stack fault\n");
+  print("got stack fault\n");
 }
 
 void int_general_protection_fault() {
-  print64("got general protection fault\n");
-  hang64();
+  print("got general protection fault\n");
+  hang();
 }
 
 void int_page_fault() {
-  print64("got page fault\n");
+  print("got page fault\n");
 }
 
 void int_math_fault() {
-  print64("got math fault\n");
+  print("got math fault\n");
 }
 
 void int_alignment_check() {
-  print64("got alignment check\n");
+  print("got alignment check\n");
 }
 
 void int_machine_check() {
-  print64("got machine check\n");
+  print("got machine check\n");
 }
 
 void int_simd_exception() {
-  print64("got simd exception\n");
+  print("got simd exception\n");
 }
 
 void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
-  print64("INT, retAddr=");
-  printHex64(retAddr);
-  print64(", codeSeg=");
-  printHex64(codeSeg);
-  print64(", flags=");
-  printHex64(flags);
-  print64("\n");
+  print("INT, retAddr=");
+  printHex(retAddr);
+  print(", codeSeg=");
+  printHex(codeSeg);
+  print(", flags=");
+  printHex(flags);
+  print("\n");
   lapic_send_eoi();
 }
 
 void int_irq0() {
   PIT_TICK_COUNT++;
   if (PIT_TICK_COUNT % 200 == 0) {
-    print64("tock ");
+    print("tock ");
   } else if (PIT_TICK_COUNT % 200 == 100) {
-    print64("tick ");
+    print("tick ");
   }
   lapic_send_eoi();
 }
 
 void int_irq1() {
-  print64("got IRQ1\n");
+  print("got IRQ1\n");
   lapic_set_priority(0);
   lapic_send_eoi();
 }
 
 void int_irq2() {
-  print64("got IRQ2\n");
+  print("got IRQ2\n");
   lapic_send_eoi();
 }
 
 void int_irq3() {
-  print64("got IRQ3\n");
+  print("got IRQ3\n");
   lapic_send_eoi();
 }
 
 void int_irq4() {
-  print64("got IRQ4\n");
+  print("got IRQ4\n");
   lapic_send_eoi();
 }
 
 void int_irq5() {
-  print64("got IRQ5\n");
+  print("got IRQ5\n");
   lapic_send_eoi();
 }
 
 void int_irq6() {
-  print64("got IRQ6\n");
+  print("got IRQ6\n");
   lapic_send_eoi();
 }
 
 void int_irq7() {
-  print64("got IRQ7\n");
+  print("got IRQ7\n");
   lapic_send_eoi();
 }
 
 void int_irq8() {
-  print64("got IRQ8\n");
+  print("got IRQ8\n");
   lapic_send_eoi();
 }
 
 void int_irq9() {
-  print64("got IRQ9\n");
+  print("got IRQ9\n");
   lapic_send_eoi();
 }
 
 void int_irq10() {
-  print64("got IRQ10\n");
+  print("got IRQ10\n");
   lapic_send_eoi();
 }
 
 void int_irq11() {
-  print64("got IRQ11\n");
+  print("got IRQ11\n");
   lapic_send_eoi();
 }
 
 void int_irq12() {
-  print64("got IRQ12\n");
+  print("got IRQ12\n");
   lapic_send_eoi();
 }
 
 void int_irq13() {
-  print64("got IRQ13\n");
+  print("got IRQ13\n");
   lapic_send_eoi();
 }
 
 void int_irq14() {
-  print64("got IRQ14\n");
+  print("got IRQ14\n");
   lapic_send_eoi();
 }
 
 void int_irq15() {
-  print64("got IRQ15\n");
+  print("got IRQ15\n");
   lapic_send_eoi();
 }
 

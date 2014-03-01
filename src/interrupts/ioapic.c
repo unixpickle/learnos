@@ -17,25 +17,25 @@ void ioapic_initialize() {
     die("No I/O APICs exist");
   }
 
-  print64("mapping I/O APIC page... ");
+  print("mapping I/O APIC page... ");
   uint64_t page = (uint64_t)(IOAPIC_BASE >> 12);
   uint64_t virtualPage = kernpage_next_virtual();
   if (!kernpage_map(virtualPage, page)) die("failed to map");
   IOAPIC_PTR = (void *)(virtualPage << 12);
-  print64("mapped to 0x");
-  printHex64((uint64_t)IOAPIC_PTR);
-  print64(" [OK]\n");
+  print("mapped to 0x");
+  printHex((uint64_t)IOAPIC_PTR);
+  print(" [OK]\n");
 
   _ioapic_configure_irqs();
   _ioapic_configure_pci();
   _ioapic_disable_others();
   _ioapic_start_receiving();
 
-  print64("I/O APIC Version ");
-  printHex64(ioapic_get_version());
-  print64(", pins available ");
-  printHex64(ioapic_get_pin_count());
-  print64("\n");
+  print("I/O APIC Version ");
+  printHex(ioapic_get_version());
+  print(", pins available ");
+  printHex(ioapic_get_pin_count());
+  print("\n");
 }
 
 void ioapic_write_reg(uint8_t reg, uint32_t val) {
@@ -133,7 +133,7 @@ static void _ioapic_disable_others() {
 
 static void _ioapic_start_receiving() {
   // apparently this is a motherboard thing
-  outb64(0x22, 0x70);
-  outb64(0x23, 0x01);
+  outb(0x22, 0x70);
+  outb(0x23, 0x01);
 }
 

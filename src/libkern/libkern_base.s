@@ -1,17 +1,17 @@
 bits 64
 
-global hang64
-hang64:
+global hang
+hang:
   hlt
-  jmp hang64
+  jmp hang
 
-global halt64
-halt64:
+global halt
+halt:
   hlt
   ret
 
-global outb64
-outb64:
+global outb
+outb:
   push rdx
   mov rdx, rdi ; first argument, port
   mov rax, rsi ; second argument, value

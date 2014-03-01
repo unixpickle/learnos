@@ -5,8 +5,8 @@
 
 void pic_disable() {
   if (!acpi_has_pic()) return;
-  print64("disabling PIC...\n");
-  outb64(0x21, 0xff);
-  outb64(0xa1, 0xff);
+  print("disabling PIC...\n");
+  outb(0x21, 0xff);
+  outb(0xa1, 0xff);
 }
 

@@ -23,9 +23,9 @@ void apic_initialize() {
 
   // setup real handlers and have fun!
   configure_global_idt();
-  print64("enabling interrupts...\n");
+  print("enabling interrupts...\n");
   enable_interrupts();
-  print64("now accepting interrupts.\n");
+  print("now accepting interrupts.\n");
 
   pit_set_divisor(11932);
 }

@@ -6,17 +6,17 @@
 /**
  * Output to a processor pin
  */
-void outb64(uint32_t port, uint8_t byte);
+void outb(uint32_t port, uint8_t byte);
 
 /**
  * Infinite hlt loop.
  */
-void hang64();
+void hang();
 
 /**
  * hlt - wait for next interrupt
  */
-void halt64();
+void halt();
 
 /**
  * Get the CPUID information

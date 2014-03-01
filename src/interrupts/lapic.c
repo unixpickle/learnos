@@ -17,14 +17,14 @@ void lapic_initialize() {
       die("Local APIC not available");
     }
     // map the memory for the page
-    print64("mapping Local APIC page... ");
+    print("mapping Local APIC page... ");
     uint64_t page = (uint64_t)(LAPIC_BASE_ADDR >> 12);
     uint64_t virtualPage = kernpage_next_virtual();
     if (!kernpage_map(virtualPage, page)) die("failed to map");
     LAPIC_PTR = (void *)(virtualPage << 12);
-    print64("mapped to 0x");
-    printHex64((uint64_t)LAPIC_PTR);
-    print64(" [OK]\n");
+    print("mapped to 0x");
+    printHex((uint64_t)LAPIC_PTR);
+    print(" [OK]\n");
   }
 
   lapic_enable();
