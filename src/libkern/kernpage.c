@@ -305,6 +305,13 @@ static void _kernpage_configure_anpages() {
   // initialize the structure
   uint64_t firstVpage = kernpage_calculate_virtual(LAST_PAGE + 1);
   uint64_t vpageLen = 1 + LAST_VPAGE - firstVpage;
+
+  print("firstVpage=0x");
+  printHex(firstVpage);
+  print(" vpageLen=0x");
+  printHex(vpageLen);
+  print("\n");
+
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   anpages_initialize(pages, firstVpage, vpageLen);
 }

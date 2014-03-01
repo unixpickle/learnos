@@ -161,7 +161,6 @@ _entry64:
   call print
   call kernpage_initialize
   call apic_initialize
-  call kernpage_lockdown
   call hang
 
 inLongModeMessage:
