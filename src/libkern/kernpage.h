@@ -1,77 +1,63 @@
-#ifndef __LIBKERN_KERNPAGE_H__
-#define __LIBKERN_KERNPAGE_H__
-
 #include <stdint.h>
+#include <anpages.h>
+
+typedef struct {
+  uint32_t size;
+  uint64_t base_addr;
+  uint64_t length;
+  uint32_t type;
+} __attribute__((packed)) mmap_info;
+
+typedef struct {
+  uint64_t start;
+  uint64_t length;
+} __attribute__((packed)) kernpage_info;
 
 /**
- * This must be called during initialization of the kernel and never again.
+ * Initializes the kernel page tables to map to the entire physical address
+ * space.
  */
 void kernpage_initialize();
 
 /**
- * Prevents further changes to the kernel page table and physical address
- * space. This should be called once during kernel startup after all
- * needed DMA buffers have been reserved.
+ * Calculates the virtual page which maps to a physical page.
  */
-void kernpage_lockdown();
+uint64_t kernpage_calculate_virtual(uint64_t phys);
 
 /**
- * Uses LAST_PAGE to compute the next free *physical* page in memory.
- * @return 0 on error
+ * Calculates the physical page that a virtual page maps to.
  */
-uint64_t kernpage_next_physical();
+uint64_t kernpage_calculate_physical(uint64_t virt);
 
 /**
- * Calculates the virtual page index for a physical page index.
- * @return 0 on error
+ * Returns `true` if a virtual page is mapped, `false` if not.
  */
-uint64_t kernpage_calculate_virtual(uint64_t physicalPage);
+bool kernpage_is_mapped(uint64_t virt);
 
 /**
- * Calculates the physical page index for a virtual page.
- * @return 0 on error
+ * Maps a virtual page to point to a physical page.
  */
-uint64_t kernpage_calculate_physical(uint64_t virtualPage);
+bool kernpage_map(uint64_t virt, uint64_t phys);
 
 /**
- * Allocates the next physical page and returns its index.
- * @return 0 on error
+ * Does a backwards search through the kernel page tables to find a virtual
+ * page which maps to a physical page.
  */
-uint64_t kernpage_allocate_physical();
+bool kernpage_lookup_virtual(uint64_t phys, uint64_t * virt);
 
 /**
- * Allocates the next contiguous chain of `count` pages of physical
- * memory and returns the index of the first such page.
- * @return 0 on error
+ * Uses the underlying anpages structure to allocate a new virtual page of 
+ * memory.
  */
-uint64_t kernpage_allocate_contiguous(uint64_t count);
+uint64_t kernpage_alloc_virtual();
 
 /**
- * @return true if virtualPage is already mapped, false otherwise.
+ * Uses the underlying anpages structure to free a virtual page of memory.
  */
-bool kernpage_is_mapped(uint64_t virtualPage);
+void kernpage_free_virtual(uint64_t virt);
 
 /**
- * Maps virtualPage to the physical address physicalPage.
- * @return false on failure to allocate new page tables, true otherwise.
- */
-bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage);
-
-/**
- * Finds the virtual address which maps to a physical address
- * if one is mapped at all.
- */
-uint64_t kernpage_lookup_virtual(uint64_t physical);
-
-/**
- * Copies a piece of data from physical memory to virtual memory.
- * This may be slow, so watch out.
+ * Copies a piece of data from physical memory to virtual memory. This may be
+ * slow, so watch out.
  */
 void kernpage_copy_physical(void * dest, const void * physical, uint64_t len);
-
-/**
- * Returns the next virtual page that is not mapped.
- */
-uint64_t kernpage_next_virtual();
-
-#endif

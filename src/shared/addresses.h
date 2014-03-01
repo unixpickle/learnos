@@ -71,6 +71,11 @@
 #define ACPI_MADT_PTR 0x203000
 
 /**
+ * The global 0x20 byte anpages_t structure.
+ */
+#define ANPAGES_STRUCT 0x204000
+
+/**
  * Set CR3=PML4_START to enable kernel paging.
  */
 #define PML4_START 0x300000

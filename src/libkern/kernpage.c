@@ -1,111 +1,66 @@
 #include "kernpage.h"
+#include <stdio.h>
+#include <libkern_base.h>
 #include <shared/addresses.h>
-#include "stdio.h"
-#include "libkern_base.h"
 
-typedef struct {
-  uint32_t size;
-  uint64_t base_addr;
-  uint64_t length;
-  uint32_t type;
-} __attribute__((packed)) mmap_info;
+static void _kernpage_get_regions();
+static void _kernpage_make_mapping();
+static void _kernpage_configure_anpages();
 
-typedef struct {
-  uint64_t start;
-  uint64_t length;
-} __attribute__((packed)) kernpage_info;
+// old kernpage functions
+static uint64_t _kernpage_next_physical();
+static uint64_t _kernpage_allocate_physical();
+static bool _kernpage_lin_map(uint64_t virt, uint64_t phys);
 
-static void _kernpage_initialize_mapping();
-static void _kernpage_page_physical();
-static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t depth, uint64_t base);
+// search functions
+static bool _kernpage_find_physical(uint64_t * table,
+                                    uint64_t page,
+                                    uint8_t depth,
+                                    uint64_t base,
+                                    uint64_t * virt);
 
 void kernpage_initialize() {
-  KERNPAGE_ENABLED = 1;
-  _kernpage_initialize_mapping();
-  _kernpage_page_physical();
+  _kernpage_get_regions();
+  _kernpage_make_mapping();
+  
   print("last pages: virtual=0x");
   printHex((uint64_t)LAST_VPAGE);
   print(" physical=0x");
   printHex((uint64_t)LAST_PAGE);
   print("\n");
+  
+  _kernpage_configure_anpages();
 }
 
-void kernpage_lockdown() {
-  KERNPAGE_ENABLED = 0;
-}
-
-uint64_t kernpage_next_physical() {
-  uint64_t page = LAST_PAGE;
-  int i;
-  const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
-  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
-    kernpage_info map = maps[i];
-    if (map.start + map.length > page && map.start <= page) {
-      if (page < map.start + map.length - 1) {
-        return page + 1;
-      } else if (i == PHYSICAL_MAP_COUNT - 1) {
-        return 0;
-      } else {
-        return maps[i + 1].start;
-      }
-    }
-  }
-  return 0;
-}
-
-uint64_t kernpage_calculate_virtual(uint64_t physicalPage) {
+uint64_t kernpage_calculate_virtual(uint64_t phys) {
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
   uint64_t virtual = 0;
   for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
-    if (maps[i].start > physicalPage) return 0; // we've gone too far
-    if (maps[i].start <= physicalPage && maps[i].start + maps[i].length > physicalPage) {
-      return virtual + physicalPage - maps[i].start;
+    if (maps[i].start > phys) return 0; // we've gone too far
+    if (maps[i].start <= phys && maps[i].start + maps[i].length > phys) {
+      return virtual + phys - maps[i].start;
     }
     virtual += maps[i].length;
   }
   return 0;
 }
 
-uint64_t kernpage_calculate_physical(uint64_t virtualPage) {
+uint64_t kernpage_calculate_physical(uint64_t virt) {
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
   for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
-    if (maps[i].start + maps[i].length > virtualPage) {
-      return maps[i].start + virtualPage;
+    if (maps[i].start + maps[i].length > virt) {
+      return maps[i].start + virt;
     }
-    virtualPage -= maps[i].length;
+    virt -= maps[i].length;
   }
   return 0;
 }
 
-uint64_t kernpage_allocate_physical() {
-  uint64_t next = kernpage_next_physical();
-  if (!next) return 0;
-  return (LAST_PAGE = next);
-}
-
-uint64_t kernpage_allocate_contiguous(uint64_t count) {
-  uint64_t page = LAST_PAGE;
-  int i;
-  const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
-  uint64_t result = 0;
-  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
-    kernpage_info map = maps[i];
-    if (map.start <= page) {
-      if (page < map.start + map.length - count) {
-        result = page + 1;
-        break;
-      } else if (i == PHYSICAL_MAP_COUNT - 1) {
-        return 0;
-      }
-    }
-  }
-  if (result == 0) return result;
-  LAST_PAGE = result + count - 1;
-  return result;
-}
-
+/**
+ * Returns `true` if a virtual page is mapped, `false` if not.
+ */
 bool kernpage_is_mapped(uint64_t page) {
   if (page > LAST_VPAGE) return false;
   int i;
@@ -129,23 +84,26 @@ bool kernpage_is_mapped(uint64_t page) {
   return true;
 }
 
-bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage) {
-  // check if it's set in the page table
+bool kernpage_map(uint64_t virt, uint64_t phys) {
+  // very similar to _kernpage_lin_map() but uses anpages_t.
+  
   int i;
-  uint64_t indexInPT = virtualPage % 0x200;
-  uint64_t indexInPDT = (virtualPage >> 9) % 0x200;
-  uint64_t indexInPDPT = (virtualPage >> 18) % 0x200;
-  uint64_t indexInPML4 = (virtualPage >> 27) % 0x200;
+  uint64_t indexInPT = virt % 0x200;
+  uint64_t indexInPDT = (virt >> 9) % 0x200;
+  uint64_t indexInPDPT = (virt >> 18) % 0x200;
+  uint64_t indexInPML4 = (virt >> 27) % 0x200;
   uint64_t indices[4] = {indexInPML4, indexInPDPT, indexInPDT, indexInPT};
   volatile uint64_t * tablePtr = (uint64_t *)PML4_START;
+  
   for (i = 0; i < 3; i++) {
     uint64_t value = tablePtr[indices[i]];
     if (!(value & 0x03)) {
       // create a subtable
-      uint64_t newPage = kernpage_allocate_physical();
-      if (!newPage) return false;
-      uint64_t newVirPage = kernpage_calculate_virtual(newPage);
+      uint64_t newVirPage = kernpage_alloc_virtual();
       if (!newVirPage) return false;
+      uint64_t newPage = kernpage_calculate_physical(newVirPage);
+      if (!newPage) return false;
+      
       volatile uint64_t * newData = (uint64_t *)(newVirPage << 12);
       int j;
       for (j = 0; j < 0x200; j++) newData[j] = 0;
@@ -158,21 +116,39 @@ bool kernpage_map(uint64_t virtualPage, uint64_t physicalPage) {
       tablePtr = (uint64_t *)(virPage << 12);
     }
   }
-  tablePtr[indices[3]] = (physicalPage << 12) | 3;
-  invalidate_page(virtualPage);
-  if (virtualPage > LAST_VPAGE) LAST_VPAGE = virtualPage;
+  
+  tablePtr[indices[3]] = (phys << 12) | 3;
+  invalidate_page(virt);
+  if (virt > LAST_VPAGE) LAST_VPAGE = virt;
   return true;
 }
 
-uint64_t kernpage_lookup_virtual(uint64_t physical) {
-  uint64_t quickResult = kernpage_calculate_virtual(physical);
+bool kernpage_lookup_virtual(uint64_t phys, uint64_t * virt) {
+  if (phys == 0) {
+    *virt = 0;
+    return true;
+  }
+  
+  uint64_t quickResult = kernpage_calculate_virtual(phys);
   if (quickResult) return quickResult;
 
   uint64_t * tablePtr = (uint64_t *)PML4_START;
-  return _kernpage_find_physical(tablePtr, physical, 3, 0);
+  return _kernpage_find_physical(tablePtr, phys, 3, 0, virt);
 }
 
-void kernpage_copy_physical(void * _dest, const void * physical, uint64_t len) {
+uint64_t kernpage_alloc_virtual() {
+  anpages_t pages = (anpages_t)ANPAGES_STRUCT;
+  return anpages_alloc(pages);
+}
+
+void kernpage_free_virtual(uint64_t virt) {
+  anpages_t pages = (anpages_t)ANPAGES_STRUCT;
+  return anpages_free(pages, virt);
+}
+
+void kernpage_copy_physical(void * _dest,
+                            const void * physical,
+                            uint64_t len) {
   if (len == 0) return;
   unsigned char * dest = _dest;
   uint64_t pageOffset = ((uint64_t)physical) & 0xfff;
@@ -182,9 +158,9 @@ void kernpage_copy_physical(void * _dest, const void * physical, uint64_t len) {
   uint64_t maxPage = ((uint64_t)physical + len - 1) >> 12;
   uint64_t curPage;
   for (curPage = minPage; curPage <= maxPage; curPage++) {
-    uint64_t virPage = kernpage_lookup_virtual(curPage);
-    if (!virPage) {
-      virPage = kernpage_next_virtual();
+    uint64_t virPage;
+    if (!kernpage_lookup_virtual(curPage, &virPage)) {
+      virPage = kernpage_alloc_virtual();
       if (!kernpage_map(virPage, curPage)) {
         die("Failed to map page for kernpage_copy_physical");
       }
@@ -211,11 +187,11 @@ void kernpage_copy_physical(void * _dest, const void * physical, uint64_t len) {
   }
 }
 
-uint64_t kernpage_next_virtual() {
-  return LAST_VPAGE + 1;
-}
+/***********
+ * Private *
+ ***********/
 
-static void _kernpage_initialize_mapping() {
+static void _kernpage_get_regions() {
   uint32_t mmapLength = MBOOT_INFO[11];
   uint64_t mmapAddr = (uint64_t)MBOOT_INFO[12];
 
@@ -299,7 +275,7 @@ static void _kernpage_initialize_mapping() {
   print("\n");
 }
 
-static void _kernpage_page_physical() {
+static void _kernpage_make_mapping() {
   print("expanding physical map...\n");
   // map pages
   int i;
@@ -314,7 +290,7 @@ static void _kernpage_page_physical() {
   for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
     for (j = maps[i].start; j < maps[i].length + maps[i].start; j++) {
       if (!kernpage_is_mapped(virtual)) {
-        kernpage_map(virtual, j);
+        _kernpage_lin_map(virtual, j);
         created++;
       }
       virtual++;
@@ -325,14 +301,96 @@ static void _kernpage_page_physical() {
   print(" new pages to virtual memory\n");
 }
 
-static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t depth, uint64_t base) {
+static void _kernpage_configure_anpages() {
+  // initialize the structure
+  uint64_t firstVpage = kernpage_calculate_virtual(LAST_PAGE + 1);
+  uint64_t vpageLen = 1 + LAST_VPAGE - firstVpage;
+  anpages_t pages = (anpages_t)ANPAGES_STRUCT;
+  anpages_initialize(pages, firstVpage, vpageLen);
+}
+
+/************************
+ * Old kernpage methods *
+ ************************/
+
+static uint64_t _kernpage_next_physical() {
+  uint64_t page = LAST_PAGE;
+  int i;
+  const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
+  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
+    kernpage_info map = maps[i];
+    if (map.start + map.length > page && map.start <= page) {
+      if (page < map.start + map.length - 1) {
+        return page + 1;
+      } else if (i == PHYSICAL_MAP_COUNT - 1) {
+        return 0;
+      } else {
+        return maps[i + 1].start;
+      }
+    }
+  }
+  return 0;
+}
+
+static uint64_t _kernpage_allocate_physical() {
+  uint64_t next = _kernpage_next_physical();
+  if (!next) return 0;
+  return (LAST_PAGE = next);
+}
+
+static bool _kernpage_lin_map(uint64_t virt, uint64_t phys) {
+  int i;
+  uint64_t indexInPT = virt % 0x200;
+  uint64_t indexInPDT = (virt >> 9) % 0x200;
+  uint64_t indexInPDPT = (virt >> 18) % 0x200;
+  uint64_t indexInPML4 = (virt >> 27) % 0x200;
+  uint64_t indices[4] = {indexInPML4, indexInPDPT, indexInPDT, indexInPT};
+  volatile uint64_t * tablePtr = (uint64_t *)PML4_START;
+  for (i = 0; i < 3; i++) {
+    uint64_t value = tablePtr[indices[i]];
+    if (!(value & 0x03)) {
+      // create a subtable
+      uint64_t newPage = _kernpage_allocate_physical();
+      if (!newPage) return false;
+      uint64_t newVirPage = kernpage_calculate_virtual(newPage);
+      if (!newVirPage) return false;
+      volatile uint64_t * newData = (uint64_t *)(newVirPage << 12);
+      int j;
+      for (j = 0; j < 0x200; j++) newData[j] = 0;
+      tablePtr[indices[i]] = (newPage << 12) | 3;
+      tablePtr = newData;
+    } else {
+      uint64_t physPage = value >> 12;
+      uint64_t virPage = kernpage_calculate_virtual(physPage);
+      if (!virPage) return false;
+      tablePtr = (uint64_t *)(virPage << 12);
+    }
+  }
+  tablePtr[indices[3]] = (phys << 12) | 3;
+  invalidate_page(virt);
+  if (virt > LAST_VPAGE) LAST_VPAGE = virt;
+  return true;
+}
+
+/**********************************
+ * Searching (for love--and pages) *
+ **********************************/
+
+static bool _kernpage_find_physical(uint64_t * table,
+                                    uint64_t page,
+                                    uint8_t depth,
+                                    uint64_t base,
+                                    uint64_t * virt) {
   int i;
   if (depth == 0) {
     for (i = 0x1ff; i >= 0; i--) {
       if (!(table[i] & 0x3)) continue;
-      if (table[i] >> 12 == page) return base + i;
+      if (table[i] >> 12 == page) {
+        *virt = base + i;
+        return true;
+      }
     }
-    return 0;
+    return false;
   }
 
   // recursive search
@@ -341,11 +399,12 @@ static uint64_t _kernpage_find_physical(uint64_t * table, uint64_t page, uint8_t
     if (!(table[i] & 0x3)) continue;
     uint64_t virPage = kernpage_calculate_virtual(table[i] >> 12);
     uint64_t * nextTable = (uint64_t *)(virPage << 12);
-    uint64_t result = _kernpage_find_physical(nextTable, page, depth - 1,
-                                              base + (eachSize * i));
-    if (result) return result;
+    bool result = _kernpage_find_physical(nextTable,
+                                          page,
+                                          depth - 1,
+                                          base + (eachSize * i),
+                                          virt);
+    if (result) return true;
   }
-  
-  return 0;
+  return false;
 }
-
