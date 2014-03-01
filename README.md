@@ -2,9 +2,9 @@
 
  * Fix keyboard overflow etc.
 
-# The anpages subtree
+# Subtrees
 
-The subtree was setup as follows:
+The `anpages` subtree was setup as follows:
 
     git remote add anpages https://github.com/unixpickle/anpages.git
     git fetch anpages
@@ -12,9 +12,11 @@ The subtree was setup as follows:
     git checkout master
     git read-tree --prefix=libs/anpages/ -u anpages
 
-To pull upstream changes:
+To pull upstream changes from `anpages`, use:
 
     git checkout anpages
     git pull
     git checkout master
     git merge --squash -s subtree --no-commit anpages
+
+The same proceedure applies for the `anlock` subtree.
