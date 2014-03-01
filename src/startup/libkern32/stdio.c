@@ -48,7 +48,7 @@ void printHex32(unsigned int number) {
     buf[len - i - 1] = buf[i];
     buf[i] = a;
   }
-  print32(buf);
+  print32((const char *)buf);
 }
 
 static void setPosition(unsigned short x, unsigned short y) {

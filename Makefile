@@ -30,4 +30,8 @@ clean:
 		cd $$dir && $(MAKE) clean; \
 		cd -; \
 	done
+	for dir in $(LIBS); do \
+		cd $$dir && $(MAKE) clean; \
+		cd -; \
+	done
 

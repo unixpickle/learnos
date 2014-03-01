@@ -2,7 +2,7 @@ PROJECT_ROOT=../..
 
 CSOURCES=idt.c ioapic.c lapic.c acpi.c pic.c pit.c
 
-all: csources
+all: csources build/basic.o
 
 include ../directives.mk
 include ../csources.mk
