@@ -23,7 +23,7 @@
 #define LAPIC_SETTING_SW_ENABLE 0x100
 #define LAPIC_SETTING_CPUFOCUS 0x200
 #define LAPIC_SETTING_DISABLE 0x1000
-#define LAPIC_SETTING_NMI (4 << 8)
+#define LAPIC_SETTING_NMI (1 << 10)
 #define LAPIC_SETTING_TMR_PERIODIC 0x20000
 #define LAPIC_SETTING_TMR_BASEDIV (1 << 20)
 
@@ -32,9 +32,16 @@ void lapic_set_defaults();
 bool lapic_is_available();
 bool lapic_is_x2_available();
 void lapic_enable();
+uint32_t lapic_get_id();
+void lapic_clear_errors();
 
 void lapic_send_eoi();
 void lapic_set_priority(uint8_t pri);
 void lapic_set_register(uint16_t reg, uint64_t value);
 uint64_t lapic_get_register(uint16_t reg);
+void lapic_send_ipi(uint32_t cpu,
+                    uint8_t vector,
+                    uint8_t mode,
+                    uint8_t level,
+                    uint8_t trigger);
 

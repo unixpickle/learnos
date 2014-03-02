@@ -56,7 +56,7 @@ typedef struct {
 } __attribute__((packed)) acpi_madt;
 
 typedef struct {
-  uint8_t type;
+  uint8_t type; // should be zero
   uint8_t length;
   uint8_t apicpuId;
   uint8_t apicId;
@@ -81,10 +81,21 @@ typedef struct {
   uint16_t flags;
 } __attribute__((packed)) acpi_entry_iso;
 
+typedef struct {
+  uint8_t type; // should be 9
+  uint8_t length;
+  uint16_t reserved;
+  uint32_t x2apicId;
+  uint32_t flags;
+  uint32_t x2apicpuId;
+} __attribute__((packed)) acpi_entry_x2apic;
+
+typedef bool (* madt_iterator_t)(void * data, void * entry);
+
 bool acpi_find_madt();
 int acpi_count_lapics();
 int acpi_count_ioapics();
 bool acpi_has_pic();
-void acpi_get_lapics(acpi_entry_lapic * output);
+void acpi_madt_iterate_type(uint8_t type, void * data, madt_iterator_t iter);
 acpi_entry_iso * acpi_iso_lookup(uint8_t physicalIRQ);
 

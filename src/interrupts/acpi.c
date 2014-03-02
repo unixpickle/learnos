@@ -8,7 +8,7 @@ static uint8_t _acpi_mem_checksum(uint8_t * ptr, int len);
 static uint64_t _acpi_get_madt(acpi_rsdp * rsdp);
 static uint64_t _acpi_get_madt_v0(acpi_rsdp * rsdp);
 static uint64_t _acpi_get_madt_v1(acpi_rsdp * rsdp);
-static int _acpi_count_type(uint8_t type);
+static bool _increment_value(void * ptr1, void * ptr2);
 
 bool acpi_find_madt() {
   // scan for magic identifier
@@ -26,11 +26,15 @@ bool acpi_find_madt() {
 }
 
 int acpi_count_lapics() {
-  return _acpi_count_type(0);
+  uint64_t count;
+  acpi_madt_iterate_type(0, &count, _increment_value);
+  return (int)count;
 }
 
 int acpi_count_ioapics() {
-  return _acpi_count_type(1);
+  uint64_t count;
+  acpi_madt_iterate_type(1, &count, _increment_value);
+  return (int)count;
 }
 
 bool acpi_has_pic() {
@@ -38,8 +42,17 @@ bool acpi_has_pic() {
   return madt->flags & 1;
 }
 
-void acpi_get_lapics(acpi_entry_lapic * output) {
-  // TODO: nyi
+void acpi_madt_iterate_type(uint8_t type, void * data, madt_iterator_t iter) {
+  uint64_t fieldPtr = ACPI_MADT_PTR + 0x2c;
+  uint64_t fieldMax = ACPI_MADT_PTR + ((const uint32_t *)ACPI_MADT_PTR)[1];
+  while (fieldPtr < fieldMax) {
+    uint8_t aType = *((uint8_t *)(fieldPtr));
+    uint8_t len = *((uint8_t *)(fieldPtr + 1));
+    if (type == aType) {
+      if (!iter(data, (void *)fieldPtr)) return;
+    }
+    fieldPtr += len;
+  }
 }
 
 acpi_entry_iso * acpi_iso_lookup(uint8_t physicalIRQ) {
@@ -131,16 +144,8 @@ static uint64_t _acpi_get_madt_v1(acpi_rsdp * rsdp) {
   return 0;
 }
 
-static int _acpi_count_type(uint8_t type) {
-  uint64_t fieldPtr = ACPI_MADT_PTR + 0x2c;
-  uint64_t fieldMax = ACPI_MADT_PTR + ((const uint32_t *)ACPI_MADT_PTR)[1];
-  int count = 0;
-  while (fieldPtr < fieldMax) {
-    uint8_t aType = *((uint8_t *)(fieldPtr));
-    uint8_t len = *((uint8_t *)(fieldPtr + 1));
-    if (type == aType) count++;
-    fieldPtr += len;
-  }
-  return count;
+static bool _increment_value(void * ptr1, void * ptr2) {
+  (*((uint64_t *)ptr1))++;
+  return 1;
 }
 

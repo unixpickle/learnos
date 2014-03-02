@@ -1,13 +1,16 @@
 CSOURCES32=page_init.c
-CSOURCES=apic_init.c
+CSOURCES=apic_init.c smp_init.c
 PROJECT_ROOT=../..
 
 include ../directives.mk
 
-all: build/entry.o
+all: build/entry.o build/procentry.o
 
 build/entry.o: csources32 csources
 	nasm -f elf64 entry.s -o build/entry.o
+
+build/procentry.o:
+	nasm -f elf64 procentry.s -o build/procentry.o
 
 csources32: build
 	for file in $(CSOURCES32); do\

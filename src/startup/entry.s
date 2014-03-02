@@ -7,6 +7,7 @@ extern hang
 extern kernpage_initialize
 extern kernpage_lockdown
 extern apic_initialize
+extern smp_initialize
 
 bits 32
 
@@ -91,7 +92,7 @@ start:
   add esp, 4
 
   ; load our GDT and jump!
-  lgdt [GDT64.pointer]
+  lgdt [GDT64_pointer]
   jmp GDT64.code:_entry64
 
 startedMessage:
@@ -117,6 +118,7 @@ _endstack:
 
 align 8
 ; from http://wiki.osdev.org/User:Stephanvanschaik/Setting_Up_Long_Mode
+global GDT64
 GDT64:                           ; Global Descriptor Table (64-bit).
     .null: equ $ - GDT64         ; The null descriptor.
     dw 0                         ; Limit (low).
@@ -139,7 +141,8 @@ GDT64:                           ; Global Descriptor Table (64-bit).
     db 10010000b                 ; Access.
     db 00000000b                 ; Granularity.
     db 0                         ; Base (high).
-    .pointer:                    ; The GDT-pointer.
+global GDT64_pointer
+GDT64_pointer:
     dw $ - GDT64 - 1             ; Limit.
     dq GDT64                     ; Base.
 
@@ -161,6 +164,7 @@ _entry64:
   call print
   call kernpage_initialize
   call apic_initialize
+  call smp_initialize
   call hang
 
 inLongModeMessage:

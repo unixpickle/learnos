@@ -1,4 +1,16 @@
 /**
+ * The pointer+limit structure to the 64-bit GDT structure.
+ * This is for processor initialization
+ */
+#define GDT64_PTR 0x5ff6
+
+/**
+ * The address where new processors will be initialized to.
+ * This address must be page-aligned.
+ */
+#define PROC_INIT_PTR 0x6000
+
+/**
  * Lower word = x, upper word = y of cursor.
  */
 #define CURSOR_INFO ((volatile short *)0x200000)
@@ -73,12 +85,13 @@
 /**
  * The global 0x20 byte anpages_t structure.
  */
-#define ANPAGES_STRUCT 0x204000
+#define ANPAGES_STRUCT 0x205000
 
 /**
  * The global anlock_t for paging. (8 bytes)
  */
-#define ANPAGES_LOCK 0x204020
+#define ANPAGES_LOCK 0x205020
+
 
 /**
  * Set CR3=PML4_START to enable kernel paging.

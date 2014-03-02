@@ -68,6 +68,14 @@ void lapic_enable() {
   msr_write(0x1b, LAPIC_BASE_ADDR | flags);
 }
 
+uint32_t lapic_get_id() {
+  return (uint32_t)lapic_get_register(LAPIC_REG_APICID);
+}
+
+void lapic_clear_errors() {
+  lapic_set_register(LAPIC_REG_ESR, 0);
+}
+
 void lapic_send_eoi() {
   lapic_set_register(LAPIC_REG_EOI, 0);
 }
@@ -84,8 +92,8 @@ void lapic_set_register(uint16_t reg, uint64_t value) {
     if (reg != 0x30) {
       *((volatile uint32_t *)(base + (reg * 0x10))) = (uint32_t)(value & 0xffffffff);
     } else {
-      *((volatile uint32_t *)(base + 0x300)) = (uint32_t)(value & 0xffffffff);
       *((volatile uint32_t *)(base + 0x310)) = (uint32_t)(value >> 0x20);
+      *((volatile uint32_t *)(base + 0x300)) = (uint32_t)(value & 0xffffffff);
     }
   }
 }
@@ -103,5 +111,25 @@ uint64_t lapic_get_register(uint16_t reg) {
       return ((uint64_t)lower) | ((uint64_t)upper << 0x20);
     }
   }
+}
+
+void lapic_send_ipi(uint32_t cpu,
+                    uint8_t vector,
+                    uint8_t mode,
+                    uint8_t level,
+                    uint8_t trigger) {
+  uint64_t value = 0;
+  // 1 << 0xb = physical mode
+  value = (uint64_t)vector | ((uint64_t)mode << 8) | (0 << 0xb);
+  value |= ((uint64_t)level << 0xe) | ((uint64_t)trigger << 0xf);
+  if (lapic_is_x2_available()) {
+    value |= ((uint64_t)cpu << 0x20);
+  } else {
+    value |= ((uint64_t)cpu << 0x38);
+  }
+  print("setting value to ");
+  printHex(value);
+  print("\n");
+  lapic_set_register(0x30, value);
 }
 
