@@ -9,6 +9,7 @@ static uint64_t _acpi_get_madt(acpi_rsdp * rsdp);
 static uint64_t _acpi_get_madt_v0(acpi_rsdp * rsdp);
 static uint64_t _acpi_get_madt_v1(acpi_rsdp * rsdp);
 static bool _increment_value(void * ptr1, void * ptr2);
+static bool _find_iso(void * ptr, void * entry);
 
 bool acpi_find_madt() {
   // scan for magic identifier
@@ -56,20 +57,14 @@ void acpi_madt_iterate_type(uint8_t type, void * data, madt_iterator_t iter) {
 }
 
 acpi_entry_iso * acpi_iso_lookup(uint8_t physicalIRQ) {
-  uint64_t fieldPtr = ACPI_MADT_PTR + 0x2c;
-  uint64_t fieldMax = ACPI_MADT_PTR + ((const uint32_t *)ACPI_MADT_PTR)[1];
-  while (fieldPtr < fieldMax) {
-    uint8_t aType = *((uint8_t *)(fieldPtr));
-    uint8_t len = *((uint8_t *)(fieldPtr + 1));
-    if (aType != 2) {
-      fieldPtr += len;
-      continue;
-    }
-    acpi_entry_iso * iso = (acpi_entry_iso *)fieldPtr;
-    if (iso->source == physicalIRQ && iso->bus == 0) return iso;
-    fieldPtr += len;
-  }
-  return NULL;
+  struct {
+    acpi_entry_iso * iso;
+    uint8_t phys;
+  } __attribute__((packed)) isoInfo;
+  isoInfo.phys = physicalIRQ;
+  isoInfo.iso = NULL;
+  acpi_madt_iterate_type(2, &isoInfo, _find_iso);
+  return isoInfo.iso;
 }
 
 static void * _acpi_find_rsdp() {
@@ -146,6 +141,17 @@ static uint64_t _acpi_get_madt_v1(acpi_rsdp * rsdp) {
 
 static bool _increment_value(void * ptr1, void * ptr2) {
   (*((uint64_t *)ptr1))++;
+  return 1;
+}
+
+static bool _find_iso(void * ptr, void * entry) {
+  acpi_entry_iso ** isoOut = (acpi_entry_iso **)ptr;
+  acpi_entry_iso * iso = (acpi_entry_iso *)entry;
+  uint8_t * phys = (uint8_t *)ptr + sizeof(acpi_entry_iso *);
+  if (iso->source == (*phys) && iso->bus == 0) {
+    (*isoOut) = iso;
+    return 0;
+  }
   return 1;
 }
 

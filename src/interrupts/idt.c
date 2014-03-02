@@ -145,6 +145,7 @@ void int_irq0() {
   } else if (PIT_TICK_COUNT % 200 == 100) {
     print("tick ");
   }
+  
   lapic_send_eoi();
 }
 

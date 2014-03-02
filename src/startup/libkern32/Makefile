@@ -14,8 +14,5 @@ build/basic.o: build
 	objcopy -O $(DESTARCH) build/basic_32.o build/basic.o
 	rm build/basic_32.o
 
-build:
-	mkdir build
+include ../../builddir.mk
 
-clean:
-	rm -rf build/

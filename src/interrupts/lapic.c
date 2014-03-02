@@ -69,7 +69,9 @@ void lapic_enable() {
 }
 
 uint32_t lapic_get_id() {
-  return (uint32_t)lapic_get_register(LAPIC_REG_APICID);
+  uint32_t ident = lapic_get_register(LAPIC_REG_APICID);
+  if (!lapic_is_x2_available()) return ident >> 0x18;
+  return ident;
 }
 
 void lapic_clear_errors() {
@@ -127,9 +129,6 @@ void lapic_send_ipi(uint32_t cpu,
   } else {
     value |= ((uint64_t)cpu << 0x38);
   }
-  print("setting value to ");
-  printHex(value);
-  print("\n");
   lapic_set_register(0x30, value);
 }
 

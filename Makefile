@@ -1,5 +1,5 @@
-SOURCE_DIRS=src/startup src/startup/libkern32 src/libkern src/interrupts
-BUILD_FILES=$(filter-out src/startup/build/entry.o, $(wildcard src/startup/build/*.o)) src/startup/libkern32/build/*.o src/libkern/build/*.o src/interrupts/build/*.o
+SOURCE_DIRS=src/startup src/startup/libkern32 src/libkern src/interrupts src/smp
+BUILD_FILES=$(filter-out src/startup/build/entry.o, $(wildcard src/startup/build/*.o)) src/startup/libkern32/build/*.o src/libkern/build/*.o src/interrupts/build/*.o src/smp/build/*.o
 LIBS=libs/anpages libs/anlock
 LIB_BUILD=libs/anpages/build/*.o libs/anlock/build/*.o
 

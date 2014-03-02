@@ -20,9 +20,5 @@ csources32: build
 	done
 
 include ../csources.mk
+include ../builddir.mk
 
-build:
-	mkdir build
-
-clean:
-	rm -rf build/

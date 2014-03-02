@@ -118,7 +118,6 @@ _endstack:
 
 align 8
 ; from http://wiki.osdev.org/User:Stephanvanschaik/Setting_Up_Long_Mode
-global GDT64
 GDT64:                           ; Global Descriptor Table (64-bit).
     .null: equ $ - GDT64         ; The null descriptor.
     dw 0                         ; Limit (low).

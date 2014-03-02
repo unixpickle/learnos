@@ -10,8 +10,5 @@ include ../csources.mk
 build/basic.o: build
 	nasm -f elf64 basic.s -o build/basic.o
 
-build:
-	mkdir build
+include ../builddir.mk
 
-clean:
-	rm -rf build/

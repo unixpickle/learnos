@@ -92,6 +92,16 @@
  */
 #define ANPAGES_LOCK 0x205020
 
+/**
+ * The page index of the first cpu_info structure.
+ */
+#define CPU_INFO_FIRST (*((volatile uint64_t *)0x205028))
+
+/**
+ * The anlock_t structure for the CPU list.
+ */
+#define CPU_LIST_LOCK 0x205030
+
 
 /**
  * Set CR3=PML4_START to enable kernel paging.
