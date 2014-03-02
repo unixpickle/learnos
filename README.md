@@ -1,6 +1,7 @@
 # TODO
 
  * Fix keyboard overflow etc.
+ * Replace all appropriate `uint64_t` with `page_t`
 
 # Subtrees
 

@@ -10,16 +10,16 @@ static void _kernpage_make_mapping();
 static void _kernpage_configure_anpages();
 
 // old kernpage functions
-static uint64_t _kernpage_next_physical();
-static uint64_t _kernpage_allocate_physical();
-static bool _kernpage_lin_map(uint64_t virt, uint64_t phys);
+static page_t _kernpage_next_physical();
+static page_t _kernpage_allocate_physical();
+static bool _kernpage_lin_map(page_t virt, page_t phys);
 
 // search functions
 static bool _kernpage_find_physical(uint64_t * table,
-                                    uint64_t page,
+                                    page_t page,
                                     uint8_t depth,
-                                    uint64_t base,
-                                    uint64_t * virt);
+                                    page_t base,
+                                    page_t * virt);
 
 void kernpage_initialize() {
   _kernpage_get_regions();
@@ -34,7 +34,7 @@ void kernpage_initialize() {
   _kernpage_configure_anpages();
 }
 
-uint64_t kernpage_calculate_virtual(uint64_t phys) {
+page_t kernpage_calculate_virtual(page_t phys) {
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
   uint64_t virtual = 0;
@@ -48,7 +48,7 @@ uint64_t kernpage_calculate_virtual(uint64_t phys) {
   return 0;
 }
 
-uint64_t kernpage_calculate_physical(uint64_t virt) {
+page_t kernpage_calculate_physical(page_t virt) {
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
   for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
@@ -63,7 +63,7 @@ uint64_t kernpage_calculate_physical(uint64_t virt) {
 /**
  * Returns `true` if a virtual page is mapped, `false` if not.
  */
-bool kernpage_is_mapped(uint64_t page) {
+bool kernpage_is_mapped(page_t page) {
   if (page > LAST_VPAGE) return false;
   int i;
 
@@ -86,7 +86,7 @@ bool kernpage_is_mapped(uint64_t page) {
   return true;
 }
 
-bool kernpage_map(uint64_t virt, uint64_t phys) {
+bool kernpage_map(page_t virt, page_t phys) {
   // very similar to _kernpage_lin_map() but uses anpages_t.
   
   int i;
@@ -125,7 +125,7 @@ bool kernpage_map(uint64_t virt, uint64_t phys) {
   return true;
 }
 
-bool kernpage_lookup_virtual(uint64_t phys, uint64_t * virt) {
+bool kernpage_lookup_virtual(page_t phys, page_t * virt) {
   if (phys == 0) {
     *virt = 0;
     return true;
@@ -138,12 +138,12 @@ bool kernpage_lookup_virtual(uint64_t phys, uint64_t * virt) {
   return _kernpage_find_physical(tablePtr, phys, 3, 0, virt);
 }
 
-uint64_t kernpage_alloc_virtual() {
+page_t kernpage_alloc_virtual() {
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   return anpages_alloc(pages);
 }
 
-void kernpage_free_virtual(uint64_t virt) {
+void kernpage_free_virtual(page_t virt) {
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   return anpages_free(pages, virt);
 }
@@ -331,7 +331,7 @@ static void _kernpage_configure_anpages() {
  * Old kernpage methods *
  ************************/
 
-static uint64_t _kernpage_next_physical() {
+static page_t _kernpage_next_physical() {
   uint64_t page = LAST_PAGE;
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
@@ -350,13 +350,13 @@ static uint64_t _kernpage_next_physical() {
   return 0;
 }
 
-static uint64_t _kernpage_allocate_physical() {
+static page_t _kernpage_allocate_physical() {
   uint64_t next = _kernpage_next_physical();
   if (!next) return 0;
   return (LAST_PAGE = next);
 }
 
-static bool _kernpage_lin_map(uint64_t virt, uint64_t phys) {
+static bool _kernpage_lin_map(page_t virt, page_t phys) {
   int i;
   uint64_t indexInPT = virt % 0x200;
   uint64_t indexInPDT = (virt >> 9) % 0x200;
@@ -397,8 +397,8 @@ static bool _kernpage_lin_map(uint64_t virt, uint64_t phys) {
 static bool _kernpage_find_physical(uint64_t * table,
                                     uint64_t page,
                                     uint8_t depth,
-                                    uint64_t base,
-                                    uint64_t * virt) {
+                                    page_t base,
+                                    page_t * virt) {
   int i;
   if (depth == 0) {
     for (i = 0x1ff; i >= 0; i--) {
