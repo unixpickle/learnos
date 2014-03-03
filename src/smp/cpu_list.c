@@ -18,6 +18,7 @@ void cpu_list_initialize(uint32_t cpuId) {
   info->baseStack = baseStack;
   info->threadCur = 0;
   info->nextCPU = 0;
+  info->lock = 0;
   CPU_INFO_FIRST = page;
   anlock_initialize((anlock_t)CPU_LIST_LOCK);
 }

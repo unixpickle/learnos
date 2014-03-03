@@ -1,10 +1,12 @@
 #include <stdint.h>
+#include <anlock.h>
 
 typedef struct {
   uint32_t cpuId; // the x2APIC ID
   uint64_t baseStack; // page index of the CPUs 1-page stack
   uint64_t threadCur; // 0 = idle
   uint64_t nextCPU; // 0 => this is the last one
+  uint64_t lock;
 } __attribute__((packed)) cpu_info;
 
 void cpu_list_initialize(uint32_t firstProc);

@@ -87,7 +87,6 @@ static void initialize_cpu(uint32_t cpuId) {
   lapic_clear_errors();
   lapic_send_ipi(cpuId, vector, 6, 1, 0);
   pit_sleep(20);
-  halt();
 
   if (cpu_list_lookup(cpuId)) print("[OK]\n");
   else print("[FAILED]\n");

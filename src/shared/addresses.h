@@ -102,9 +102,46 @@
  */
 #define CPU_LIST_LOCK 0x205030
 
+/**
+ * The 0x20 byte structure containing the task list.
+ */
+#define TASK_LIST_PTR 0x205038
 
 /**
  * Set CR3=PML4_START to enable kernel paging.
  */
 #define PML4_START 0x300000
+
+/**
+ * Page addresses in process address space.
+ */
+
+/**
+ * Kernel stacks take up 4 pages each, and with our limit of 0x100000 threads,
+ * this is a total of 0x400000 pages long.
+ */
+#define KERN_STACKS 0x400L
+
+/**
+ * User stacks are each 0x100 pages long, and there's a hard limit of 0x100000
+ * of them, just like kernel stacks.
+ */
+#define USER_STACKS 0x400400L
+
+/**
+ * Each socket is 4 pages long, and once again we have a 0x100000 limit.
+ */
+#define SOCKET_BUFFS 0x10400400L
+
+/**
+ * The code buffer is of a hard limit of 0x100000 pages long (4 GiB).
+ */
+#define CODE_BUFF 0x10800400L
+
+/**
+ * The heap can be as long as it could possibly want to be.
+ * Note that this address, in terms of pages, is an entire 1TB
+ * up in memory already. Our hard limit with 4-level paging is 256TB.
+ */
+#define HEAP_BUFF 0x10900400L
 
