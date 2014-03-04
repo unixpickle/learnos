@@ -21,7 +21,8 @@
 #define MBOOT_INFO (*((uint32_t **)0x200004))
 
 /**
- * The highest physical page that is mapped.
+ * The highest physical page that is mapped. When the kernpage subsystem has
+ * been initialized, this is used to store the number of pages allocated.
  */
 #define LAST_PAGE (*((volatile unsigned long long *)0x20000c))
 
@@ -120,28 +121,28 @@
  * Kernel stacks take up 4 pages each, and with our limit of 0x100000 threads,
  * this is a total of 0x400000 pages long.
  */
-#define KERN_STACKS 0x400L
+#define PROC_KERN_STACKS 0x400L
 
 /**
  * User stacks are each 0x100 pages long, and there's a hard limit of 0x100000
  * of them, just like kernel stacks.
  */
-#define USER_STACKS 0x400400L
+#define PROC_USER_STACKS 0x400400L
 
 /**
  * Each socket is 4 pages long, and once again we have a 0x100000 limit.
  */
-#define SOCKET_BUFFS 0x10400400L
+#define PROC_SOCKET_BUFFS 0x10400400L
 
 /**
  * The code buffer is of a hard limit of 0x100000 pages long (4 GiB).
  */
-#define CODE_BUFF 0x10800400L
+#define PROC_CODE_BUFF 0x10800400L
 
 /**
  * The heap can be as long as it could possibly want to be.
  * Note that this address, in terms of pages, is an entire 1TB
  * up in memory already. Our hard limit with 4-level paging is 256TB.
  */
-#define HEAP_BUFF 0x10900400L
+#define PROC_HEAP_BUFF 0x10900400L
 

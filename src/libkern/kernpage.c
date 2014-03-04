@@ -140,11 +140,14 @@ bool kernpage_lookup_virtual(page_t phys, page_t * virt) {
 
 page_t kernpage_alloc_virtual() {
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
-  return anpages_alloc(pages);
+  page_t p = anpages_alloc(pages);
+  if (p) LAST_PAGE++;
+  return p;
 }
 
 void kernpage_free_virtual(page_t virt) {
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
+  LAST_PAGE--;
   return anpages_free(pages, virt);
 }
 
@@ -154,6 +157,10 @@ void kernpage_lock() {
 
 void kernpage_unlock() {
   anlock_unlock((anlock_t)ANPAGES_LOCK);
+}
+
+uint64_t kernpage_count_allocated() {
+  return LAST_PAGE;
 }
 
 void kernpage_copy_physical(void * _dest,
@@ -325,6 +332,8 @@ static void _kernpage_configure_anpages() {
   anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   anpages_initialize(pages, firstVpage, vpageLen);
   anlock_initialize((anlock_t)ANPAGES_LOCK);
+
+  LAST_PAGE = 0;
 }
 
 /************************

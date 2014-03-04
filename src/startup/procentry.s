@@ -80,3 +80,10 @@ initiate_routine:
   mov rdi, rax
   call smp_entry
 
+global bootstrap_task
+bootstrap_task:
+  jmp bootstrap_task
+
+global bootstrap_task_end
+bootstrap_task_end:
+

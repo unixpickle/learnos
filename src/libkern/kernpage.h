@@ -66,6 +66,11 @@ void kernpage_lock();
 void kernpage_unlock();
 
 /**
+ * Returns the number of pages allocated with kernpage_alloc_virtual().
+ */
+uint64_t kernpage_count_allocated();
+
+/**
  * Copies a piece of data from physical memory to virtual memory. This may be
  * slow, so watch out.
  */

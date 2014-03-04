@@ -95,11 +95,15 @@ void thread_release(page_t thread);
 page_t task_page_lookup(page_t task, page_t virt);
 
 /**
- * Maps a virtual page to a physical page. The physical page must have all the
- * necessary flags set, etc.
- * The mapped memory will be accessible to user-space code.
+ * Maps a virtual page to a physical page.
  */
-bool task_page_map(page_t task, page_t virt, page_t phys);
+bool task_page_map(page_t task, page_t virt, page_t phys, bool user);
+
+/**
+ * Zero's out a page's entry in the page table. This may additionally free
+ * various page tables if possible.
+ */
+void task_page_unmap(page_t task, page_t virt);
 
 /**
  * Notifies all running instances of the process that the page tables have
