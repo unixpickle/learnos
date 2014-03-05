@@ -7,15 +7,15 @@ uint8_t anidxset_initialize(anidxset_root_t * root,
                             anidxset_free_t free) {
   root->alloc = alloc;
   root->free = free;
-  root->used = 0x1fe;
+  root->used = ANIDXSET_NODE_CAPACITY;
   root->first = root->alloc();
   if (!root->first) return 0;
   anidxset_node_t * node = (anidxset_node_t *)root->first;
-  node->count = 0x1fe;
+  node->count = ANIDXSET_NODE_CAPACITY;
   node->next = 0;
   int i;
-  for (i = 0; i < 0x1fe; i++) {
-    node->indexes[i] = 0x1fd - i;
+  for (i = 0; i < ANIDXSET_NODE_CAPACITY; i++) {
+    node->indexes[i] = ANIDXSET_NODE_CAPACITY - 1 - i;
   }
   return 1;
 }
@@ -35,7 +35,8 @@ uint64_t anidxset_get(anidxset_root_t * root) {
 
 uint8_t anidxset_put(anidxset_root_t * root, uint64_t value) {
   anidxset_node_t * node = root->first;
-  if (node->count == 0x1fe) {
+  // if this node is full, we will allocate a new node
+  if (node->count == ANIDXSET_NODE_CAPACITY) {
     anidxset_node_t * newNode = (anidxset_node_t *)root->alloc();
     if (!newNode) return 0;
     newNode->count = 1;
@@ -49,7 +50,7 @@ uint8_t anidxset_put(anidxset_root_t * root, uint64_t value) {
 }
 
 static void _allocate_next_page(anidxset_root_t * root) {
-  uint64_t nextCount = 0x1fe;
+  uint64_t nextCount = ANIDXSET_NODE_CAPACITY;
   anidxset_node_t * node = (anidxset_node_t *)root->first;
   node->next = 0;
   node->count = nextCount;
