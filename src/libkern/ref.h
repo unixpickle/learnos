@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 typedef struct {
   uint64_t count;
   void (* dealloc)(void * ptr);

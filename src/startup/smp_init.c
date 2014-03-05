@@ -4,7 +4,6 @@
 #include <interrupts/acpi.h>
 #include <interrupts/pit.h>
 #include <smp/cpu_config.h>
-#include <smp/task_bootstrap.h>
 
 extern void GDT64_pointer();
 extern void proc_entry();
@@ -28,18 +27,7 @@ void smp_initialize() {
 
   uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
   uint64_t taskStart = ((uint64_t)bootstrap_task);
-  kernpage_lock();
-  uint64_t used = kernpage_count_allocated();
-  kernpage_unlock();
-  page_t task = task_create_sync(0, (void *)taskStart, taskEnd - taskStart);
-  kernpage_lock();
-  used = kernpage_count_allocated() - used;
-  kernpage_unlock();
-  print("Created task at page ");
-  printHex(task);
-  print(" using ");
-  printHex(used);
-  print(" pages of memory.\n");
+  // TODO: create a task with this buffer
 }
 
 static void copy_gdt_pointer() {
