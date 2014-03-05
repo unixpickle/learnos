@@ -1,33 +1,50 @@
-#include <anlock.h>
-#include <stdint.h>
 #include <ref.h>
+#include <socket.h>
 
 typedef struct {
   uint64_t lock;
   page_t firstTask; // strong
   page_t nextTask; // strong
-} __attribute__((packed)) task_list_t;
 
-typedef struct {
+  uint64_t pidsLock;
+  anidxset_root_t pids;
+} __attribute__((packed)) tasks_root_t;
+
+typedef struct task_t task_t;
+typedef struct thread_t thread_t;
+
+struct task_t {
   obj_ref_t ref;
-  page_t nextTask; // strong
 
+  // each link has a strong reference to the next node
+  uint64_t nextTaskLock;
+  task_t * nextTask; // strong
+
+  // process identifier and user identifier, just like UNIX bro
   uint64_t pid;
   uint64_t uid;
 
-  page_t pml4; // physical page of PML4
+  // every process has its own page table setup
   uint64_t pml4Lock;
+  page_t pml4; // physical page of PML4
 
-  page_t firstThread;
+  // this lock applies to both ...Thread fields
   uint64_t threadsLock;
+  thread_t * firstThread; // strong
+  thread_t * nextThread; // strong
+  uint64_t threadStacksLock;
+  anidxset_root_t threadStacks;
 
-  page_t firstSocket;
-  uint64_t socketsLock;
+  uint64_t firstSocketLock;
+  socket_t * firstSocket; // strong
+  uint64_t socketDescsLock;
+  anidxset_root_t socketDescs; // like file descriptors, bro
 
-  bool isCleanup;
-} __attribute__((packed)) task_t;
+  // if this is 0, then the process is being shut-down
+  bool isActive;
+} __attribute__((packed));
 
-typedef struct {
+struct state_t {
   uint64_t rsp;
   uint64_t rbp;
   uint64_t cr3;
@@ -39,76 +56,42 @@ typedef struct {
   uint64_t rdx;
   uint64_t rsi;
   uint64_t rdi;
-} __attribute__((packed)) state_t;
+} __attribute__((packed));
 
-typedef struct {
-  uint64_t retainCount;
-  page_t task;
-  page_t nextThread;
+struct thread_t {
+  obj_ref_t ref;
+
+  uint64_t nextThreadLock;
+  thread_t * nextThread;
 
   uint64_t stackIndex;
-  state_t state;
+  struct state_t state;
+
   uint8_t isRunning;
-} __attribute__((packed)) thread_t;
+  uint8_t isSystem; // if 1, this thread can't be killed
+} __attribute__((packed));
+
+void * task_idxset_alloc();
+void task_idxset_free(void * ptr);
 
 /**
- * Adds a thread to a task.
+ * Whenever the kernel thread of a process holds any locks, it must be in a
+ * critical section. This means that the CPU core will not start to execute
+ * another task while the lock is held.
  */
-void task_add_thread(page_t task, void * rip);
+void task_critical_start();
 
 /**
- * Starts a task pointed to with a page index.
+ * Exits a critical section.
  */
-void task_start(page_t task);
+void task_critical_exit();
+
+task_t * task_create();
 
 /**
- * Removes a task from the task list, reducing it's retain count and the retain
- * counts of all its threads.
+ * Deallocates the *critical* resources of the task. This should only
+ * be called once the task has finished its shutdown sequence.
+ * Really, this should only be called when the task's retain count reaches 0.
  */
-void task_term(page_t task);
-
-/**
- * @return a retained task or 0 if not found.
- * @discussion This function locks the task list for you, so you don't
- * need to worry about it.
- */
-page_t task_find(uint64_t pid);
-
-/**
- * Releases a task. This operation is atomic and may result
- * in the task's entire resources being released.
- * When a task is finally at retain count 0, a new task is
- * created which specifically exists to clean it up. This new
- * task takes place in the same address space for ease of use.
- */
-void task_release(page_t task);
-
-/**
- * Release a thread. This may result in the thread being cleaned up
- * and furthermore in the owning task being deleted.
- */
-void thread_release(page_t thread);
-
-/**
- * Uses a task's page tables to find the physical page that a virtual page in
- * the tasks address space points to.
- */
-page_t task_page_lookup(page_t task, page_t virt);
-
-/**
- * Maps a virtual page to a physical page.
- */
-bool task_page_map(page_t task, page_t virt, page_t phys, bool user);
-
-/**
- * Zero's out a page's entry in the page table. This may additionally free
- * various page tables if possible.
- */
-void task_page_unmap(page_t task, page_t virt);
-
-/**
- * Notifies all running instances of the process that the page tables have
- * changed and the TLB should be cleared.
- */
-void task_pages_changed();
+void task_dealloc(task_t * task);
 

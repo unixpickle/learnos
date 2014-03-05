@@ -1,7 +1,7 @@
 SOURCE_DIRS=src/startup src/startup/libkern32 src/libkern src/interrupts src/smp
 BUILD_FILES=$(filter-out src/startup/build/entry.o, $(wildcard src/startup/build/*.o)) src/startup/libkern32/build/*.o src/libkern/build/*.o src/interrupts/build/*.o src/smp/build/*.o
-LIBS=libs/anpages libs/anlock
-LIB_BUILD=libs/anpages/build/*.o libs/anlock/build/*.o
+LIBS=libs/anpages libs/anlock libs/anidxset
+LIB_BUILD=libs/anpages/build/*.o libs/anlock/build/*.o libs/anidxset/build/*.o
 
 learnos.bin: objects all_libs
 	ld src/startup/build/entry.o $(BUILD_FILES) $(LIB_BUILD) -Ttext 0x100000 -e multiboot_header --oformat binary -s -o learnos.bin
