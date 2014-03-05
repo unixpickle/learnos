@@ -104,7 +104,7 @@
 #define CPU_LIST_LOCK 0x205030
 
 /**
- * The 0x20 byte structure containing the task list.
+ * The 0x40 byte structure containing the task list.
  */
 #define TASK_LIST_PTR 0x205038
 
@@ -118,8 +118,8 @@
  */
 
 /**
- * Kernel stacks take up 4 pages each, and with our limit of 0x100000 threads,
- * this is a total of 0x400000 pages long.
+ * Kernel stacks take up 1 page each, and with our limit of 0x100000 threads,
+ * this is a total of 0x100000 pages long.
  */
 #define PROC_KERN_STACKS 0x400L
 
@@ -127,22 +127,22 @@
  * User stacks are each 0x100 pages long, and there's a hard limit of 0x100000
  * of them, just like kernel stacks.
  */
-#define PROC_USER_STACKS 0x400400L
+#define PROC_USER_STACKS 0x100400L
 
 /**
  * Each socket is 4 pages long, and once again we have a 0x100000 limit.
  */
-#define PROC_SOCKET_BUFFS 0x10400400L
+#define PROC_SOCKET_BUFFS 0x10100400L
 
 /**
  * The code buffer is of a hard limit of 0x100000 pages long (4 GiB).
  */
-#define PROC_CODE_BUFF 0x10800400L
+#define PROC_CODE_BUFF 0x10500400L
 
 /**
  * The heap can be as long as it could possibly want to be.
  * Note that this address, in terms of pages, is an entire 1TB
  * up in memory already. Our hard limit with 4-level paging is 256TB.
  */
-#define PROC_HEAP_BUFF 0x10900400L
+#define PROC_HEAP_BUFF 0x10600400L
 

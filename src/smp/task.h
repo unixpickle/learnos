@@ -1,17 +1,17 @@
 #include <ref.h>
 #include <socket.h>
 
+typedef struct task_t task_t;
+typedef struct thread_t thread_t;
+
 typedef struct {
   uint64_t lock;
-  page_t firstTask; // strong
-  page_t nextTask; // strong
+  task_t * firstTask; // strong
+  task_t * nextTask; // strong
 
   uint64_t pidsLock;
   anidxset_root_t pids;
 } __attribute__((packed)) tasks_root_t;
-
-typedef struct task_t task_t;
-typedef struct thread_t thread_t;
 
 struct task_t {
   obj_ref_t ref;
@@ -86,12 +86,20 @@ void task_critical_start();
  */
 void task_critical_exit();
 
+void tasks_initialize();
+
+/**
+ * Allocates a new task with base resources.
+ * @discussion This function allocates lots of memory, so it must be called from
+ * a critical section.
+ */
 task_t * task_create();
 
 /**
  * Deallocates the *critical* resources of the task. This should only
  * be called once the task has finished its shutdown sequence.
  * Really, this should only be called when the task's retain count reaches 0.
+ * @discussion Must be called from a critical section just like task_create().
  */
 void task_dealloc(task_t * task);
 
