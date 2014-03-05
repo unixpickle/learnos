@@ -1,18 +1,19 @@
 #include <anlock.h>
 #include <stdint.h>
+#include <ref.h>
 
 typedef struct {
-  page_t firstTask;
-  page_t nextTask; // 0 means start over
-  uint64_t nextPID;
-  uint64_t listLock;
+  uint64_t lock;
+  page_t firstTask; // strong
+  page_t nextTask; // strong
 } __attribute__((packed)) task_list_t;
 
 typedef struct {
-  uint64_t retainCount;
+  obj_ref_t ref;
+  page_t nextTask; // strong
+
   uint64_t pid;
   uint64_t uid;
-  page_t nextTask; // for task_list_t
 
   page_t pml4; // physical page of PML4
   uint64_t pml4Lock;
