@@ -27,7 +27,9 @@ uint64_t anidxset_get(anidxset_root_t * root) {
       // allocate a new chunk
       _allocate_next_page(root);
     } else {
+      anidxset_node_t * cur = node;
       node = (root->first = (anidxset_node_t *)node->next);
+      root->free(cur);
     }
   }
   return node->indexes[--node->count];
@@ -47,6 +49,15 @@ uint8_t anidxset_put(anidxset_root_t * root, uint64_t value) {
     node->indexes[node->count++] = value;
   }
   return 1;
+}
+
+void anidxset_free(anidxset_root_t * root) {
+  anidxset_node_t * node = root->first;
+  while (node) {
+    anidxset_node_t * next = (anidxset_node_t *)node->next;
+    root->free(node);
+    node = next;
+  }
 }
 
 static void _allocate_next_page(anidxset_root_t * root) {

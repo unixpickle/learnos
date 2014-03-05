@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MASSIVE_COUNT 0x100000
+#define MASSIVE_COUNT 0x1000000
 
 void fail_test(const char * msg);
 void begin_test(const char * name);
@@ -23,6 +23,7 @@ int main(int argc, const char * argv[]) {
   test_massive_gets();
   test_massive_puts();
   test_get_loopback();
+  anidxset_free(&root);
   return 0;
 }
 

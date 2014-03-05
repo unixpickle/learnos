@@ -28,4 +28,4 @@ uint8_t anidxset_initialize(anidxset_root_t * root,
                             anidxset_free_t free);
 uint64_t anidxset_get(anidxset_root_t * root);
 uint8_t anidxset_put(anidxset_root_t * root, uint64_t value);
-
+void anidxset_free(anidxset_root_t * root);
