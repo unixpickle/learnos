@@ -1,3 +1,6 @@
+#ifndef __ANIDXSET_H__
+#define __ANIDXSET_H__
+
 #include <stdint.h>
 
 #define ANIDXSET_NODE_CAPACITY 0x1fe
@@ -29,3 +32,6 @@ uint8_t anidxset_initialize(anidxset_root_t * root,
 uint64_t anidxset_get(anidxset_root_t * root);
 uint8_t anidxset_put(anidxset_root_t * root, uint64_t value);
 void anidxset_free(anidxset_root_t * root);
+
+#endif
+

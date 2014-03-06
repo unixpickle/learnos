@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <anlock.h>
+#include "task.h"
 
 typedef struct {
   uint32_t cpuId; // the x2APIC ID

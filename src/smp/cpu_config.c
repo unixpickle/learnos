@@ -10,7 +10,8 @@ void configure_cpu(uint64_t stack) {
   cpu_info * info = (cpu_info *)(entryPage << 12);
   info->cpuId = lapic_get_id();
   info->baseStack = stack;
-  info->threadCur = 0;
+  info->currentThread = NULL;
+  info->currentTask = NULL;
   info->nextCPU = 0;
   cpu_list_add(entryPage);
 }

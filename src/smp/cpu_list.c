@@ -2,6 +2,7 @@
 #include <anlock.h>
 #include <stdio.h>
 #include <kernpage.h>
+#include <interrupts/lapic.h>
 #include <shared/addresses.h>
 
 static void cpu_list_lock();
@@ -16,9 +17,10 @@ void cpu_list_initialize(uint32_t cpuId) {
   cpu_info * info = (cpu_info *)(page << 12);
   info->cpuId = cpuId;
   info->baseStack = baseStack;
-  info->threadCur = 0;
   info->nextCPU = 0;
   info->lock = 0;
+  info->currentThread = NULL;
+  info->currentTask = NULL;
   CPU_INFO_FIRST = page;
   anlock_initialize((anlock_t)CPU_LIST_LOCK);
 }

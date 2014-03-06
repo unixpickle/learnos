@@ -25,8 +25,8 @@ void smp_initialize() {
   acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
-  uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
-  uint64_t taskStart = ((uint64_t)bootstrap_task);
+  // uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
+  // uint64_t taskStart = ((uint64_t)bootstrap_task);
   // TODO: create a task with this buffer
 }
 

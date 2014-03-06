@@ -1,3 +1,6 @@
+#ifndef __TASK_H__
+#define __TASK_H__
+
 #include <ref.h>
 #include <anidxset.h>
 #include "socket.h"
@@ -110,4 +113,6 @@ task_t * task_create();
  * section.
  */
 void task_dealloc(task_t * task);
+
+#endif
 
