@@ -65,7 +65,6 @@ struct state_t {
 struct thread_t {
   ref_obj_t ref;
 
-  uint64_t nextThreadLock;
   thread_t * nextThread;
 
   uint64_t stackIndex;

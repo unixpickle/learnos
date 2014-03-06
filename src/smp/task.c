@@ -44,6 +44,7 @@ void task_critical_start() {
 
 void task_critical_stop() {
   enable_interrupts();
+  __asm__ __volatile__("nop\nnop"); // do some nops to get interrupts
 }
 
 void tasks_initialize() {
