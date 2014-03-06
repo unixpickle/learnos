@@ -3,14 +3,25 @@
 /**
  * Creates a thread which will first allocate a user stack for itself and then
  * will jump to user code pointed to by RIP.
+ * @discussion This must be called from a critical section.
  */
-thread_t * thread_create_user(void * rip);
+thread_t * thread_create_user(task_t * task, void * rip);
 
 /**
  * Creates the first thread for a new process. This thread copies in the user-
  * space code in addition to allocating a sure-space stack.
+ * @discussion This much be called from a critical section.
  */
-thread_t * thread_create_first(void * rip, void * program, uint64_t len);
+thread_t * thread_create_first(task_t * task,
+                               void * rip,
+                               void * program,
+                               uint64_t len);
+
+/**
+ * Only to be called when the thread has already been cleaned up by a kernel
+ * mini-program.
+ */
+void thread_dealloc(thread_t * thread);
 
 /**
  * This method should never be called conventionally. Rather, it is a mini

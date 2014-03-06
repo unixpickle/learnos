@@ -135,12 +135,16 @@ void task_dealloc(task_t * task) {
   // just in case, we do it here.
   anidxset_free(&task->socketDescs);
   anidxset_free(&task->threadStacks);
-  
+
   // relinquish the PID
   tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
   anlock_lock(&root->pidsLock);
   anidxset_put(&root->pids, task->pid);
   anlock_unlock(&root->pidsLock);
+
+  kernpage_lock();
+  kernpage_free_virtual(((uint64_t)task) >> 12);
+  kernpage_unlock();
 }
 
 static uint64_t _next_pid() {

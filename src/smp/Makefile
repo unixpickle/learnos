@@ -1,6 +1,6 @@
 PROJECT_ROOT=../..
 
-CSOURCES=cpu_config.c cpu_list.c task.c vm.c
+CSOURCES=cpu_config.c cpu_list.c task.c vm.c thread.c
 
 all: csources
 
