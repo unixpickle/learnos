@@ -16,3 +16,8 @@ bool task_vm_set(task_t * task, page_t virt, uint64_t value);
  */
 void task_vm_make_user(task_t * task, page_t virt);
 
+/**
+ * @discussion see task_vm_lookup() discussion
+ */
+void task_vm_unmap(task_t * task, page_t virt);
+

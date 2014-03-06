@@ -1,5 +1,6 @@
 #include <ref.h>
-#include <socket.h>
+#include <anidxset.h>
+#include "socket.h"
 
 typedef struct task_t task_t;
 typedef struct thread_t thread_t;
@@ -14,7 +15,7 @@ typedef struct {
 } __attribute__((packed)) tasks_root_t;
 
 struct task_t {
-  obj_ref_t ref;
+  ref_obj_t ref;
 
   // each link has a strong reference to the next node
   uint64_t nextTaskLock;
@@ -59,7 +60,7 @@ struct state_t {
 } __attribute__((packed));
 
 struct thread_t {
-  obj_ref_t ref;
+  ref_obj_t ref;
 
   uint64_t nextThreadLock;
   thread_t * nextThread;
@@ -74,6 +75,9 @@ struct thread_t {
 void * task_idxset_alloc();
 void task_idxset_free(void * ptr);
 
+void * task_idxset_alloc_safe();
+void task_idxset_free_safe(void * ptr);
+
 /**
  * Whenever the kernel thread of a process holds any locks, it must be in a
  * critical section. This means that the CPU core will not start to execute
@@ -84,14 +88,13 @@ void task_critical_start();
 /**
  * Exits a critical section.
  */
-void task_critical_exit();
+void task_critical_stop();
 
 void tasks_initialize();
 
 /**
  * Allocates a new task with base resources.
- * @discussion This function allocates lots of memory, so it must be called from
- * a critical section.
+ * @discussion This function must be called from a critical section.
  */
 task_t * task_create();
 
@@ -99,7 +102,8 @@ task_t * task_create();
  * Deallocates the *critical* resources of the task. This should only
  * be called once the task has finished its shutdown sequence.
  * Really, this should only be called when the task's retain count reaches 0.
- * @discussion Must be called from a critical section just like task_create().
+ * @discussion Just like task_create, you must call this from a critical
+ * section.
  */
 void task_dealloc(task_t * task);
 
