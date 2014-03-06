@@ -19,10 +19,29 @@ static void get_task_and_thread(task_thread_t * info);
 static page_t _task_calculate_kernel_stack(uint64_t index);
 static page_t _task_calculate_user_stack(uint64_t index);
 
+/**
+ * Enters a critical section periodically to allocate the virtual memory
+ * in a task and copy the main executable code into it.
+ */
 static bool _allocate_user_code(void * program, uint64_t len);
+
+/**
+ * Copies memory from a source location to a destination page.
+ */
 static void _copy_memory(page_t dest, void * src, uint64_t len);
 
+/**
+ * Call this from a system thread to terminate the task. A reference is assumed
+ * to both the `task` and `thread` arguments.
+ */
 static void _thread_unlink(task_t * task, thread_t * thread);
+
+/**
+ * This must be called from the critical section of a thread other than the
+ * thread to be released, or else the stack will be deallocated while it's in
+ * use. To get around this, _thread_unlink enters a critical section and then
+ * switches to the CPU's stack -- that's what it's for, anyway.
+ */
 static void _release_thread(task_thread_t * info);
 
 thread_t * thread_create_user(task_t * task, void * rip) {
@@ -261,6 +280,7 @@ static void _thread_unlink(task_t * task, thread_t * thread) {
   task_thread_t info;
   info.task = task;
   info.thread = thread;
+
   task_critical_start();
   cpu_info * cpuInfo = cpu_get_current();
   void * stack = (void *)((cpuInfo->baseStack << 12) + 0x1000);
@@ -304,6 +324,7 @@ static void _release_thread(task_thread_t * _info) {
   ref_release(info.thread);
   ref_release(info.task);
 
+  // run a different thread than the one we just killed.
   scheduler_resign();
 }
 
