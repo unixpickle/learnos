@@ -33,6 +33,7 @@ static void _copy_memory(page_t dest, void * src, uint64_t len);
 /**
  * Call this from a system thread to terminate the task. A reference is assumed
  * to both the `task` and `thread` arguments.
+ * @discussion This function enters a critical section for you.
  */
 static void _thread_unlink(task_t * task, thread_t * thread);
 
@@ -224,9 +225,10 @@ static bool _allocate_user_code(void * program, uint64_t len) {
     kernpage_lock();
     page_t next = kernpage_alloc_virtual();
     kernpage_unlock();
-    task_critical_stop();
-    if (!next) return false;
-    task_critical_start();
+    if (!next) {
+      ref_release(task);
+      return false;
+    }
     anlock_lock(&task->pml4Lock);
     uint64_t entry = (kernpage_calculate_physical(next) << 12) | 7;
     bool result = task_vm_set(task, pageIndex, entry);
@@ -238,6 +240,7 @@ static bool _allocate_user_code(void * program, uint64_t len) {
       kernpage_lock();
       kernpage_free_virtual(next);
       kernpage_unlock();
+      ref_release(task);
       task_critical_stop();
       return false;
     }
@@ -247,6 +250,9 @@ static bool _allocate_user_code(void * program, uint64_t len) {
     pageIndex++;
   }
 
+  task_critical_start();
+  ref_release(task);
+  task_critical_stop();
   return true;
 }
 
