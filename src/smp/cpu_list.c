@@ -51,6 +51,11 @@ void cpu_list_add(uint64_t page) {
   cpu_list_unlock();
 }
 
+cpu_info * cpu_get_current() {
+  uint32_t ident = lapic_get_id();
+  return cpu_list_lookup(ident);
+}
+
 static void cpu_list_lock() {
   anlock_t lock = (anlock_t)CPU_LIST_LOCK;
   anlock_lock(lock);

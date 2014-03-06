@@ -10,7 +10,7 @@ typedef struct {
 
 void ref_initialize(void * ptr, void (*dealloc)(void * ptr));
 void ref_release(void * ptr);
-uint64_t ref_retain(void * ptr);
+void * ref_retain(void * ptr);
 void ref_dealloc(void * ptr);
 
 #endif

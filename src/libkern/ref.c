@@ -13,9 +13,10 @@ void ref_release(void * ptr) {
   }
 }
 
-uint64_t ref_retain(void * ptr) {
+void * ref_retain(void * ptr) {
   ref_obj_t * obj = (ref_obj_t *)ptr;
-  return __sync_add_and_fetch(&obj->count, 1);
+  __sync_add_and_fetch(&obj->count, 1);
+  return ptr;
 }
 
 void ref_dealloc(void * ptr) {
