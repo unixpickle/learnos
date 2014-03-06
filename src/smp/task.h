@@ -90,6 +90,10 @@ void task_critical_start();
  */
 void task_critical_stop();
 
+/**
+ * Initialize the task subsystem. This should only be called once at boot and
+ * never again.
+ */
 void tasks_initialize();
 
 /**
