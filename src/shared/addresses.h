@@ -109,6 +109,17 @@
 #define TASK_LIST_PTR 0x205038
 
 /**
+ * The GDT which is used for processors after SMP is started up. This is
+ * needed to have a TSS for each CPU core.
+ */
+#define DYNAMIC_GDT 0x210000
+
+/**
+ * 0x67f98 bytes, round to 0x70 pages
+ */
+#define TSS_ENTRIES 0x220000
+
+/**
  * Set CR3=PML4_START to enable kernel paging.
  */
 #define PML4_START 0x300000

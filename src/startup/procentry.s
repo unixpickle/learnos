@@ -87,3 +87,9 @@ bootstrap_task:
 global bootstrap_task_end
 bootstrap_task_end:
 
+global load_new_gdt
+load_new_gdt:
+  mov rbx, GDT64_PTR
+  lgdt [rbx]
+  ret
+

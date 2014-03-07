@@ -4,6 +4,7 @@
 #include <interrupts/acpi.h>
 #include <interrupts/pit.h>
 #include <smp/cpu_config.h>
+#include <smp/gdt.h>
 
 extern void GDT64_pointer();
 extern void proc_entry();
@@ -19,7 +20,7 @@ static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry);
 static void initialize_cpu(uint32_t cpuId);
 
 void smp_initialize() {
-  copy_gdt_pointer();
+  gdt_initialize();
   copy_init_code();
   cpu_list_initialize(lapic_get_id());
   acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);

@@ -4,6 +4,7 @@
 #include <kernpage.h>
 #include <interrupts/lapic.h>
 #include <shared/addresses.h>
+#include "gdt.h"
 
 static void cpu_list_lock();
 static void cpu_list_unlock();
@@ -23,6 +24,9 @@ void cpu_list_initialize(uint32_t cpuId) {
   info->currentTask = NULL;
   CPU_INFO_FIRST = page;
   anlock_initialize((anlock_t)CPU_LIST_LOCK);
+
+  info->tssSelector = (uint16_t)gdt_get_size();
+  info->tss = gdt_add_tss();
 }
 
 cpu_info * cpu_list_lookup(uint32_t cpuId) {

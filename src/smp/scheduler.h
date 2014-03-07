@@ -13,3 +13,9 @@ void scheduler_resign();
  */
 void scheduler_jump_state(struct state_t * newState);
 
+/**
+ * Jump to a specific task. The current task's state must be saved in order for
+ * this to work.
+ */
+void scheduler_switch_task(task_t * task, thread_t * thread);
+

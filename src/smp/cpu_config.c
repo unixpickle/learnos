@@ -13,6 +13,8 @@ void configure_cpu(uint64_t stack) {
   info->currentThread = NULL;
   info->currentTask = NULL;
   info->nextCPU = 0;
+  info->tssSelector = (uint16_t)gdt_get_size();
+  info->tss = gdt_add_tss();
   cpu_list_add(entryPage);
 }
 
