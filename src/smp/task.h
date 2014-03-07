@@ -21,7 +21,6 @@ struct task_t {
   ref_obj_t ref;
 
   // each link has a strong reference to the next node
-  uint64_t nextTaskLock;
   task_t * nextTask; // strong
 
   // process identifier and user identifier, just like UNIX bro
@@ -112,6 +111,12 @@ task_t * task_create();
  * section.
  */
 void task_dealloc(task_t * task);
+
+/**
+ * Uses the task list to find the next task and thread to execute.
+ * @discussion This must be called from a critical section.
+ */
+bool task_get_next_job(task_t ** task, thread_t ** thread);
 
 #endif
 

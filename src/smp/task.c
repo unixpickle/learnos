@@ -8,6 +8,9 @@ static uint64_t _next_pid();
 static bool _create_4mb_identity(uint64_t * pml4);
 static void _deallocate_table(uint64_t * table, int depth);
 
+static task_t * _get_next_task();
+static thread_t * _get_next_thread();
+
 void * task_idxset_alloc_safe() {
   task_critical_start();
   kernpage_lock();
@@ -81,7 +84,6 @@ task_t * task_create() {
   task->nextThread = NULL;
   task->firstSocket = NULL;
   
-  anlock_initialize(&task->nextTaskLock);
   anlock_initialize(&task->pml4Lock);
   anlock_initialize(&task->threadsLock);
   anlock_initialize(&task->threadStacksLock);
@@ -148,6 +150,46 @@ void task_dealloc(task_t * task) {
   kernpage_unlock();
 }
 
+bool task_get_next_job(task_t ** task, thread_t ** thread) {
+  tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
+  anlock_lock(&root->lock);
+
+  // iterate over the tasks until we find one with an available thread, and
+  // then run that sucker!
+  task_t * firstTask = _get_next_task();
+  task_t * currentTask = firstTask;
+  if (!firstTask) {
+    anlock_unlock(&root->lock);
+    return false;
+  }
+  do {
+    anlock_lock(&currentTask->threadsLock);
+    thread_t * firstThread = _get_next_thread(currentTask);
+    thread_t * currentThread = firstThread;
+    if (!firstThread) {
+      anlock_unlock(&currentTask->threadsLock);
+      break;
+    }
+    do {
+      if (!__sync_fetch_and_or(&currentThread->isRunning, 1)) {
+        // yus
+        anlock_unlock(&currentTask->threadsLock);
+        anlock_unlock(&root->lock);
+        (*task) = currentTask;
+        (*thread) = currentThread;
+        return true;
+      }
+      ref_release(currentThread);
+      currentThread = _get_next_thread(currentTask);
+    } while (currentThread != firstThread);
+    anlock_unlock(&currentTask->threadsLock);
+    ref_release(currentTask);
+    currentTask = _get_next_task();
+  } while (currentTask != firstTask);
+  anlock_unlock(&root->lock);
+  return false;
+}
+
 static uint64_t _next_pid() {
   tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
   anlock_lock(&root->pidsLock);
@@ -204,5 +246,28 @@ static void _deallocate_table(uint64_t * table, int depth) {
     kernpage_free_virtual(vPage);
     kernpage_unlock();
   }
+}
+
+static task_t * _get_next_task() {
+  tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
+  task_t * nextTask = root->nextTask;
+  if (!nextTask) {
+    nextTask = ref_retain(root->firstTask);
+    if (!nextTask) {
+      return NULL;
+    }
+  }
+  root->nextTask = ref_retain(nextTask->nextTask);
+  return nextTask;
+}
+
+static thread_t * _get_next_thread(task_t * task) {
+  thread_t * nextThread = task->nextThread;
+  if (!nextThread) {
+    nextThread = ref_retain(task->firstThread);
+    if (!nextThread) return NULL;
+  }
+  task->nextThread = ref_retain(nextThread->nextThread);
+  return nextThread;
 }
 

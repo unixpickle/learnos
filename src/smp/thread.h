@@ -18,6 +18,16 @@ thread_t * thread_create_first(task_t * task,
                                uint64_t len);
 
 /**
+ * Uses a thread's state to determine where in the kernpage address space the
+ * next available byte of kernel stack is located.  If the process was in user
+ * mode, this will be the first byte of kernel stack.  Otherwise, this will be
+ * the programs last rsp value.
+ * @discussion Obviously, this should be called from a critical section once
+ * the thread has been marked as *running*.
+ */
+void * thread_resume_kernel_stack(task_t * task, thread_t * thread);
+
+/**
  * Only to be called when the thread has already been cleaned up by a kernel
  * mini-program.
  */

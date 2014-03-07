@@ -99,6 +99,18 @@ thread_t * thread_create_first(task_t * task,
   return thread;
 }
 
+void * thread_resume_kernel_stack(task_t * task, thread_t * thread) {
+  if (thread->state.cr3 == PML4_START) {
+    return (void *)thread->state.rsp;
+  } else {
+    page_t vmStack = _task_calculate_kernel_stack(thread->stackIndex);
+    anlock_lock(&task->pml4Lock);
+    page_t physical = task_vm_lookup(task, vmStack);
+    anlock_unlock(&task->pml4Lock);
+    return (void *)((1 + kernpage_calculate_virtual(physical)) << 12);
+  }
+}
+
 void thread_dealloc(thread_t * thread) {
   cpu_info * cpu = cpu_get_current();
   anlock_lock(&cpu->lock);
@@ -177,7 +189,7 @@ void thread_configure_user_stack(void * rip) {
   task_critical_start();
   ref_release(task);
   ref_release(thread);
-  scheduler_jump_state(&state);
+  // TODO: jump to the state
 
   // this code is never reached, so there's no point
   // task_critical_stop();
@@ -331,6 +343,6 @@ static void _release_thread(task_thread_t * _info) {
   ref_release(info.task);
 
   // run a different thread than the one we just killed.
-  scheduler_resign();
+  scheduler_run_next();
 }
 
