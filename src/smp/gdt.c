@@ -26,6 +26,12 @@ tss_t * gdt_add_tss() {
   uint64_t index = (size - 0x10) / 0x10;
   uint64_t ptr = TSS_ENTRIES + (index * 0x68);
 
+  // zero out the TSS
+  uint32_t * tss = (uint32_t *)ptr;
+  int i;
+  for (i = 0; i < 0x1a; i++) tss[i] = 0;
+  tss[0x19] = 0xffff0000; // IOPL points *way* in the distance
+
   tss_descriptor_t desc;
   desc.limit_0 = 0x67;
   desc.limit_16 = 0;
@@ -36,13 +42,13 @@ tss_t * gdt_add_tss() {
   desc.res0 = 0;
   desc.res1 = 0;
   desc.res2 = 0;
-  uint8_t * ptr = (uint8_t *)(DYNAMIC_GDT + size);
-  uint8_t * source = (uint8_t *)&desc;
-  uint64_t i;
-  for (i = 0; i < sizeof(desc); i++) {
+  uint32_t * ptr = (uint32_t *)(DYNAMIC_GDT + size);
+  uint32_t * source = (uint32_t *)&desc;
+  for (i = 0; i < 4; i++) {
     ptr[i] = source[i];
   }
   (*((uint16_t *)GDT64_PTR)) += sizeof(desc);
-  return (tss_t *)ptr;
+
+  return tss;
 }
 

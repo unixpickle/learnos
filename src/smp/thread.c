@@ -137,6 +137,10 @@ void thread_dealloc(thread_t * thread) {
   ref_release(task);
 }
 
+void thread_configure_tss(thread_t * thread, tss_t * tss) {
+  tss->rsp[0] = _task_calculate_kernel_stack(thread);
+}
+
 void thread_configure_user_stack(void * rip) {
   // enter and leave critical sections as we allocate memory
   task_thread_t ttt;

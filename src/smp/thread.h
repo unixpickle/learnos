@@ -1,4 +1,5 @@
 #include "task.h"
+#include "gdt.h"
 
 /**
  * Creates a thread which will first allocate a user stack for itself and then
@@ -32,6 +33,11 @@ void * thread_resume_kernel_stack(task_t * task, thread_t * thread);
  * mini-program.
  */
 void thread_dealloc(thread_t * thread);
+
+/**
+ * Sets the stack fields in the CSS.
+ */
+void thread_configure_tss(thread_t * thread, tss_t * tss);
 
 /**
  * This method should never be called conventionally. Rather, it is a mini

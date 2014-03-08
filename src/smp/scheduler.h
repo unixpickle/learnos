@@ -3,6 +3,11 @@
 /**
  * Jump to a specific task. The current task's state must be saved in order for
  * this to work.
+ * @param task - The task to launch.
+ * @param thread - The thread to launch. Note that this must already have
+ * isRunning set to true.
+ * @return This function will never return.
+ * @discussion This must be run from a critical section.
  */
 void scheduler_switch_task(task_t * task, thread_t * thread);
 

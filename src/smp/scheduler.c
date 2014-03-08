@@ -6,14 +6,14 @@
 void scheduler_switch_task(task_t * task, thread_t * thread) {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
+  // TODO: see if we need to use __sync
   __sync_fetch_and_and(&info->currentThread->isRunning, 0);
   ref_release(info->currentTask);
   ref_release(info->currentThread);
   info->currentTask = task;
   info->currentThread = thread;
+  thread_configure_tss(thread, info->tss);
   anlock_unlock(&info->lock);
-
-  // TODO: here, we must configure the TSS to reflect the state of `thread`
 
   task_switch(task, thread); // changes our execution context
 }
@@ -21,7 +21,7 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
 void scheduler_run_next() {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
-  // TODO: see if we need a __sync macro here
+  // TODO: see if we need to use __sync
   __sync_fetch_and_and(&info->currentThread->isRunning, 0);
   ref_release(info->currentTask);
   ref_release(info->currentThread);
