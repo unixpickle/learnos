@@ -185,7 +185,7 @@ universal_table_lookup:
 universal_page_lookup:
   push rbp
   mov rbp, rsp
-  sub rbp, 0x18
+  sub rsp, 0x18
   mov qword [rbp - 0x18], 27 ; shift
   mov rax, cr3
   shr rax, 12
