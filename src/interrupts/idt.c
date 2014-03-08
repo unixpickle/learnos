@@ -57,6 +57,7 @@ void int_div_zero() {
 
 void int_debugger() {
   print("got debugger\n");
+  hang();
 }
 
 void int_nmi() {

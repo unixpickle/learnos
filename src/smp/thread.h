@@ -14,7 +14,6 @@ thread_t * thread_create_user(task_t * task, void * rip);
  * @discussion This much be called from a critical section.
  */
 thread_t * thread_create_first(task_t * task,
-                               void * rip,
                                void * program,
                                uint64_t len);
 

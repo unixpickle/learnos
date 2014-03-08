@@ -13,6 +13,7 @@ extern ref_retain
 extern ref_release
 extern lapic_timer_set
 extern lapic_send_eoi
+extern stack_log
 
 global task_run_with_stack
 task_run_with_stack:
@@ -92,9 +93,9 @@ task_switch_to_kernpage:
   mov rdi, rax
   call kernpage_calculate_virtual
   shl rax, 12
-  mov rcx, rbp
+  mov rcx, rsp
   and rcx, 0xfff
-  add rax, rcx
+  or rax, rcx
   mov rsp, rax
 
   mov rax, PML4_START
@@ -117,21 +118,25 @@ task_switch:
   pushfq
   pop rax
   mov rcx, (0xffffffffffffffff ^ (1 << 14))
-  or rax, rcx
+  and rax, rcx
   push rax
   popfq
 
   add rsi, 0x20 ; start of state_t structure
 
   ; push state for iretq
+  mov ax, 0x10 ; TODO: set PL in the data segment
+  push ax ; push SS
+  mov rax, [rsi]
+  push rax ; push RSP
 
   mov rax, [rsi + 0x20] ; flags
   push rax
 
   ; push CS with correct priviledge level
   mov ax, 0x8
-  mov rax, [rsi + 0x10]
-  cmp rax, PML4_START
+  mov rcx, [rsi + 0x10]
+  cmp rcx, PML4_START
   je .pushCS
   or ax, 0x3 ; PL = 3
 .pushCS:
@@ -147,12 +152,20 @@ task_switch:
   mov rcx, [rsi + 0x38]
   mov rdx, [rsi + 0x40]
   mov rdi, [rsi + 0x50]
+  mov rbp, [rsp + 0x8]
 
   ; finally, get the rsi value
   push rbx
   mov rbx, [rsi + 0x48]
   mov rsi, rbx
   pop rbx
+
+  push rdi
+  mov rdi, 0x40
+  add rsp, 8
+  call stack_log
+  sub rsp, 8
+  pop rdi
   iretq ; will reset the interrupts flag in the FLAGS register
 
 global task_switch_interrupt
@@ -161,11 +174,11 @@ task_switch_interrupt:
   call scheduler_run_next
 
   ; well, we should set an interrupt
-  mov rsi, 0x20
-  mov rdi, 0x10000
+  call lapic_send_eoi
+  mov rdi, 0x20
+  mov rsi, 0x10000
   mov rdx, 1
   call lapic_timer_set
-  call lapic_send_eoi
   iretq
 
 ; looks up and returns an entry in a page table
@@ -185,6 +198,7 @@ universal_table_lookup:
 universal_page_lookup:
   push rbp
   mov rbp, rsp
+
   sub rsp, 0x18
   mov qword [rbp - 0x18], 27 ; shift
   mov rax, cr3
@@ -203,16 +217,14 @@ universal_page_lookup:
   mov rcx, [rbp - 0x18] ; get shift
   shr rdi, cl
   and rdi, 0x1ff
+  sub rcx, 9
+  mov [rbp - 0x18], rcx
   call universal_table_lookup
   mov rcx, rax
   and rcx, 1 ; make sure first bit is set in page entry
   jz .pageNotFound
   shr rax, 12
   mov [rbp - 0x10], rax
-
-  mov rax, [rbp - 0x18]
-  sub rax, 9
-  mov [rbp - 0x18], rax
 
   pop rcx
   loop .copyLoop

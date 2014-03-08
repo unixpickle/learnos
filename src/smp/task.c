@@ -125,6 +125,14 @@ task_t * task_create() {
   return task;
 }
 
+void task_list_add(task_t * task) {
+  tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
+  anlock_lock(&root->lock);
+  task->nextTask = root->firstTask;
+  root->firstTask = (task_t *)ref_retain(task);
+  anlock_unlock(&root->lock);
+}
+
 void task_dealloc(task_t * task) {
   // deallocate all memory mapping structure
   uint64_t vPml4 = kernpage_calculate_virtual(task->pml4);

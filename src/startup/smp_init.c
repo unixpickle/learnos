@@ -5,6 +5,7 @@
 #include <interrupts/pit.h>
 #include <smp/cpu_config.h>
 #include <smp/gdt.h>
+#include <smp/scheduler.h>
 
 extern void GDT64_pointer();
 extern void proc_entry();
@@ -19,19 +20,17 @@ static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry);
 static void initialize_cpu(uint32_t cpuId);
 
 void smp_initialize() {
+  tasks_initialize();
   gdt_initialize();
   copy_init_code();
   cpu_list_initialize(lapic_get_id());
-  __asm__ __volatile__ ("lgdtq (%0)"
-                        : : "r" (GDT64_PTR));
   acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
-  // uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
-  // uint64_t taskStart = ((uint64_t)bootstrap_task);
-  // TODO: create a task with this buffer
-  // lapic_timer_set(0x20, 10000, 4);
-  // lapic_timer_set(0x20, 10000, 4);
+  uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
+  uint64_t taskStart = ((uint64_t)bootstrap_task);
+  scheduler_generate_task((void *)taskStart, taskEnd - taskStart);
+  
   task_loop();
 }
 

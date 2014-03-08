@@ -43,6 +43,10 @@ tss_t * gdt_add_tss() {
   desc.res0 = 0;
   desc.res1 = 0;
   desc.res2 = 0;
+  desc.granularity = 0;
+  desc.present = 1;
+  desc.available = 1;
+  desc.type = 9; // 32-bit TSS
   uint32_t * dest = (uint32_t *)(DYNAMIC_GDT + size);
   uint32_t * source = (uint32_t *)&desc;
   for (i = 0; i < 4; i++) {

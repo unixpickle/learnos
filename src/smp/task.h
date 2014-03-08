@@ -104,6 +104,13 @@ void tasks_initialize();
 task_t * task_create();
 
 /**
+ * Adds a task to the task list. This function does not consume the reference
+ * to task, so you must do that later.
+ * @discussion You know the drill, call from a critical section.
+ */
+void task_list_add(task_t * task);
+
+/**
  * Deallocates the *critical* resources of the task. This should only
  * be called once the task has finished its shutdown sequence.
  * Really, this should only be called when the task's retain count reaches 0.

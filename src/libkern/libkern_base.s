@@ -1,5 +1,7 @@
 bits 64
 
+extern print, printHex
+
 global hang
 hang:
   hlt
@@ -80,3 +82,63 @@ disable_interrupts:
   cli
   ret
 
+global stack_log
+stack_log:
+  push rax
+  push rbx
+  push rcx
+  push rdx
+  push rsi
+  push rdi
+  push r8
+  push r9
+  push r10
+  push r11
+  push r12
+  push r13
+  push r14
+  push r15
+
+  mov rdi, .startmessage
+  call print
+
+  mov rcx, [rsp + 0x40] ; orginal rdi
+  mov rdx, 0x88
+.loopy:
+  push rcx
+  push rdx
+  xor rax, rax
+  mov al, [rsp + rdx]
+  mov rdi, rax
+  call printHex
+  mov rdi, .space
+  call print
+  pop rdx
+  pop rcx
+  add rdx, 1
+  loop .loopy
+
+  mov rdi, .endmessage
+  call print
+
+  pop r15
+  pop r14
+  pop r13
+  pop r12
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rdi
+  pop rsi
+  pop rdx
+  pop rcx
+  pop rbx
+  pop rax
+  ret
+.startmessage:
+  db 'debug call: ', 0
+.space:
+  db ' ', 0
+.endmessage:
+  db 0xa, 0

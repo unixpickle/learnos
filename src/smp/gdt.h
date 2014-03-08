@@ -6,7 +6,7 @@
 typedef struct {
   uint16_t limit_0;
   uint16_t base_0;
-  uint16_t base_16;
+  uint8_t base_16;
   unsigned type : 4;
   unsigned res0 : 1;
   unsigned dpl : 2;

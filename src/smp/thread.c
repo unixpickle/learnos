@@ -5,6 +5,7 @@
 #include "vm.h"
 #include "context.h"
 #include "scheduler.h"
+#include <stdio.h>
 
 typedef struct {
   task_t * task;
@@ -64,6 +65,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   ref_initialize(&thread, (void (*)(void *))thread_dealloc);
   // todo: great things, here!
   thread->isSystem = true;
+  thread->isRunning = 0;
   thread->nextThread = NULL;
   anlock_lock(&task->threadStacksLock);
   thread->stackIndex = anidxset_get(&task->threadStacks);
@@ -88,14 +90,18 @@ thread_t * thread_create_user(task_t * task, void * rip) {
 }
 
 thread_t * thread_create_first(task_t * task,
-                               void * rip,
                                void * program,
                                uint64_t len) {
-  thread_t * thread = thread_create_user(task, rip);
+  thread_t * thread = thread_create_user(task, (void *)PROC_CODE_BUFF);
   if (!thread) return NULL;
-  thread->state.rip = (uint64_t)thread_configure_user_program;
+  thread->state.rip = (uint64_t)print;
+  //thread->state.rip = (uint64_t)thread_configure_user_program;
   thread->state.rsi = (uint64_t)program;
   thread->state.rdx = len;
+  thread->state.rdi = (uint64_t)("hey there bro\n");
+  print("address of thread_configure_user_program: 0x");
+  printHex((uint64_t)thread_configure_user_program);
+  print("\n");
   return thread;
 }
 
@@ -186,7 +192,7 @@ void thread_configure_user_stack(void * rip) {
   state.rip = (uint64_t)rip;
   state.rsp = _task_calculate_user_stack(thread->stackIndex);
   state.rbp = state.rsp;
-  state.flags = 3 << 0xc; // I/O privilege level
+  state.flags = 0;
   state.cr3 = task->pml4;
 
   // we have retained both resources, so we must release them
@@ -200,6 +206,7 @@ void thread_configure_user_stack(void * rip) {
 }
 
 void thread_configure_user_program(void * rip, void * program, uint64_t len) {
+  __asm__ __volatile__ ("int $0x2");
   // TODO: copy over all the user-space code here
   if (!_allocate_user_code(program, len)) {
     task_thread_t ttt;

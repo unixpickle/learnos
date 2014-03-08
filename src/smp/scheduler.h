@@ -21,3 +21,9 @@ void scheduler_switch_task(task_t * task, thread_t * thread);
  */
 void scheduler_run_next();
 
+/**
+ * Creates a new task with one thread and adds it to the task queue.
+ * @discussion This must be called from a critical section.
+ */
+bool scheduler_generate_task(void * code, uint64_t len);
+

@@ -22,7 +22,8 @@ void configure_cpu(uint64_t stack) {
 }
 
 void task_loop() {
-  asm("int %0" : : "i" (IDT_VECTOR_TIMER));
+  __asm__ __volatile__ ("lgdtq (%0)\nint %1"
+                        : : "r" (GDT64_PTR), "i" (IDT_VECTOR_TIMER));
   hang();
 }
 

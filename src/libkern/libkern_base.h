@@ -49,4 +49,9 @@ void enable_interrupts();
  */
 void disable_interrupts();
 
+/**
+ * Print `count` bytes of the stack. Preserves all registers.
+ */
+void stack_log(uint64_t count);
+
 #endif
