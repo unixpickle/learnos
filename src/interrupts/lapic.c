@@ -132,3 +132,10 @@ void lapic_send_ipi(uint32_t cpu,
   lapic_set_register(0x30, value);
 }
 
+void lapic_timer_set(uint8_t vector, uint32_t count, uint32_t div) {
+  lapic_set_register(LAPIC_REG_TMRINITCNT, count);
+  lapic_set_register(LAPIC_REG_TMRDIV, div);
+  uint32_t timerField = vector | (2 << 17); // mode is bit 17
+  lapic_set_register(LAPIC_REG_LVT_TMR, timerField);
+}
+

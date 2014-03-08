@@ -1,9 +1,10 @@
 #include "gdt.h"
+#include <shared/addresses.h>
 
 extern void GDT64_pointer();
 
 void gdt_initialize() {
-  uint16_t * gdtPtr = (uint8_t *)GDT64_pointer;
+  uint16_t * gdtPtr = (uint16_t *)GDT64_pointer;
   uint8_t * dataPtr = *((uint8_t **)(gdtPtr + 1));
   uint8_t * tableDest = (uint8_t *)DYNAMIC_GDT;
   uint16_t len = *gdtPtr;
@@ -18,7 +19,7 @@ void gdt_initialize() {
 }
 
 uint64_t gdt_get_size() {
-  return 1 + *((uint16_t *)GDT64_PTR);
+  return (1 + *((uint16_t *)GDT64_PTR));
 }
 
 tss_t * gdt_add_tss() {
@@ -42,13 +43,13 @@ tss_t * gdt_add_tss() {
   desc.res0 = 0;
   desc.res1 = 0;
   desc.res2 = 0;
-  uint32_t * ptr = (uint32_t *)(DYNAMIC_GDT + size);
+  uint32_t * dest = (uint32_t *)(DYNAMIC_GDT + size);
   uint32_t * source = (uint32_t *)&desc;
   for (i = 0; i < 4; i++) {
-    ptr[i] = source[i];
+    dest[i] = source[i];
   }
   (*((uint16_t *)GDT64_PTR)) += sizeof(desc);
 
-  return tss;
+  return (tss_t *)tss;
 }
 

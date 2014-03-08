@@ -138,7 +138,7 @@ void thread_dealloc(thread_t * thread) {
 }
 
 void thread_configure_tss(thread_t * thread, tss_t * tss) {
-  tss->rsp[0] = _task_calculate_kernel_stack(thread);
+  tss->rsp[0] = _task_calculate_kernel_stack(thread->stackIndex);
 }
 
 void thread_configure_user_stack(void * rip) {

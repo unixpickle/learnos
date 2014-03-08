@@ -44,4 +44,5 @@ void lapic_send_ipi(uint32_t cpu,
                     uint8_t mode,
                     uint8_t level,
                     uint8_t trigger);
+void lapic_timer_set(uint8_t vector, uint32_t count, uint32_t div);
 

@@ -8,6 +8,7 @@ extern kernpage_initialize
 extern kernpage_lockdown
 extern apic_initialize
 extern smp_initialize
+extern task_loop
 
 bits 32
 
@@ -164,7 +165,7 @@ _entry64:
   call kernpage_initialize
   call apic_initialize
   call smp_initialize
-  call hang
+  call task_loop
 
 inLongModeMessage:
   db 'Entered long mode', 10, 0

@@ -1,6 +1,8 @@
 #ifndef __SMP_GDT_H__
 #define __SMP_GDT_H__
 
+#include <stdint.h>
+
 typedef struct {
   uint16_t limit_0;
   uint16_t base_0;

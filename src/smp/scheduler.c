@@ -1,5 +1,6 @@
 #include "scheduler.h"
 #include "context.h"
+#include "thread.h"
 #include <anlock.h>
 #include "cpu_list.h"
 

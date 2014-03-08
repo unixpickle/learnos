@@ -12,7 +12,6 @@ extern void proc_entry_end();
 extern void bootstrap_task();
 extern void bootstrap_task_end();
 
-static void copy_gdt_pointer();
 static void copy_init_code();
 
 static bool lapic_startup(void * unused, acpi_entry_lapic * entry);
@@ -23,22 +22,17 @@ void smp_initialize() {
   gdt_initialize();
   copy_init_code();
   cpu_list_initialize(lapic_get_id());
+  __asm__ __volatile__ ("lgdtq (%0)"
+                        : : "r" (GDT64_PTR));
   acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
   // uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
   // uint64_t taskStart = ((uint64_t)bootstrap_task);
   // TODO: create a task with this buffer
-}
-
-static void copy_gdt_pointer() {
-  uint16_t * source = (uint16_t *)GDT64_pointer;
-  uint16_t * dest = (uint16_t *)GDT64_PTR;
-  dest[0] = source[0];
-  dest[1] = source[1];
-  dest[2] = source[2];
-  dest[3] = source[3];
-  dest[4] = source[4];
+  // lapic_timer_set(0x20, 10000, 4);
+  // lapic_timer_set(0x20, 10000, 4);
+  task_loop();
 }
 
 static void copy_init_code() {

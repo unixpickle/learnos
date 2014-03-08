@@ -2,6 +2,9 @@
 #include <interrupts/lapic.h>
 #include <libkern_base.h>
 #include <kernpage.h>
+#include "scheduler.h"
+#include <interrupts/idt.h>
+#include <interrupts/basic.h>
 
 void configure_cpu(uint64_t stack) {
   kernpage_lock();
@@ -19,13 +22,16 @@ void configure_cpu(uint64_t stack) {
 }
 
 void task_loop() {
-  halt();
+  asm("int %0" : : "i" (IDT_VECTOR_TIMER));
+  hang();
 }
 
 void smp_entry(uint64_t stack) {
   lapic_enable();
   lapic_set_defaults();
   lapic_set_priority(0x0);
+
+  load_idtr((void *)IDTR_PTR);
 
   // configure the CPU
   configure_cpu(stack);

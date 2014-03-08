@@ -11,6 +11,8 @@ extern anlock_unlock
 extern anlock_lock
 extern ref_retain
 extern ref_release
+extern lapic_timer_set
+extern lapic_send_eoi
 
 global task_run_with_stack
 task_run_with_stack:
@@ -157,9 +159,14 @@ global task_switch_interrupt
 task_switch_interrupt:
   call task_save_state
   call scheduler_run_next
-.loop:
-  hlt
-  jmp .loop
+
+  ; well, we should set an interrupt
+  mov rsi, 0x20
+  mov rdi, 0x10000
+  mov rdx, 1
+  call lapic_timer_set
+  call lapic_send_eoi
+  iretq
 
 ; looks up and returns an entry in a page table
 ; uint64_t virtual_table_lookup(uint64_t index, page_t kernpageAddress);
@@ -184,6 +191,7 @@ universal_page_lookup:
   shr rax, 12
   mov [rbp - 0x10], rax      ; physical table page
   mov [rbp - 0x8], rdi       ; virtual page to lookup
+  mov rcx, 4                 ; number of times to run iteration
 
 .copyLoop:
   ; lookup kernpage address of the physical table

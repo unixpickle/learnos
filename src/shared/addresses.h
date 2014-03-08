@@ -70,7 +70,7 @@
  * A counter which the PIT will increment 100 times a second
  * during boot in order to keep the system time.
  */
-#define PIT_TICK_COUNT (*((volatile uint64_t *)0x201036))
+#define PIT_TICK_COUNT (*((volatile uint64_t *)0x201038))
 
 /**
  * The address of the IDT to be used by the whole system.

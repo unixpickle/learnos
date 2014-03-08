@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <libkern_base.h>
 
+extern void task_switch_interrupt();
+
 static void _initialize_idt(idt_entry * ptr);
 static void _set_irqs(idt_entry * ptr);
 static void _make_entry(idt_entry * out, void (* ptr)());
@@ -37,7 +39,11 @@ void configure_global_idt() {
   idtr->virtualAddress = IDT_PTR;
   _initialize_idt((idt_entry *)IDT_PTR);
   _set_irqs((idt_entry *)IDT_PTR);
-  // TODO: add handlers
+
+  idt_entry entry;
+  _make_entry(&entry, task_switch_interrupt);
+  ((idt_entry *)IDT_PTR)[IDT_VECTOR_TIMER] = entry;
+
   load_idtr((void *)idtr);
 }
 

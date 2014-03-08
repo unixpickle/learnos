@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <shared/addresses.h>
 
+#define IDT_VECTOR_TIMER 0x20
+
 typedef struct {
   uint16_t limit;
   uint64_t virtualAddress;
