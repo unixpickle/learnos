@@ -94,7 +94,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
 thread_t * thread_create_first(task_t * task,
                                void * program,
                                uint64_t len) {
-  thread_t * thread = thread_create_user(task, (void *)PROC_CODE_BUFF);
+  thread_t * thread = thread_create_user(task, (void *)(PROC_CODE_BUFF << 12));
   if (!thread) return NULL;
   thread->state.rip = (uint64_t)thread_configure_user_program;
   thread->state.rsi = (uint64_t)program;
@@ -112,6 +112,13 @@ void * thread_resume_kernel_stack(task_t * task, thread_t * thread) {
     anlock_unlock(&task->pml4Lock);
     return (void *)((1 + kernpage_calculate_virtual(physical)) << 12);
   }
+}
+
+void * thread_translate_kernel_stack(task_t * task,
+                                     thread_t * thread,
+                                     void * ptr) {
+  page_t localPage = _task_calculate_kernel_stack(thread->stackIndex);
+  return (void *)((localPage << 12) | (((uint64_t)ptr) & 0xfff));
 }
 
 void thread_dealloc(thread_t * thread) {
@@ -188,7 +195,7 @@ void thread_configure_user_stack(void * rip) {
   thread->state.rsp = _task_calculate_user_stack(thread->stackIndex) + 0x100000;
   thread->state.rbp = thread->state.rsp;
   thread->state.flags = 0x200; // interrupt flag
-  thread->state.cr3 = task->pml4;
+  thread->state.cr3 = (task->pml4 << 12);
   scheduler_switch_task(task, thread);
 }
 

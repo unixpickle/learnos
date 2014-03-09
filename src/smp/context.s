@@ -13,7 +13,8 @@ extern ref_retain
 extern ref_release
 extern lapic_timer_set
 extern lapic_send_eoi
-extern task_vm_get_from_kernpage, cpu_get_dedicated_stack
+extern thread_translate_kernel_stack, cpu_get_dedicated_stack
+extern stack_log
 
 global task_run_with_stack
 task_run_with_stack:
@@ -108,6 +109,12 @@ task_switch:
   ; immediately, we jump into the thread's kernel stack
   push rdi
   push rsi
+
+  mov r8, rdi
+  mov rdi, 0x10
+  call stack_log
+  mov rdi, r8
+
   call thread_resume_kernel_stack
   pop rsi
   pop rdi
@@ -166,12 +173,17 @@ task_switch:
   mov rbx, [rsi + 0x10] ; the cr3 field
   cmp rbx, PML4_START
   je .avoidRecalc
-  ; rdi is already a task, rsi is our stack argument
 
-  mov rsi, rsp
-  call task_vm_get_from_kernpage
+  ; rdi is already a task, make rsi a thread_t* and rdx the stack to translate
+  sub rsi, 0x20 ; go back to the beginning of our thread
+  mov rdx, rsp
+  call thread_translate_kernel_stack
   mov cr3, rbx ; rbp was preserved
   mov rsp, rax
+
+extern printHex
+  mov rdi, rax
+  call printHex
 
 .avoidRecalc:
   pop rdi
@@ -181,6 +193,11 @@ task_switch:
   pop rbx
   pop rax
   pop rbp
+
+  mov r8, rdi
+  mov rdi, 0x28
+  call stack_log
+  mov rdi, r8
 
   iretq ; will reset the interrupts flag in the FLAGS register
 
@@ -195,8 +212,8 @@ task_switch_interrupt:
   call lapic_send_eoi
   mov rdi, 0x20
   mov rsi, 0x10000
-  mov rdx, 1
-  call lapic_timer_set
+  mov rdx, 0x1000 ; super slow
+  ; call lapic_timer_set
   call scheduler_run_next ; only returns if #CPU's > #tasks
 
   ; hang here until another timer interrupt

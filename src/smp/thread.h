@@ -28,6 +28,15 @@ thread_t * thread_create_first(task_t * task,
 void * thread_resume_kernel_stack(task_t * task, thread_t * thread);
 
 /**
+ * Calculates the pointer in the task's address-space to a pointer that was
+ * already in kernpage space. The pointer must be within the page allocated in
+ * kernpage space for the thread's stack.
+ */
+void * thread_translate_kernel_stack(task_t * task,
+                                     thread_t * thread,
+                                     void * ptr);
+
+/**
  * Only to be called when the thread has already been cleaned up by a kernel
  * mini-program.
  */
