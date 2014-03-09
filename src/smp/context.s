@@ -13,7 +13,7 @@ extern ref_retain
 extern ref_release
 extern lapic_timer_set
 extern lapic_send_eoi
-extern stack_log
+extern task_vm_get_from_kernpage
 
 global task_run_with_stack
 task_run_with_stack:
@@ -106,11 +106,11 @@ task_switch_to_kernpage:
 global task_switch
 task_switch:
   ; immediately, we jump into the thread's kernel stack
-  push rsi
   push rdi
+  push rsi
   call thread_resume_kernel_stack
-  pop rdi
   pop rsi
+  pop rdi
   mov rsp, rax
   mov rbp, rax
 
@@ -125,7 +125,7 @@ task_switch:
   add rsi, 0x20 ; start of state_t structure
 
   ; push state for iretq
-  mov ax, 0x10 ; TODO: set PL in the data segment
+  mov ax, 0x0 ; TODO: set PL in the data segment
   push ax ; push SS
   mov rax, [rsi]
   push rax ; push RSP
@@ -134,38 +134,53 @@ task_switch:
   push rax
 
   ; push CS with correct priviledge level
-  mov ax, 0x8
+  mov rax, 0x8
   mov rcx, [rsi + 0x10]
   cmp rcx, PML4_START
   je .pushCS
-  or ax, 0x3 ; PL = 3
+  or rax, 0x3 ; PL = 3
 .pushCS:
-  push ax
+  push rax
 
   ; push rip
   mov rax, [rsi + 0x18]
   push rax
 
-  ; load the appropriate registers
-  mov rax, [rsi + 0x28]
-  mov rbx, [rsi + 0x30]
-  mov rcx, [rsi + 0x38]
-  mov rdx, [rsi + 0x40]
-  mov rdi, [rsi + 0x50]
-  mov rbp, [rsp + 0x8]
+  ; push the appropriate registers to the stack for the next thingy
+  mov rax, [rsi + 0x8] ; rbp
+  push rax
+  mov rax, [rsi + 0x28] ; rax
+  push rax
+  mov rax, [rsi + 0x30] ; rbx
+  push rax
+  mov rax, [rsi + 0x38] ; rcx
+  push rax
+  mov rax, [rsi + 0x40] ; rdx
+  push rax
+  mov rax, [rsi + 0x48] ; rsi
+  push rax
+  mov rax, [rsi + 0x50] ; rdi
+  push rax
 
-  ; finally, get the rsi value
-  push rbx
-  mov rbx, [rsi + 0x48]
-  mov rsi, rbx
-  pop rbx
+  ; check if we need to calculate a translated stack
+  mov rcx, [rsi + 0x10] ; the cr3 field
+  cmp rcx, PML4_START
+  je .avoidRecalc
+  ; rdi is already a task, rsi is our stack argument
+  mov rsi, rsp
+  call task_vm_get_from_kernpage
+  mov cr3, rcx
+  mov rsp, rax
 
-  push rdi
-  mov rdi, 0x40
-  add rsp, 8
-  call stack_log
-  sub rsp, 8
+.avoidRecalc:
   pop rdi
+  pop rsi
+  pop rdx
+  pop rcx
+  pop rbx
+  pop rax
+  pop rbp
+
   iretq ; will reset the interrupts flag in the FLAGS register
 
 global task_switch_interrupt

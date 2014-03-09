@@ -6,6 +6,7 @@
 #include "context.h"
 #include "scheduler.h"
 #include <stdio.h>
+#include <libkern_base.h>
 
 typedef struct {
   task_t * task;
@@ -94,11 +95,9 @@ thread_t * thread_create_first(task_t * task,
                                uint64_t len) {
   thread_t * thread = thread_create_user(task, (void *)PROC_CODE_BUFF);
   if (!thread) return NULL;
-  thread->state.rip = (uint64_t)print;
-  //thread->state.rip = (uint64_t)thread_configure_user_program;
+  thread->state.rip = (uint64_t)thread_configure_user_program;
   thread->state.rsi = (uint64_t)program;
   thread->state.rdx = len;
-  thread->state.rdi = (uint64_t)("hey there bro\n");
   print("address of thread_configure_user_program: 0x");
   printHex((uint64_t)thread_configure_user_program);
   print("\n");
@@ -207,6 +206,7 @@ void thread_configure_user_stack(void * rip) {
 
 void thread_configure_user_program(void * rip, void * program, uint64_t len) {
   __asm__ __volatile__ ("int $0x2");
+  hang();
   // TODO: copy over all the user-space code here
   if (!_allocate_user_code(program, len)) {
     task_thread_t ttt;

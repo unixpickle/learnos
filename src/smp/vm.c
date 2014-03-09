@@ -140,3 +140,12 @@ void task_vm_unmap(task_t * task, page_t virt) {
   }
 }
 
+void * task_vm_get_from_kernpage(task_t * task, void * ptr) {
+  page_t pval = ((uint64_t)ptr) >> 12;
+  page_t phys = kernpage_calculate_physical(pval);
+  anlock_lock(&task->pml4Lock);
+  page_t taskPage = task_vm_lookup(task, phys);
+  anlock_unlock(&task->pml4Lock);
+  return (void *)((taskPage << 12) + (((uint64_t)ptr) & 0xfff));
+}
+
