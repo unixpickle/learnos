@@ -16,9 +16,16 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
   info->currentTask = task;
   info->currentThread = thread;
   thread_configure_tss(thread, info->tss);
-  __asm__ __volatile ("ltr %0" : : "r" (info->tssSelector));
-  anlock_unlock(&info->lock);
 
+  // get the TSS and set it if it's wrong
+  // TODO: see if we need to reload the TSS
+  uint16_t currentTss;
+  __asm__ ("str %0" : "=r" (currentTss));
+  if (currentTss != info->tssSelector) {
+    __asm__ ("ltr %0" : : "r" (info->tssSelector));
+  }
+
+  anlock_unlock(&info->lock);
   task_switch(task, thread); // changes our execution context
 }
 

@@ -22,4 +22,5 @@ cpu_info * cpu_list_lookup(uint32_t cpuId);
 void cpu_list_add(uint64_t page);
 
 cpu_info * cpu_get_current();
+void * cpu_get_dedicated_stack();
 

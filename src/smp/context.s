@@ -13,8 +13,7 @@ extern ref_retain
 extern ref_release
 extern lapic_timer_set
 extern lapic_send_eoi
-extern task_vm_get_from_kernpage
-extern stack_log
+extern task_vm_get_from_kernpage, cpu_get_dedicated_stack
 
 global task_run_with_stack
 task_run_with_stack:
@@ -66,7 +65,7 @@ task_save_state:
   mov rax, [rsp + 0x48]
   mov [rdi + 0x38], rax ; rip
   mov rax, [rsp + 0x58]
-  mov [rdi + 0x40], rax; flags
+  mov [rdi + 0x40], rax ; flags
   mov rax, [rsp + 0x10]
   mov [rdi + 0x48], rax ; rax
   mov rax, [rsp + 0x18]
@@ -189,6 +188,8 @@ task_switch:
 global task_switch_interrupt
 task_switch_interrupt:
   call task_save_state
+  call cpu_get_dedicated_stack
+  mov rsp, rax
 
   ; well, we should set an interrupt
   call lapic_send_eoi
@@ -199,7 +200,6 @@ task_switch_interrupt:
   call scheduler_run_next ; only returns if #CPU's > #tasks
 
   ; hang here until another timer interrupt
-  add rsp, 0x28 ; add RIP, CS, FLAGS, RSP, SS
   sti
 .hang:
   hlt

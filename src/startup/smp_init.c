@@ -6,6 +6,7 @@
 #include <smp/cpu_config.h>
 #include <smp/gdt.h>
 #include <smp/scheduler.h>
+#include <kernpage.h>
 
 extern void GDT64_pointer();
 extern void proc_entry();

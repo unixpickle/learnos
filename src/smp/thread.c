@@ -137,12 +137,10 @@ void thread_dealloc(thread_t * thread) {
 }
 
 void thread_configure_tss(thread_t * thread, tss_t * tss) {
-  tss->rsp[0] = _task_calculate_kernel_stack(thread->stackIndex);
+  tss->rsp[0] = (_task_calculate_kernel_stack(thread->stackIndex) + 1) << 12;
 }
 
 void thread_configure_user_stack(void * rip) {
-  hang();
-
   // enter and leave critical sections as we allocate memory
   task_thread_t ttt;
   get_task_and_thread(&ttt);
@@ -195,8 +193,6 @@ void thread_configure_user_stack(void * rip) {
 }
 
 void thread_configure_user_program(void * rip, void * program, uint64_t len) {
-  hang();
-
   print("allocating user code\n");
   if (!_allocate_user_code(program, len)) {
     task_thread_t ttt;

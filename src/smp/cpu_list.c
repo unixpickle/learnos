@@ -62,6 +62,11 @@ cpu_info * cpu_get_current() {
   return cpu_list_lookup(ident);
 }
 
+void * cpu_get_dedicated_stack() {
+  cpu_info * info = cpu_get_current();
+  return (void *)((info->baseStack + 1) << 0xc);
+}
+
 static void cpu_list_lock() {
   anlock_t lock = (anlock_t)CPU_LIST_LOCK;
   anlock_lock(lock);
