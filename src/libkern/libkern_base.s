@@ -1,6 +1,7 @@
 bits 64
 
 extern print, printHex
+%include "../pushaq.s"
 
 global hang
 hang:
@@ -84,20 +85,7 @@ disable_interrupts:
 
 global stack_log
 stack_log:
-  push rax
-  push rbx
-  push rcx
-  push rdx
-  push rsi
-  push rdi
-  push r8
-  push r9
-  push r10
-  push r11
-  push r12
-  push r13
-  push r14
-  push r15
+  pushaq
 
   mov rdi, .startmessage
   call print
@@ -121,20 +109,7 @@ stack_log:
   mov rdi, .endmessage
   call print
 
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop r11
-  pop r10
-  pop r9
-  pop r8
-  pop rdi
-  pop rsi
-  pop rdx
-  pop rcx
-  pop rbx
-  pop rax
+  popaq
   ret
 .startmessage:
   db 'debug call: ', 0

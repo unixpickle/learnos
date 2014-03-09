@@ -14,6 +14,7 @@ extern ref_release
 extern lapic_timer_set
 extern lapic_send_eoi
 extern task_vm_get_from_kernpage
+extern stack_log
 
 global task_run_with_stack
 task_run_with_stack:
@@ -56,7 +57,7 @@ task_save_state:
   je .end ; there is no current thread_t running on the CPU
 
   ; store each of our variables in the thread_t structure
-  mov rax, [rsp + 0x5a]
+  mov rax, [rsp + 0x60] ; 0x40 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
   mov [rdi + 0x20], rax ; rsp
   mov rax, [rsp]
   mov [rdi + 0x28], rax ; rbp
@@ -64,7 +65,7 @@ task_save_state:
   mov [rdi + 0x30], rax ; cr3
   mov rax, [rsp + 0x48]
   mov [rdi + 0x38], rax ; rip
-  mov rax, [rsp + 0x52]
+  mov rax, [rsp + 0x58]
   mov [rdi + 0x40], rax; flags
   mov rax, [rsp + 0x10]
   mov [rdi + 0x48], rax ; rax
@@ -80,8 +81,8 @@ task_save_state:
   mov [rdi + 0x70], rax ; rdi
   call ref_release
 
-  ; return after releaving our stack of its registers!
 .end:
+  ; return after relieving our stack of its registers!
   add rsp, 0x40
   ret
   
@@ -163,13 +164,14 @@ task_switch:
   push rax
 
   ; check if we need to calculate a translated stack
-  mov rcx, [rsi + 0x10] ; the cr3 field
-  cmp rcx, PML4_START
+  mov rbx, [rsi + 0x10] ; the cr3 field
+  cmp rbx, PML4_START
   je .avoidRecalc
   ; rdi is already a task, rsi is our stack argument
+
   mov rsi, rsp
   call task_vm_get_from_kernpage
-  mov cr3, rcx
+  mov cr3, rbx ; rbp was preserved
   mov rsp, rax
 
 .avoidRecalc:
@@ -183,10 +185,10 @@ task_switch:
 
   iretq ; will reset the interrupts flag in the FLAGS register
 
+
 global task_switch_interrupt
 task_switch_interrupt:
   call task_save_state
-  call scheduler_run_next
 
   ; well, we should set an interrupt
   call lapic_send_eoi
@@ -194,7 +196,14 @@ task_switch_interrupt:
   mov rsi, 0x10000
   mov rdx, 1
   call lapic_timer_set
-  iretq
+  call scheduler_run_next ; only returns if #CPU's > #tasks
+
+  ; hang here until another timer interrupt
+  add rsp, 0x28 ; add RIP, CS, FLAGS, RSP, SS
+  sti
+.hang:
+  hlt
+  jmp .hang
 
 ; looks up and returns an entry in a page table
 ; uint64_t virtual_table_lookup(uint64_t index, page_t kernpageAddress);

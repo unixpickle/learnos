@@ -29,8 +29,16 @@ void smp_initialize() {
 
   uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
   uint64_t taskStart = ((uint64_t)bootstrap_task);
+  kernpage_lock();
+  uint64_t used = kernpage_count_allocated();
+  kernpage_unlock();
   scheduler_generate_task((void *)taskStart, taskEnd - taskStart);
-  
+  kernpage_lock();
+  used = kernpage_count_allocated() - used;
+  kernpage_unlock();
+  print("scheduler_generate_task used ");
+  printHex(used);
+  print(" pages to generate the first task\n");
   task_loop();
 }
 

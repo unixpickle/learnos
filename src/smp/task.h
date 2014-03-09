@@ -69,6 +69,7 @@ struct thread_t {
   uint64_t stackIndex;
   struct state_t state;
 
+  task_t * containingTask; // strong
   uint8_t isRunning;
   uint8_t isSystem; // if 1, this thread can't be killed
 } __attribute__((packed));

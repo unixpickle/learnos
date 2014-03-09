@@ -26,7 +26,9 @@ void scheduler_run_next() {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
   // TODO: see if we need to use __sync
-  __sync_fetch_and_and(&info->currentThread->isRunning, 0);
+  if (info->currentThread) {
+    __sync_fetch_and_and(&info->currentThread->isRunning, 0);
+  }
   ref_release(info->currentTask);
   ref_release(info->currentThread);
   info->currentTask = NULL;
@@ -43,13 +45,15 @@ void scheduler_run_next() {
 bool scheduler_generate_task(void * code, uint64_t len) {
   task_t * task = task_create();
   if (!task) return false;
+
   thread_t * thread = thread_create_first(task, code, len);
   if (!thread) {
     ref_release(task);
     return false;
   }
+
   task->nextThread = thread;
-  task->firstThread = thread;
+  task->firstThread = ref_retain(thread);
   task_list_add(task);
   ref_release(task);
   return true;

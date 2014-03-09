@@ -111,6 +111,7 @@ void int_stack_fault() {
 
 void int_general_protection_fault() {
   print("got general protection fault\n");
+  __asm__ __volatile__("cli");
   hang();
 }
 

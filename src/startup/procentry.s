@@ -82,11 +82,7 @@ initiate_routine:
 
 global bootstrap_task
 bootstrap_task:
-  mov al, 3
-  out 0x8, al
-  out 0x8, al
-  out 0x8, al
-  out 0x8, al
+  hlt
   jmp bootstrap_task
 
 global bootstrap_task_end

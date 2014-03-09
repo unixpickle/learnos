@@ -63,7 +63,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   }
 
   thread_t * thread = (thread_t *)(mainPage << 12);
-  ref_initialize(&thread, (void (*)(void *))thread_dealloc);
+  ref_initialize(thread, (void (*)(void *))thread_dealloc);
   // todo: great things, here!
   thread->isSystem = true;
   thread->isRunning = 0;
@@ -71,6 +71,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   anlock_lock(&task->threadStacksLock);
   thread->stackIndex = anidxset_get(&task->threadStacks);
   anlock_unlock(&task->threadStacksLock);
+  thread->containingTask = ref_retain(task);
 
   // map the kernel stack into the user space process
   anlock_lock(&task->pml4Lock);
@@ -85,7 +86,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   thread->state.cr3 = PML4_START;
   thread->state.rdi = (uint64_t)rip;
   thread->state.rip = (uint64_t)thread_configure_user_stack;
-  thread->state.flags = 0;
+  thread->state.flags = 0x200; // threads don't start in critical sections
 
   return thread;
 }
@@ -98,15 +99,12 @@ thread_t * thread_create_first(task_t * task,
   thread->state.rip = (uint64_t)thread_configure_user_program;
   thread->state.rsi = (uint64_t)program;
   thread->state.rdx = len;
-  print("address of thread_configure_user_program: 0x");
-  printHex((uint64_t)thread_configure_user_program);
-  print("\n");
   return thread;
 }
 
 void * thread_resume_kernel_stack(task_t * task, thread_t * thread) {
   if (thread->state.cr3 == PML4_START) {
-    return (void *)thread->state.rsp;
+    return (void *)thread->state.rsp - 0x80; // respect the Red Zone
   } else {
     page_t vmStack = _task_calculate_kernel_stack(thread->stackIndex);
     anlock_lock(&task->pml4Lock);
@@ -117,12 +115,8 @@ void * thread_resume_kernel_stack(task_t * task, thread_t * thread) {
 }
 
 void thread_dealloc(thread_t * thread) {
-  cpu_info * cpu = cpu_get_current();
-  anlock_lock(&cpu->lock);
-  task_t * task = (task_t *)ref_retain(cpu->currentTask);
-  anlock_unlock(&cpu->lock);
+  task_t * task = thread->containingTask;
 
-  // get page of the kernel stack
   anlock_lock(&task->pml4Lock);
   page_t procPage = _task_calculate_kernel_stack(thread->stackIndex);
   page_t phyPage = task_vm_lookup(task, procPage);
@@ -147,6 +141,8 @@ void thread_configure_tss(thread_t * thread, tss_t * tss) {
 }
 
 void thread_configure_user_stack(void * rip) {
+  hang();
+
   // enter and leave critical sections as we allocate memory
   task_thread_t ttt;
   get_task_and_thread(&ttt);
@@ -187,32 +183,27 @@ void thread_configure_user_stack(void * rip) {
     pageIndex++;
   }
 
-  struct state_t state;
-  state.rip = (uint64_t)rip;
-  state.rsp = _task_calculate_user_stack(thread->stackIndex);
-  state.rbp = state.rsp;
-  state.flags = 0;
-  state.cr3 = task->pml4;
-
   // we have retained both resources, so we must release them
   task_critical_start();
-  ref_release(task);
-  ref_release(thread);
-  // TODO: jump to the state
-
-  // this code is never reached, so there's no point
-  // task_critical_stop();
+  print("configuring thread\n");
+  thread->state.rip = (uint64_t)rip;
+  thread->state.rsp = _task_calculate_user_stack(thread->stackIndex) + 0x100000;
+  thread->state.rbp = thread->state.rsp;
+  thread->state.flags = 0x200; // interrupt flag
+  thread->state.cr3 = task->pml4;
+  scheduler_switch_task(task, thread);
 }
 
 void thread_configure_user_program(void * rip, void * program, uint64_t len) {
-  __asm__ __volatile__ ("int $0x2");
   hang();
-  // TODO: copy over all the user-space code here
+
+  print("allocating user code\n");
   if (!_allocate_user_code(program, len)) {
     task_thread_t ttt;
     get_task_and_thread(&ttt);
     _thread_unlink(ttt.task, ttt.thread);
   }
+  print("configuring user stack\n");
   thread_configure_user_stack(rip);
 }
 
