@@ -145,6 +145,8 @@ void thread_dealloc(thread_t * thread) {
 
 void thread_configure_tss(thread_t * thread, tss_t * tss) {
   tss->rsp[0] = (_task_calculate_kernel_stack(thread->stackIndex) + 1) << 12;
+  tss->rsp[1] = (_task_calculate_kernel_stack(thread->stackIndex) + 1) << 12;
+  tss->rsp[2] = (_task_calculate_kernel_stack(thread->stackIndex) + 1) << 12;
 }
 
 void thread_configure_user_stack(void * rip) {
@@ -188,25 +190,23 @@ void thread_configure_user_stack(void * rip) {
     pageIndex++;
   }
 
-  // we have retained both resources, so we must release them
   task_critical_start();
-  print("configuring thread\n");
   thread->state.rip = (uint64_t)rip;
-  thread->state.rsp = _task_calculate_user_stack(thread->stackIndex) + 0x100000;
+  thread->state.rsp = (_task_calculate_user_stack(thread->stackIndex) + 0x100) << 12;
   thread->state.rbp = thread->state.rsp;
   thread->state.flags = 0x200; // interrupt flag
   thread->state.cr3 = (task->pml4 << 12);
+
+  // we have retained both resources, so we can pass them to this
   scheduler_switch_task(task, thread);
 }
 
 void thread_configure_user_program(void * rip, void * program, uint64_t len) {
-  print("allocating user code\n");
   if (!_allocate_user_code(program, len)) {
     task_thread_t ttt;
     get_task_and_thread(&ttt);
     _thread_unlink(ttt.task, ttt.thread);
   }
-  print("configuring user stack\n");
   thread_configure_user_stack(rip);
 }
 
@@ -244,10 +244,11 @@ static bool _allocate_user_code(void * program, uint64_t len) {
     kernpage_unlock();
     if (!next) {
       ref_release(task);
+      task_critical_stop();
       return false;
     }
-    anlock_lock(&task->pml4Lock);
     uint64_t entry = (kernpage_calculate_physical(next) << 12) | 7;
+    anlock_lock(&task->pml4Lock);
     bool result = task_vm_set(task, pageIndex, entry);
     task_vm_make_user(task, pageIndex);
     anlock_unlock(&task->pml4Lock);
@@ -261,9 +262,10 @@ static bool _allocate_user_code(void * program, uint64_t len) {
       task_critical_stop();
       return false;
     }
-    uint64_t copyLen = len > 0x1000 ? 0x1000 : len;
+    uint64_t copyLen = len > 0x1000L ? 0x1000L : len;
     _copy_memory(next, program, copyLen);
     len -= copyLen;
+    program += copyLen;
     pageIndex++;
   }
 
@@ -275,7 +277,7 @@ static bool _allocate_user_code(void * program, uint64_t len) {
 
 static void _copy_memory(page_t dest, void * src, uint64_t len) {
   uint8_t * buff = (uint8_t *)(dest << 12);
-  uint8_t * source = (uint8_t *)source;
+  uint8_t * source = (uint8_t *)src;
   uint64_t i;
   for (i = 0; i < len; i++) {
     buff[i] = source[i];

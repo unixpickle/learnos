@@ -7,6 +7,7 @@
 static uint64_t _next_pid();
 static bool _create_4mb_identity(uint64_t * pml4);
 static void _deallocate_table(uint64_t * table, int depth);
+static void _zero_page(page_t page);
 
 static task_t * _get_next_task();
 static thread_t * _get_next_thread();
@@ -72,6 +73,8 @@ task_t * task_create() {
     kernpage_unlock();
     return NULL;
   }
+
+  _zero_page(pml4);
 
   task_t * task = (task_t *)(taskPage << 12);
   ref_initialize(task, (void (*)(void *))task_dealloc);
@@ -222,6 +225,8 @@ static bool _create_4mb_identity(uint64_t * pml4) {
     kernpage_unlock();
     return false;
   }
+  _zero_page(pdpt);
+  _zero_page(pdt);
   pml4[0] = (kernpage_calculate_physical(pdpt) << 12) | 3;
   uint64_t * table = (uint64_t *)(pdpt << 12);
   table[0] = (kernpage_calculate_physical(pdt) << 12) | 3;
@@ -277,5 +282,11 @@ static thread_t * _get_next_thread(task_t * task) {
   }
   task->nextThread = ref_retain(nextThread->nextThread);
   return nextThread;
+}
+
+static void _zero_page(page_t page) {
+  uint64_t * addr = (uint64_t *)(page << 12);
+  int i;
+  for (i = 0; i < 0x200; i++) addr[i] = 0;
 }
 

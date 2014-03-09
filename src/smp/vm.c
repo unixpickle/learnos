@@ -7,10 +7,10 @@ page_t task_vm_lookup(task_t * task, page_t page) {
   uint64_t * tablePtr = (uint64_t *)(pml4Page << 12);
 
   // check if it's set in the page table
-  uint64_t indexInPT = page & 0x1ff;
-  uint64_t indexInPDT = (page >> 9) & 0x1ff;
-  uint64_t indexInPDPT = (page >> 18) & 0x1ff;
-  uint64_t indexInPML4 = (page >> 27) & 0x1ff;
+  uint64_t indexInPT = page & 0x1ffL;
+  uint64_t indexInPDT = (page >> 9L) & 0x1ffL;
+  uint64_t indexInPDPT = (page >> 18L) & 0x1ffL;
+  uint64_t indexInPML4 = (page >> 27L) & 0x1ffL;
   uint64_t indices[4] = {indexInPML4, indexInPDPT, indexInPDT, indexInPT};
 
   int i;

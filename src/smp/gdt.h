@@ -28,7 +28,7 @@ typedef struct {
   uint64_t res2;
   uint16_t res3;
   uint16_t ioplBase;
-} tss_t;
+} __attribute__((packed)) tss_t;
 
 void gdt_initialize();
 uint64_t gdt_get_size();

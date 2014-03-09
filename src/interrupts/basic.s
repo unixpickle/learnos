@@ -36,8 +36,27 @@ extern int_irq12
 extern int_irq13
 extern int_irq14
 extern int_irq15
+extern task_switch_to_kernpage
 
 %include "../pushaq.s"
+
+%macro beginframe 0
+  pushaq
+  mov rax, cr3
+  push rax
+  mov rax, rsp
+  push rax
+  call task_switch_to_kernpage
+%endmacro
+
+%macro endframe 0
+  pop rax ; rsp
+  pop rbx ; cr3
+  add rax, 8
+  mov rsp, rax
+  mov cr3, rbx
+  popaq
+%endmacro
 
 global handle_div_zero
 handle_div_zero:
@@ -143,15 +162,21 @@ handle_stack_fault:
 global handle_general_protection_fault
 handle_general_protection_fault:
   pushaq
+  mov rdi, [rsp + 0x78]
+  mov rsi, [rsp + 0x70]
   call int_general_protection_fault
   popaq
+  add rsp, 8
   iretq
 
 global handle_page_fault
 handle_page_fault:
   pushaq
+  mov rdi, [rsp + 0x78]
+  mov rsi, [rsp + 0x70]
   call int_page_fault
   popaq
+  add rsp, 8
   iretq
 
 global handle_math_fault
@@ -200,37 +225,37 @@ handle_unknown_exception:
 
 global handle_irq0
 handle_irq0:
-  pushaq
+  beginframe
   call int_irq0
-  popaq
+  endframe
   iretq
 
 global handle_irq1
 handle_irq1:
-  pushaq
+  beginframe
   call int_irq1
-  popaq
+  endframe
   iretq
 
 global handle_irq2
 handle_irq2:
-  pushaq
+  beginframe
   call int_irq2
-  popaq
+  endframe
   iretq
 
 global handle_irq3
 handle_irq3:
-  pushaq
+  beginfrmae
   call int_irq3
-  popaq
+  endframe
   iretq
 
 global handle_irq4
 handle_irq4:
-  pushaq
+  beginframe
   call int_irq4
-  popaq
+  endframe
   iretq
 
 global handle_irq5
@@ -263,9 +288,9 @@ handle_irq8:
 
 global handle_irq9
 handle_irq9:
-  pushaq
+  beginframe
   call int_irq9
-  popaq
+  endframe
   iretq
 
 global handle_irq10

@@ -82,8 +82,11 @@ initiate_routine:
 
 global bootstrap_task
 bootstrap_task:
-  hlt
-  jmp bootstrap_task
+.start
+  mov rcx, 3000
+.loop:
+  loop .loop
+  jmp .start
 
 global bootstrap_task_end
 bootstrap_task_end:

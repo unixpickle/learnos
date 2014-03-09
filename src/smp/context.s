@@ -88,6 +88,10 @@ task_save_state:
   
 global task_switch_to_kernpage
 task_switch_to_kernpage:
+  mov rcx, cr3
+  cmp rcx, PML4_START
+  je .return
+
   mov rdi, rsp
   shr rdi, 12
   call universal_page_lookup
@@ -101,6 +105,7 @@ task_switch_to_kernpage:
 
   mov rax, PML4_START
   mov cr3, rax
+.return:
   ret
 
 ; leapfrog off a thread's stack and setup the context for an iretq
@@ -109,11 +114,6 @@ task_switch:
   ; immediately, we jump into the thread's kernel stack
   push rdi
   push rsi
-
-  mov r8, rdi
-  mov rdi, 0x10
-  call stack_log
-  mov rdi, r8
 
   call thread_resume_kernel_stack
   pop rsi
@@ -132,8 +132,8 @@ task_switch:
   add rsi, 0x20 ; start of state_t structure
 
   ; push state for iretq
-  mov ax, 0x0 ; TODO: set PL in the data segment
-  push ax ; push SS
+  mov rax, 0x0 ; TODO: set PL in the data segment
+  push rax ; push SS
   mov rax, [rsi]
   push rax ; push RSP
 
@@ -145,7 +145,8 @@ task_switch:
   mov rcx, [rsi + 0x10]
   cmp rcx, PML4_START
   je .pushCS
-  or rax, 0x3 ; PL = 3
+  mov rax, 0x1b ; PL = 3
+  mov word [rsp + 0x10], 0x23 ; the SS
 .pushCS:
   push rax
 
@@ -178,12 +179,8 @@ task_switch:
   sub rsi, 0x20 ; go back to the beginning of our thread
   mov rdx, rsp
   call thread_translate_kernel_stack
-  mov cr3, rbx ; rbp was preserved
+  mov cr3, rbx ; rbx was preserved
   mov rsp, rax
-
-extern printHex
-  mov rdi, rax
-  call printHex
 
 .avoidRecalc:
   pop rdi
@@ -194,16 +191,15 @@ extern printHex
   pop rax
   pop rbp
 
-  mov r8, rdi
-  mov rdi, 0x28
-  call stack_log
-  mov rdi, r8
-
   iretq ; will reset the interrupts flag in the FLAGS register
 
 
 global task_switch_interrupt
 task_switch_interrupt:
+  mov ax, 0x10
+  mov ss, ax
+  mov ds, ax
+
   call task_save_state
   call cpu_get_dedicated_stack
   mov rsp, rax
@@ -211,9 +207,9 @@ task_switch_interrupt:
   ; well, we should set an interrupt
   call lapic_send_eoi
   mov rdi, 0x20
-  mov rsi, 0x10000
-  mov rdx, 0x1000 ; super slow
-  ; call lapic_timer_set
+  mov rsi, 0x100000
+  mov rdx, 0x1
+  call lapic_timer_set
   call scheduler_run_next ; only returns if #CPU's > #tasks
 
   ; hang here until another timer interrupt

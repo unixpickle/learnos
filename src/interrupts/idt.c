@@ -109,14 +109,25 @@ void int_stack_fault() {
   print("got stack fault\n");
 }
 
-void int_general_protection_fault() {
-  print("got general protection fault\n");
-  __asm__ __volatile__("cli");
-  hang();
+void int_general_protection_fault(void * rip, uint64_t code) {
+  print("got #gp(");
+  printHex(code);
+  print(") from 0x");
+  printHex((uint64_t)rip);
+  print("\n");
+  __asm__ __volatile__("cli\nhlt");
 }
 
-void int_page_fault() {
-  print("got page fault\n");
+void int_page_fault(void * rip, uint64_t flags) {
+  uint64_t error;
+  __asm__ ("mov %%cr2, %0" : "=r" (error));
+  print("got page fault: ");
+  printHex(error);
+  print(" from ");
+  printHex((uint64_t)rip);
+  print(", error flags = ");
+  printHex(flags);
+  print("\n");
 }
 
 void int_math_fault() {
