@@ -2,6 +2,7 @@
 
  * Fix keyboard overflow etc.
  * Replace all appropriate `uint64_t` with `page_t`
+ * Fix stack alignment issues and respect Red Zone
 
 # Subtrees
 
