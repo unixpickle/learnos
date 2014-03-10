@@ -36,7 +36,7 @@ static bool print_line(const char * ptr) {
       return false;
     }
     page_t virPage = kernpage_calculate_virtual(entry >> 12);
-    uint64_t virAddr = (((uint64_t)addr) & 0xfff) + virPage;
+    uint64_t virAddr = (((uint64_t)addr) & 0xfff) + (virPage << 12);
     char buff[2] = {*((const char *)virAddr), 0};
     if (buff[0] == 0) {
       ref_release(task);

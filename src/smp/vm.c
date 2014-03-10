@@ -3,7 +3,7 @@
 #include <kernpage.h>
 
 page_t task_vm_lookup(task_t * task, page_t page) {
-  return task_vm_lookup_raw(task, page) << 12;
+  return task_vm_lookup_raw(task, page) >> 12;
 }
 
 uint64_t task_vm_lookup_raw(task_t * task, page_t page) {

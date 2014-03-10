@@ -163,12 +163,13 @@ void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
 
 void int_irq0() {
   PIT_TICK_COUNT++;
+  /*
   if (PIT_TICK_COUNT % 200 == 0) {
     print("tock ");
   } else if (PIT_TICK_COUNT % 200 == 100) {
     print("tick ");
   }
-  
+  */
   lapic_send_eoi();
 }
 
