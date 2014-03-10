@@ -3,6 +3,10 @@
 #include <kernpage.h>
 
 page_t task_vm_lookup(task_t * task, page_t page) {
+  return task_vm_lookup_raw(task, page) << 12;
+}
+
+uint64_t task_vm_lookup_raw(task_t * task, page_t page) {
   uint64_t pml4Page = kernpage_calculate_virtual(task->pml4);
   uint64_t * tablePtr = (uint64_t *)(pml4Page << 12);
 
@@ -19,7 +23,7 @@ page_t task_vm_lookup(task_t * task, page_t page) {
     if (!(value & 1)) {
       return 0;
     } else if (i == 3) {
-      return tablePtr[indices[i]] >> 12;
+      return tablePtr[indices[i]];
     }
 
     uint64_t physPage = value >> 12;

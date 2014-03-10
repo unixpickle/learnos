@@ -4,6 +4,7 @@
 #include "ioapic.h"
 #include <stdio.h>
 #include <libkern_base.h>
+#include <syscall/base.h>
 
 extern void task_switch_interrupt();
 
@@ -43,6 +44,9 @@ void configure_global_idt() {
   idt_entry entry;
   _make_entry(&entry, task_switch_interrupt);
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_TIMER] = entry;
+  _make_entry(&entry, syscall_print);
+  entry.flags |= 0x60; // dpl
+  ((idt_entry *)IDT_PTR)[IDT_VECTOR_PRINT] = entry;
 
   load_idtr((void *)idtr);
 }

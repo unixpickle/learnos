@@ -7,6 +7,11 @@
 page_t task_vm_lookup(task_t * task, page_t virt);
 
 /**
+ * Same as task_vm_lookup, but finds the raw entry in the table.
+ */
+uint64_t task_vm_lookup_raw(task_t * task, page_t virt);
+
+/**
  * @discussion see task_vm_lookup() discussion
  */
 bool task_vm_set(task_t * task, page_t virt, uint64_t value);

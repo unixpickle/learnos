@@ -2,6 +2,7 @@
 #include <shared/addresses.h>
 
 #define IDT_VECTOR_TIMER 0x20
+#define IDT_VECTOR_PRINT 0x21
 
 typedef struct {
   uint16_t limit;

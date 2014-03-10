@@ -21,6 +21,7 @@ static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry);
 static void initialize_cpu(uint32_t cpuId);
 
 void smp_initialize() {
+  print_initialize();
   tasks_initialize();
   gdt_initialize();
   copy_init_code();

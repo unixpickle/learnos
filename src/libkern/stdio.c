@@ -1,4 +1,5 @@
 #include <shared/addresses.h>
+#include <anlock.h>
 #include "libkern_base.h"
 #include "stdio.h"
 
@@ -56,6 +57,18 @@ void die(const char * msg) {
   print("[ERROR] ");
   print(msg);
   hang();
+}
+
+void print_initialize() {
+  anlock_initialize((uint64_t *)PRINT_LOCK_PTR);
+}
+
+void print_lock() {
+  anlock_lock((uint64_t *)PRINT_LOCK_PTR);
+}
+
+void print_unlock() {
+  anlock_unlock((uint64_t *)PRINT_LOCK_PTR);
 }
 
 static void setPosition(unsigned short x, unsigned short y) {

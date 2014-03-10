@@ -82,11 +82,15 @@ initiate_routine:
 
 global bootstrap_task
 bootstrap_task:
-.start
+.start:
   mov rcx, 3000
 .loop:
   loop .loop
+  ;mov rdi, (.msg - bootstrap_task + 0x10500400)
+  ;int 0x21
   jmp .start
+;.msg:
+;  db 'Hey there, user space!', 0xa, 0
 
 global bootstrap_task_end
 bootstrap_task_end:

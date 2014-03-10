@@ -37,7 +37,8 @@
 #define PHYSICAL_MAP_COUNT (*((volatile unsigned char *)0x20001c))
 
 /**
- * A 1-byte flag; if 1, then the kernpage_ functions may be used.
+ * A 1-byte flag; if 1, then the kernpage_ functions may be used. This flag
+ * no longer actually does anything.
  */
 #define KERNPAGE_ENABLED (*((volatile unsigned char *)0x20001d))
 
@@ -107,6 +108,11 @@
  * The 0x40 byte structure containing the task list.
  */
 #define TASK_LIST_PTR 0x205038
+
+/**
+ * Lock for print_lock() and print_unlock().
+  */
+#define PRINT_LOCK_PTR 0x205078
 
 /**
  * The GDT which is used for processors after SMP is started up. This is

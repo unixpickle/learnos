@@ -39,24 +39,7 @@ extern int_irq15
 extern task_switch_to_kernpage
 
 %include "../pushaq.s"
-
-%macro beginframe 0
-  pushaq
-  mov rax, cr3
-  push rax
-  mov rax, rsp
-  push rax
-  call task_switch_to_kernpage
-%endmacro
-
-%macro endframe 0
-  pop rax ; rsp
-  pop rbx ; cr3
-  add rax, 8
-  mov rsp, rax
-  mov cr3, rbx
-  popaq
-%endmacro
+%include "../ctxswitch.s"
 
 global handle_div_zero
 handle_div_zero:
@@ -246,7 +229,7 @@ handle_irq2:
 
 global handle_irq3
 handle_irq3:
-  beginfrmae
+  beginframe
   call int_irq3
   endframe
   iretq
