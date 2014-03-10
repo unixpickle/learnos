@@ -22,8 +22,10 @@ void configure_cpu(uint64_t stack) {
 }
 
 void task_loop() {
-  __asm__ __volatile__ ("lgdtq (%0)\nint %1"
-                        : : "r" (GDT64_PTR), "i" (IDT_VECTOR_TIMER));
+  __asm__ __volatile__ ("lgdtq (%0)" : : "r" (GDT64_PTR));
+  disable_interrupts();
+  __asm__ __volatile__ ("int $0x20");
+  //lapic_timer_set(0x20, 0x1000, 1);
   hang();
 }
 

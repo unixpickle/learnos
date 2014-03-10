@@ -87,7 +87,9 @@ bootstrap_task:
 .loop:
   loop .loop
   mov rdi, (.msg - bootstrap_task + 0x10500400000)
-  int 0x21
+  ;int 0x21
+  ; cause a GP fault
+  hlt
   jmp .start
 .msg:
   db 'Hey there, user space!', 0xa, 0
