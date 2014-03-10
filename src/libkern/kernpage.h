@@ -29,6 +29,11 @@ page_t kernpage_calculate_virtual(page_t phys);
 page_t kernpage_calculate_physical(page_t virt);
 
 /**
+ * Gets the last virtual address that is mapped in the kernpage tables.
+ */
+page_t kernpage_last_virtual();
+
+/**
  * Returns `true` if a virtual page is mapped, `false` if not.
  */
 bool kernpage_is_mapped(page_t virt);

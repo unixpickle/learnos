@@ -19,7 +19,7 @@ void lapic_initialize() {
     // map the memory for the page
     print("mapping Local APIC page... ");
     uint64_t page = (uint64_t)(LAPIC_BASE_ADDR >> 12);
-    uint64_t virtualPage = kernpage_alloc_virtual();
+    uint64_t virtualPage = kernpage_last_virtual() + 1;
     if (!kernpage_map(virtualPage, page)) die("failed to map");
     LAPIC_PTR = (void *)(virtualPage << 12);
     print("mapped to 0x");

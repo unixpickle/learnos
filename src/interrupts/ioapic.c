@@ -19,7 +19,7 @@ void ioapic_initialize() {
 
   print("mapping I/O APIC page... ");
   uint64_t page = (uint64_t)(IOAPIC_BASE >> 12);
-  uint64_t virtualPage = kernpage_alloc_virtual();
+  uint64_t virtualPage = kernpage_last_virtual() + 1;
   if (!kernpage_map(virtualPage, page)) die("failed to map");
   IOAPIC_PTR = (void *)(virtualPage << 12);
   print("mapped to 0x");

@@ -60,6 +60,10 @@ page_t kernpage_calculate_physical(page_t virt) {
   return 0;
 }
 
+uint64_t kernpage_last_virtual() {
+  return LAST_VPAGE;
+}
+
 /**
  * Returns `true` if a virtual page is mapped, `false` if not.
  */
@@ -177,7 +181,7 @@ void kernpage_copy_physical(void * _dest,
   for (curPage = minPage; curPage <= maxPage; curPage++) {
     uint64_t virPage;
     if (!kernpage_lookup_virtual(curPage, &virPage)) {
-      virPage = kernpage_alloc_virtual();
+      virPage = kernpage_last_virtual() + 1;
       if (!kernpage_map(virPage, curPage)) {
         die("Failed to map page for kernpage_copy_physical");
       }
