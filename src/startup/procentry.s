@@ -75,6 +75,7 @@ initiate_routine:
   shl rbx, 12
   mov rbp, rbx
   mov rsp, rbp
+  add rsp, 0x1000
 
   ; now that we have our new stack, call smp_entry(page)
   mov rdi, rax
