@@ -8,7 +8,7 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
   if (info->currentThread) {
-    // TODO: see if we need to use __sync
+    // TODO: figure out a better way than with sync
     __sync_fetch_and_and(&info->currentThread->isRunning, 0);
   }
   ref_release(info->currentTask);

@@ -208,7 +208,7 @@ task_switch_interrupt:
   call lapic_send_eoi
   mov rdi, 0x20
   mov rsi, 0x100000
-  mov rdx, 0x1
+  mov rdx, 0x4
   call lapic_timer_set
   call scheduler_run_next ; only returns if #CPU's > #tasks
 

@@ -47,6 +47,9 @@ void configure_global_idt() {
   _make_entry(&entry, syscall_print);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_PRINT] = entry;
+  _make_entry(&entry, syscall_sleep);
+  entry.flags |= 0x60; // dpl
+  ((idt_entry *)IDT_PTR)[IDT_VECTOR_SLEEP] = entry;
 
   load_idtr((void *)idtr);
 }

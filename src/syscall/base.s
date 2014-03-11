@@ -5,7 +5,8 @@ bits 64
 
 extern print
 
-extern syscall_print_method, task_switch_to_kernpage
+extern syscall_print_method, syscall_sleep_method
+extern task_switch_to_kernpage
 
 global syscall_print
 syscall_print:
@@ -14,5 +15,12 @@ syscall_print:
   call syscall_print_method
   endframe
   iretq
-.message: 
-  db 'hey there bro', 0xa, 0
+
+global syscall_sleep
+syscall_sleep:
+  beginframe
+  mov rdi, [rsp + 0x50]
+  call syscall_sleep_method
+  endframe
+  iretq
+

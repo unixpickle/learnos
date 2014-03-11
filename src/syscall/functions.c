@@ -3,7 +3,7 @@
 #include <kernpage.h>
 #include <smp/vm.h>
 #include <smp/cpu_list.h>
-#include <stdint.h>
+#include <interrupts/pit.h>
 
 static bool print_line(const char * ptr);
 
@@ -14,9 +14,12 @@ void syscall_print_method(void * ptr) {
     ptr += 0x50;
   }
   task_critical_start();
-  print("[CPUID is ");
-  printHex(lapic_get_id());
-  print("]\n");
+}
+
+void syscall_sleep_method(uint64_t time) {
+  task_critical_stop();
+  pit_sleep(time);
+  task_critical_start();
 }
 
 static bool print_line(const char * ptr) {

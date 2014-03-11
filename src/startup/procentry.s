@@ -90,16 +90,23 @@ initiate_routine:
 global bootstrap_task
 bootstrap_task:
 .start:
-  mov rcx, 300000000
-.loop:
-  loop .loop
-  mov rdi, (.msg - bootstrap_task + 0x10500400000)
+  mov rdi, 100
+  int 0x22
+  mov rdi, (.msg_tick - bootstrap_task + 0x10500400000)
   int 0x21
+
+  mov rdi, 100
+  int 0x22
+  mov rdi, (.msg_tock - bootstrap_task + 0x10500400000)
+  int 0x21
+
   ; cause a GP fault
   ; hlt
   jmp .start
-.msg:
-  db 'Hey there, user space!', 0xa, 0
+.msg_tick:
+  db 'Tick ', 0
+.msg_tock:
+  db 'Tock ', 0
 
 global bootstrap_task_end
 bootstrap_task_end:

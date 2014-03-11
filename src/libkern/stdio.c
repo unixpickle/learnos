@@ -81,6 +81,8 @@ static void setPosition(unsigned short x, unsigned short y) {
   // and now send the `high` byte
   outb(0x3D4, 0x0e);
   outb(0x3D5, (unsigned char)((position >> 8) & 0xff));
+
+  buffer[1 + position * 2] = 0xa;
 }
 
 static void scrollUp() {

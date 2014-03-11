@@ -64,7 +64,6 @@ thread_t * thread_create_user(task_t * task, void * rip) {
 
   thread_t * thread = (thread_t *)(mainPage << 12);
   ref_initialize(thread, (void (*)(void *))thread_dealloc);
-  // todo: great things, here!
   thread->isSystem = true;
   thread->isRunning = 0;
   thread->nextThread = NULL;
@@ -199,7 +198,7 @@ void thread_configure_user_stack(void * rip) {
 
   // we have retained both resources, so we can pass them to this
   // print("process bootstrapped.\n");
-  scheduler_switch_task(task, thread);
+  task_switch(task, thread);
 }
 
 void thread_configure_user_program(void * rip, void * program, uint64_t len) {

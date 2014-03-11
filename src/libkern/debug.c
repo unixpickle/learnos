@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <interrupts/lapic.h>
 
 void ensure_critical() {
   uint64_t flags;

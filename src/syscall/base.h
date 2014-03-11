@@ -4,3 +4,8 @@
  */
 void syscall_print();
 
+/**
+ * Inaccurate PIT sleep.
+ */
+void syscall_sleep();
+
