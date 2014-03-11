@@ -14,7 +14,7 @@ objects:
 
 all_libs:
 	for dir in $(LIBS); do \
-		cd $$dir && $(MAKE); \
+		cd $$dir && $(MAKE) CFLAGS=-fno-stack-protector\ -mno-red-zone\ -ffreestanding; \
 		cd -; \
 	done
 
