@@ -159,7 +159,7 @@ void thread_configure_user_stack(void * rip) {
   // allocate 0x100 pages
   int i;
   page_t pageIndex = _task_calculate_user_stack(thread->stackIndex);
-  for (i = 0; i < 0x100; i++) {
+  for (i = 0; i < /*0x100*/2; i++) {
     task_critical_start();
     kernpage_lock();
     page_t next = kernpage_alloc_virtual();
@@ -198,6 +198,7 @@ void thread_configure_user_stack(void * rip) {
   thread->state.cr3 = (task->pml4 << 12);
 
   // we have retained both resources, so we can pass them to this
+  // print("process bootstrapped.\n");
   scheduler_switch_task(task, thread);
 }
 

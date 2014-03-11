@@ -83,6 +83,8 @@ void int_bounds() {
 void int_invalid_opcode(uint64_t ptr) {
   print("got invalid opcode: ");
   printHex(ptr);
+  print(" CPU ");
+  printHex(lapic_get_id());
   print("\n");
   hang();
 }
@@ -118,19 +120,23 @@ void int_general_protection_fault(void * rip, uint64_t code) {
   printHex(code);
   print(") from 0x");
   printHex((uint64_t)rip);
+  print(" in CPU ");
+  printHex(lapic_get_id());
   print("\n");
   __asm__ __volatile__("cli\nhlt");
 }
 
 void int_page_fault(void * rip, uint64_t flags) {
-  uint64_t error;
-  __asm__ ("mov %%cr2, %0" : "=r" (error));
+  uint64_t error, rrsp;
+  __asm__ ("mov %%cr2, %0\nmov %%rsp, %%rax" : "=r" (error), "=a" (rrsp));
   print("got page fault: ");
   printHex(error);
   print(" from ");
   printHex((uint64_t)rip);
   print(", error flags = ");
   printHex(flags);
+  print(", RSP = 0x");
+  printHex(rrsp);
   print("\n");
 }
 

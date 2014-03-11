@@ -24,14 +24,19 @@ void smp_initialize() {
   print_initialize();
   tasks_initialize();
   gdt_initialize();
-  copy_init_code();
   cpu_list_initialize(lapic_get_id());
-  acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
-  acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
+  copy_init_code();
 
+  task_critical_start();
   uint64_t taskEnd = ((uint64_t)bootstrap_task_end);
   uint64_t taskStart = ((uint64_t)bootstrap_task);
   scheduler_generate_task((void *)taskStart, taskEnd - taskStart);
+  task_critical_stop();
+
+  acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
+  acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
+
+
   task_loop();
 }
 

@@ -14,6 +14,9 @@ void syscall_print_method(void * ptr) {
     ptr += 0x50;
   }
   task_critical_start();
+  print("[CPUID is ");
+  printHex(lapic_get_id());
+  print("]\n");
 }
 
 static bool print_line(const char * ptr) {

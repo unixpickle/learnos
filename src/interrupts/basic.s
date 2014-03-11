@@ -43,158 +43,158 @@ extern task_switch_to_kernpage
 
 global handle_div_zero
 handle_div_zero:
-  pushaq
+  beginframe
   call int_div_zero
-  popaq
+  endframe
   iretq
 
 global handle_debugger
 handle_debugger:
-  pushaq
+  beginframe
   call int_debugger
-  popaq
+  endframe
   iretq
 
 global handle_nmi
 handle_nmi:
-  pushaq
+  beginframe
   call int_nmi
-  popaq
+  endframe
   iretq
 
 global handle_breakpoint
 handle_breakpoint:
-  pushaq
+  beginframe
   call int_breakpoint
-  popaq
+  endframe
   iretq
 
 global handle_overflow
 handle_overflow:
-  pushaq
+  beginframe
   call int_overflow
-  popaq
+  endframe
   iretq
 
 global handle_bounds
 handle_bounds:
-  pushaq
+  beginframe
   call int_bounds
-  popaq
+  endframe
   iretq
 
 global handle_invalid_opcode
 handle_invalid_opcode:
-  push rsp
+  push rbp
   mov rbp, rsp
-  pushaq
+  beginframe
 
   mov rdi, [rbp + 8]
   call int_invalid_opcode
 
-  popaq
+  endframe
   leave
   iretq
 
 global handle_coprocessor_not_available
 handle_coprocessor_not_available:
-  pushaq
+  beginframe
   call int_coprocessor_not_available
-  popaq
+  endframe
   iretq
 
 global handle_double_fault
 handle_double_fault:
   push rbp
   mov rbp, rsp
-  pushaq
+  beginframe
   mov rdi, [rbp + 18]
   call int_double_fault
-  popaq
+  endframe
   leave
   iretq
 
 global handle_coprocessor_segment_overrun
 handle_coprocessor_segment_overrun:
-  pushaq
+  beginframe
   call int_coprocessor_segment_overrun
-  popaq
+  endframe
   iretq
 
 global handle_invalid_tss
 handle_invalid_tss:
-  pushaq
+  beginframe
   call int_invalid_tss
-  popaq
+  endframe
   iretq
 
 global handle_segmentation_fault
 handle_segmentation_fault:
-  pushaq
+  beginframe
   call int_segmentation_fault
-  popaq
+  endframe
   iretq
 
 global handle_stack_fault
 handle_stack_fault:
-  pushaq
+  beginframe
   call int_stack_fault
-  popaq
+  endframe
   iretq
 
 global handle_general_protection_fault
 handle_general_protection_fault:
-  pushaq
+  beginframe
   mov rdi, [rsp + 0x78]
   mov rsi, [rsp + 0x70]
   call int_general_protection_fault
-  popaq
+  endframe
   add rsp, 8
   iretq
 
 global handle_page_fault
 handle_page_fault:
-  pushaq
+  beginframe
   mov rdi, [rsp + 0x78]
   mov rsi, [rsp + 0x70]
   call int_page_fault
-  popaq
+  endframe
   add rsp, 8
   iretq
 
 global handle_math_fault
 handle_math_fault:
-  pushaq
+  beginframe
   call int_math_fault
-  popaq
+  endframe
   iretq
 
 global handle_alignment_check
 handle_alignment_check:
-  pushaq
+  beginframe
   call int_alignment_check
-  popaq
+  endframe
   iretq
 
 global handle_machine_check
 handle_machine_check:
-  pushaq
+  beginframe
   call int_machine_check
-  popaq
+  endframe
   iretq
 
 global handle_simd_exception
 handle_simd_exception:
-  pushaq
+  beginframe
   call int_simd_exception
-  popaq
+  endframe
   iretq
 
 global handle_unknown_exception
 handle_unknown_exception:
-  push rsp
+  push rbp
   mov rbp, rsp
-  pushaq
+  beginframe
 
   mov rdi, [rbp + 8]
   xor rsi, rsi
@@ -202,7 +202,7 @@ handle_unknown_exception:
   mov rdx, [rbp + 18]
   call int_unknown_exception
 
-  popaq
+  endframe
   leave
   iretq
 
@@ -243,30 +243,30 @@ handle_irq4:
 
 global handle_irq5
 handle_irq5:
-  pushaq
+  beginframe
   call int_irq5
-  popaq
+  endframe
   iretq
 
 global handle_irq6
 handle_irq6:
-  pushaq
+  beginframe
   call int_irq6
-  popaq
+  endframe
   iretq
 
 global handle_irq7
 handle_irq7:
-  pushaq
+  beginframe
   call int_irq7
-  popaq
+  endframe
   iretq
 
 global handle_irq8
 handle_irq8:
-  pushaq
+  beginframe
   call int_irq8
-  popaq
+  endframe
   iretq
 
 global handle_irq9
@@ -278,44 +278,44 @@ handle_irq9:
 
 global handle_irq10
 handle_irq10:
-  pushaq
+  beginframe
   call int_irq10
-  popaq
+  endframe
   iretq
 
 global handle_irq11
 handle_irq11:
-  pushaq
+  beginframe
   call int_irq11
-  popaq
+  endframe
   iretq
 
 global handle_irq12
 handle_irq12:
-  pushaq
+  beginframe
   call int_irq12
-  popaq
+  endframe
   iretq
 
 global handle_irq13
 handle_irq13:
-  pushaq
+  beginframe
   call int_irq13
-  popaq
+  endframe
   iretq
 
 global handle_irq14
 handle_irq14:
-  pushaq
+  beginframe
   call int_irq14
-  popaq
+  endframe
   iretq
 
 global handle_irq15
 handle_irq15:
-  pushaq
+  beginframe
   call int_irq15
-  popaq
+  endframe
   iretq
 
 global load_idtr
