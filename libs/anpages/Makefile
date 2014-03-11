@@ -1,10 +1,10 @@
-all: test
+all: build/anpages.o
 
 test: build/anpages.o
 	cd test && $(MAKE)
 
 build/anpages.o: build
-	gcc -c src/anpages.c -o build/anpages.o
+	gcc $(CFLAGS) -c src/anpages.c -o build/anpages.o
 
 build:
 	mkdir build
