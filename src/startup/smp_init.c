@@ -27,7 +27,9 @@ void smp_initialize() {
   cpu_list_initialize(lapic_get_id());
   copy_init_code();
 
+  print("initializing xAPIC's\n");
   acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
+  print("initializing x2APIC's\n");
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
   task_critical_start();
@@ -53,6 +55,11 @@ static void copy_init_code() {
 }
 
 static bool lapic_startup(void * unused, acpi_entry_lapic * entry) {
+  if (!(entry->flags & 1)) {
+    print("There was a disabled CPU with ID ");
+    printHex(entry->apicId);
+    print("\n");
+  }
   if (!(entry->flags & 1)) return 1;
   initialize_cpu(entry->apicId);
   return 1;

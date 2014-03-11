@@ -65,7 +65,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   thread_t * thread = (thread_t *)(mainPage << 12);
   ref_initialize(thread, (void (*)(void *))thread_dealloc);
   thread->isSystem = true;
-  thread->isRunning = 0;
+  thread->runState = 0;
   thread->nextThread = NULL;
   anlock_lock(&task->threadStacksLock);
   thread->stackIndex = anidxset_get(&task->threadStacks);

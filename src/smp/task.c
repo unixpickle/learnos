@@ -182,13 +182,15 @@ bool task_get_next_job(task_t ** task, thread_t ** thread) {
       break;
     }
     do {
-      if (!__sync_fetch_and_or(&currentThread->isRunning, 1)) {
+      if (!__sync_fetch_and_or(&currentThread->runState, 1)) {
         // yus
         anlock_unlock(&currentTask->threadsLock);
         anlock_unlock(&root->lock);
         (*task) = currentTask;
         (*thread) = currentThread;
         return true;
+      } else {
+        __sync_fetch_and_and(&currentThread->runState, 0b11111110);
       }
       ref_release(currentThread);
       currentThread = _get_next_thread(currentTask);
