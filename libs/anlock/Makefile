@@ -4,7 +4,7 @@ test: lib
 	cd test && $(MAKE)
 
 build/anlock.o: build
-	gcc -c src/anlock.c -o build/anlock.o
+	gcc $(CFLAGS) -c src/anlock.c -o build/anlock.o
 
 build:
 	mkdir build
