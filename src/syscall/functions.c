@@ -4,6 +4,8 @@
 #include <smp/vm.h>
 #include <smp/cpu_list.h>
 #include <interrupts/pit.h>
+#include <shared/addresses.h>
+#include <smp/scheduler.h>
 
 static bool print_line(const char * ptr);
 
@@ -20,6 +22,15 @@ void syscall_sleep_method(uint64_t time) {
   task_critical_stop();
   pit_sleep(time);
   task_critical_start();
+}
+
+void syscall_getint_method() {
+  cpu_info * info = cpu_get_current();
+  anlock_lock(&info->lock);
+  thread_t * thread = info->currentThread;
+  anlock_unlock(&info->lock);
+  if (thread) __sync_fetch_and_or(&thread->runState, 2);
+  scheduler_run_next();
 }
 
 static bool print_line(const char * ptr) {

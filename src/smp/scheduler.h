@@ -28,3 +28,8 @@ void scheduler_run_next();
  */
 bool scheduler_generate_task(void * code, uint64_t len);
 
+/**
+ * Call this when an external IRQ comes in.
+ */
+void scheduler_handle_interrupt(uint64_t irqMask);
+

@@ -74,6 +74,11 @@
 #define PIT_TICK_COUNT (*((volatile uint64_t *)0x201038))
 
 /**
+ * First bit = IRQ0, etc.
+ */
+#define INT_FLAGS (*((volatile uint64_t *)0x201040))
+
+/**
  * The address of the IDT to be used by the whole system.
  * 16*256 = 4096 bytes, so one page for this table is reserved.
  */

@@ -9,3 +9,8 @@ void syscall_print();
  */
 void syscall_sleep();
 
+/**
+ * Waits until an incoming interrupt occurs and then returns the INT_FLAGS.
+ */
+void syscall_getint();
+
