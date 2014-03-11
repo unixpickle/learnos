@@ -1,0 +1,3 @@
+void ensure_critical();
+
+
