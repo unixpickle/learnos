@@ -1,7 +1,6 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
-#include <ref.h>
 #include <anidxset.h>
 #include "socket.h"
 

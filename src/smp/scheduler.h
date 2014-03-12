@@ -7,8 +7,7 @@
  * @param thread - The thread to launch. Note that this must already have
  * isRunning set to true.
  * @return This function will never return.
- * @discussion This must be run from a critical section. Both arguments must
- * have a reference to them, which will be consumed by this call.
+ * @discussion This must be run from a critical section.
  */
 void scheduler_switch_task(task_t * task, thread_t * thread);
 
