@@ -33,8 +33,7 @@ static bool _allocate_user_code(void * program, uint64_t len);
 static void _copy_memory(page_t dest, void * src, uint64_t len);
 
 /**
- * Call this from a system thread to terminate the task. A reference is assumed
- * to both the `task` and `thread` arguments.
+ * Call this from a system thread to terminate the task.
  * @discussion This function enters a critical section for you.
  */
 static void _thread_unlink(task_t * task, thread_t * thread);
@@ -63,14 +62,14 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   }
 
   thread_t * thread = (thread_t *)(mainPage << 12);
-  ref_initialize(thread, (void (*)(void *))thread_dealloc);
   thread->isSystem = true;
-  thread->isRunning = 0;
+  thread->status = 0;
   thread->nextThread = NULL;
   anlock_lock(&task->threadStacksLock);
   thread->stackIndex = anidxset_get(&task->threadStacks);
   anlock_unlock(&task->threadStacksLock);
-  thread->containingTask = ref_retain(task);
+  thread->containingTask = task;
+  anlock_initialize(&thread->statusLock);
 
   // map the kernel stack into the user space process
   anlock_lock(&task->pml4Lock);
@@ -138,8 +137,6 @@ void thread_dealloc(thread_t * thread) {
   anlock_lock(&task->threadStacksLock);
   anidxset_put(&task->threadStacks, stackIndex);
   anlock_unlock(&task->threadStacksLock);
-
-  ref_release(task);
 }
 
 void thread_configure_tss(thread_t * thread, tss_t * tss) {
@@ -214,8 +211,8 @@ static void get_task_and_thread(task_thread_t * info) {
   task_critical_start();
   cpu_info * cpu = cpu_get_current();
   anlock_lock(&cpu->lock);
-  info->task = (task_t *)ref_retain(cpu->currentTask);
-  info->thread = (thread_t *)ref_retain(cpu->currentThread);
+  info->task = (task_t *)cpu->currentTask;
+  info->thread = (thread_t *)cpu->currentThread;
   anlock_unlock(&cpu->lock);
   task_critical_stop();
 }
@@ -232,7 +229,7 @@ static bool _allocate_user_code(void * program, uint64_t len) {
   task_critical_start();
   cpu_info * cpu = cpu_get_current();
   anlock_lock(&cpu->lock);
-  task_t * task = (task_t *)ref_retain(cpu->currentTask);
+  task_t * task = (task_t *)cpu->currentTask;
   anlock_unlock(&cpu->lock);
   task_critical_stop();
 
@@ -243,7 +240,6 @@ static bool _allocate_user_code(void * program, uint64_t len) {
     page_t next = kernpage_alloc_virtual();
     kernpage_unlock();
     if (!next) {
-      ref_release(task);
       task_critical_stop();
       return false;
     }
@@ -258,7 +254,6 @@ static bool _allocate_user_code(void * program, uint64_t len) {
       kernpage_lock();
       kernpage_free_virtual(next);
       kernpage_unlock();
-      ref_release(task);
       task_critical_stop();
       return false;
     }
@@ -270,7 +265,6 @@ static bool _allocate_user_code(void * program, uint64_t len) {
   }
 
   task_critical_start();
-  ref_release(task);
   task_critical_stop();
   return true;
 }
@@ -327,11 +321,10 @@ static void _release_thread(task_thread_t * _info) {
     info.task->nextThread = info.thread->nextThread;
   }
 
-  thread = (thread_t *)ref_retain(info.task->firstThread);
+  thread = info.task->firstThread;
   while (thread && thread != info.thread) {
-    ref_release(prevThread);
     prevThread = thread;
-    thread = (thread_t *)ref_retain(thread->nextThread);
+    thread = thread->nextThread;
   }
 
   // it *should* still be in the damn list
@@ -342,12 +335,9 @@ static void _release_thread(task_thread_t * _info) {
       info.task->firstThread = thread->nextThread;
     }
   }
-  ref_release(thread);
-  ref_release(prevThread);
   anlock_unlock(&info.task->threadsLock);
 
-  ref_release(info.thread);
-  ref_release(info.task);
+  thread_dealloc(thread);
 
   // run a different thread than the one we just killed.
   scheduler_run_next();

@@ -77,7 +77,6 @@ task_t * task_create() {
   _zero_page(pml4);
 
   task_t * task = (task_t *)(taskPage << 12);
-  ref_initialize(task, (void (*)(void *))task_dealloc);
   task->pml4 = kernpage_calculate_physical(pml4);
   task->pid = _next_pid();
   task->uid = 0;
@@ -132,7 +131,7 @@ void task_list_add(task_t * task) {
   tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
   anlock_lock(&root->lock);
   task->nextTask = root->firstTask;
-  root->firstTask = (task_t *)ref_retain(task);
+  root->firstTask = task;
   anlock_unlock(&root->lock);
 }
 
@@ -182,19 +181,20 @@ bool task_get_next_job(task_t ** task, thread_t ** thread) {
       break;
     }
     do {
-      if (!__sync_fetch_and_or(&currentThread->isRunning, 1)) {
-        // yus
+      anlock_lock(&currentThread->statusLock);
+      if (!currentThread->status) {
+        currentThread->status = 1;
+        anlock_unlock(&currentThread->statusLock);
         anlock_unlock(&currentTask->threadsLock);
         anlock_unlock(&root->lock);
         (*task) = currentTask;
         (*thread) = currentThread;
         return true;
       }
-      ref_release(currentThread);
+      anlock_unlock(&currentThread->statusLock);
       currentThread = _get_next_thread(currentTask);
     } while (currentThread != firstThread);
     anlock_unlock(&currentTask->threadsLock);
-    ref_release(currentTask);
     currentTask = _get_next_task();
   } while (currentTask != firstTask);
   anlock_unlock(&root->lock);
@@ -265,22 +265,22 @@ static task_t * _get_next_task() {
   tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
   task_t * nextTask = root->nextTask;
   if (!nextTask) {
-    nextTask = ref_retain(root->firstTask);
+    nextTask = root->firstTask;
     if (!nextTask) {
       return NULL;
     }
   }
-  root->nextTask = ref_retain(nextTask->nextTask);
+  root->nextTask = nextTask->nextTask;
   return nextTask;
 }
 
 static thread_t * _get_next_thread(task_t * task) {
   thread_t * nextThread = task->nextThread;
   if (!nextThread) {
-    nextThread = ref_retain(task->firstThread);
+    nextThread = task->firstThread;
     if (!nextThread) return NULL;
   }
-  task->nextThread = ref_retain(nextThread->nextThread);
+  task->nextThread = nextThread->nextThread;
   return nextThread;
 }
 

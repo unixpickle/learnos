@@ -224,7 +224,6 @@ void int_irq8() {
 }
 
 void int_irq9() {
-  print("got IRQ9\n");
   lapic_send_eoi();
 }
 

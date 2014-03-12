@@ -10,18 +10,15 @@ typedef struct thread_t thread_t;
 
 typedef struct {
   uint64_t lock;
-  task_t * firstTask; // strong
-  task_t * nextTask; // strong
+  task_t * firstTask;
+  task_t * nextTask;
 
   uint64_t pidsLock;
   anidxset_root_t pids;
 } __attribute__((packed)) tasks_root_t;
 
 struct task_t {
-  ref_obj_t ref;
-
-  // each link has a strong reference to the next node
-  task_t * nextTask; // strong
+  task_t * nextTask;
 
   // process identifier and user identifier, just like UNIX bro
   uint64_t pid;
@@ -33,13 +30,13 @@ struct task_t {
 
   // this lock applies to both ...Thread fields
   uint64_t threadsLock;
-  thread_t * firstThread; // strong
-  thread_t * nextThread; // strong
+  thread_t * firstThread;
+  thread_t * nextThread;
   uint64_t threadStacksLock;
   anidxset_root_t threadStacks;
 
   uint64_t firstSocketLock;
-  socket_t * firstSocket; // strong
+  socket_t * firstSocket;
   uint64_t socketDescsLock;
   anidxset_root_t socketDescs; // like file descriptors, bro
 
@@ -62,15 +59,15 @@ struct state_t {
 } __attribute__((packed));
 
 struct thread_t {
-  ref_obj_t ref;
-
   thread_t * nextThread;
 
   uint64_t stackIndex;
   struct state_t state;
 
-  task_t * containingTask; // strong
-  bool isRunning;
+  task_t * containingTask;
+
+  uint64_t statusLock;
+  uint8_t status;
   uint8_t isSystem; // if 1, this thread can't be killed
 } __attribute__((packed));
 
@@ -105,8 +102,7 @@ void tasks_initialize();
 task_t * task_create();
 
 /**
- * Adds a task to the task list. This function does not consume the reference
- * to task, so you must do that later.
+ * Adds a task to the task list.
  * @discussion You know the drill, call from a critical section.
  */
 void task_list_add(task_t * task);

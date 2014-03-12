@@ -8,11 +8,10 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
   if (info->currentThread) {
-    // TODO: figure out a better way than with sync
-    __sync_fetch_and_and(&info->currentThread->isRunning, 0);
+    anlock_lock(&thread->statusLock);
+    thread->status ^= 1;
+    anlock_unlock(&thread->statusLock);
   }
-  ref_release(info->currentTask);
-  ref_release(info->currentThread);
   info->currentTask = task;
   info->currentThread = thread;
   thread_configure_tss(thread, info->tss);
@@ -32,12 +31,11 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
 void scheduler_run_next() {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
-  // TODO: see if we need to use __sync
   if (info->currentThread) {
-    __sync_fetch_and_and(&info->currentThread->isRunning, 0);
+    anlock_lock(&info->currentThread->statusLock);
+    info->currentThread->status ^= 1;
+    anlock_unlock(&info->currentThread->statusLock);
   }
-  ref_release(info->currentTask);
-  ref_release(info->currentThread);
   info->currentTask = NULL;
   info->currentThread = NULL;
   anlock_unlock(&info->lock);
@@ -55,14 +53,12 @@ bool scheduler_generate_task(void * code, uint64_t len) {
 
   thread_t * thread = thread_create_first(task, code, len);
   if (!thread) {
-    ref_release(task);
     return false;
   }
 
   task->nextThread = thread;
-  task->firstThread = ref_retain(thread);
+  task->firstThread = thread;
   task_list_add(task);
-  ref_release(task);
   return true;
 }
 

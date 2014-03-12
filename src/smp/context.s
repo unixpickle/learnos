@@ -9,8 +9,6 @@ extern thread_resume_kernel_stack
 extern scheduler_run_next
 extern anlock_unlock
 extern anlock_lock
-extern ref_retain
-extern ref_release
 extern lapic_timer_set
 extern lapic_send_eoi
 extern thread_translate_kernel_stack, cpu_get_dedicated_stack
@@ -47,7 +45,7 @@ task_save_state:
   call anlock_lock
   pop rsi
   mov rdi, [rsi + 0x24]
-  call ref_retain
+  mov rax, rdi
   pop rdi
   push rax
   call anlock_unlock
@@ -58,28 +56,27 @@ task_save_state:
 
   ; store each of our variables in the thread_t structure
   mov rax, [rsp + 0x60] ; 0x40 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
-  mov [rdi + 0x20], rax ; rsp
+  mov [rdi + 0x10], rax ; rsp
   mov rax, [rsp]
-  mov [rdi + 0x28], rax ; rbp
+  mov [rdi + 0x18], rax ; rbp
   mov rax, [rsp + 8]
-  mov [rdi + 0x30], rax ; cr3
+  mov [rdi + 0x20], rax ; cr3
   mov rax, [rsp + 0x48]
-  mov [rdi + 0x38], rax ; rip
+  mov [rdi + 0x28], rax ; rip
   mov rax, [rsp + 0x58]
-  mov [rdi + 0x40], rax ; flags
+  mov [rdi + 0x30], rax ; flags
   mov rax, [rsp + 0x10]
-  mov [rdi + 0x48], rax ; rax
+  mov [rdi + 0x38], rax ; rax
   mov rax, [rsp + 0x18]
-  mov [rdi + 0x50], rax ; rbx
+  mov [rdi + 0x40], rax ; rbx
   mov rax, [rsp + 0x20]
-  mov [rdi + 0x58], rax ; rcx
+  mov [rdi + 0x48], rax ; rcx
   mov rax, [rsp + 0x28]
-  mov [rdi + 0x60], rax ; rdx
+  mov [rdi + 0x50], rax ; rdx
   mov rax, [rsp + 0x30]
-  mov [rdi + 0x68], rax ; rsi
+  mov [rdi + 0x58], rax ; rsi
   mov rax, [rsp + 0x38]
-  mov [rdi + 0x70], rax ; rdi
-  call ref_release
+  mov [rdi + 0x60], rax ; rdi
 
 .end:
   ; return after relieving our stack of its registers!
@@ -129,7 +126,7 @@ task_switch:
   push rax
   popfq
 
-  add rsi, 0x20 ; start of state_t structure
+  add rsi, 0x10 ; start of state_t structure
 
   ; push state for iretq
   mov rax, 0x0 ; TODO: set PL in the data segment
@@ -176,7 +173,7 @@ task_switch:
   je .avoidRecalc
 
   ; rdi is already a task, make rsi a thread_t* and rdx the stack to translate
-  sub rsi, 0x20 ; go back to the beginning of our thread
+  sub rsi, 0x10 ; go back to the beginning of our thread
   mov rdx, rsp
   call thread_translate_kernel_stack
   mov cr3, rbx ; rbx was preserved
