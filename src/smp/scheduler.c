@@ -70,16 +70,6 @@ bool scheduler_generate_task(void * code, uint64_t len) {
 }
 
 void scheduler_handle_interrupt(uint64_t irqMask) {
-  INT_FLAGS |= irqMask;
-  tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
-  anlock_lock(&root->lock);
-  task_t * task = root->firstTask;
-  while (task) {
-    __sync_fetch_and_and(&task->runState, 0b11111101);
-    task = task->nextTask;
-  }
-  anlock_unlock(&root->lock);
-
-  // TODO: activate first task
+  // TODO: activate interrupted tasks here
 }
 
