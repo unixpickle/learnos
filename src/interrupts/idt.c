@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <libkern_base.h>
 #include <syscall/base.h>
+#include <smp/scheduler.h>
 
 extern void task_switch_interrupt();
 
@@ -50,6 +51,9 @@ void configure_global_idt() {
   _make_entry(&entry, syscall_sleep);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_SLEEP] = entry;
+  _make_entry(&entry, syscall_getint);
+  entry.flags |= 0x60; // dpl
+  ((idt_entry *)IDT_PTR)[IDT_VECTOR_GETINT] = entry;
 
   load_idtr((void *)idtr);
 }
@@ -183,9 +187,9 @@ void int_irq0() {
 }
 
 void int_irq1() {
-  print("got IRQ1\n");
-  lapic_set_priority(0);
   lapic_send_eoi();
+  scheduler_handle_interrupt(1 << 1);
+  // lapic_set_priority(0);
 }
 
 void int_irq2() {

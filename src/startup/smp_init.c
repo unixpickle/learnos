@@ -22,7 +22,6 @@ static void initialize_cpu(uint32_t cpuId);
 
 void smp_initialize() {
   print_initialize();
-  tasks_initialize();
   gdt_initialize();
   cpu_list_initialize(lapic_get_id());
   copy_init_code();

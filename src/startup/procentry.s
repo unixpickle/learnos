@@ -90,6 +90,12 @@ initiate_routine:
 global bootstrap_task
 bootstrap_task:
 .start:
+  int 0x23
+  mov rdi, (.msg_tick - bootstrap_task + 0x10500400000)
+  int 0x21
+.hang:
+  jmp $
+
   mov rdi, 100
   int 0x22
   mov rdi, (.msg_tick - bootstrap_task + 0x10500400000)

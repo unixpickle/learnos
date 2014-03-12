@@ -68,6 +68,8 @@ struct thread_t {
   uint64_t statusLock;
   uint8_t status;
   uint8_t isSystem; // if 1, this thread can't be killed
+  uint8_t reserved[6];
+  uint64_t interruptMask;
 } __attribute__((packed));
 
 void * task_idxset_alloc();

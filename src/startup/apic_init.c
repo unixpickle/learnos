@@ -7,9 +7,11 @@
 #include <interrupts/acpi.h>
 #include <interrupts/pit.h>
 #include <interrupts/basic.h>
-#include <smp/cpu_list.h>
+#include <smp/task.h>
 
 void apic_initialize() {
+  tasks_initialize();
+
   if (!acpi_find_madt()) die("Failed to find MADT");
 
   // suck away all the dummy interrupts

@@ -6,6 +6,7 @@
 #include <interrupts/pit.h>
 #include <shared/addresses.h>
 #include <smp/scheduler.h>
+#include <smp/context.h>
 
 static bool print_line(const char * ptr);
 
@@ -25,7 +26,27 @@ void syscall_sleep_method(uint64_t time) {
 }
 
 void syscall_getint_method() {
-  // TODO: NYI
+  cpu_info * info = cpu_get_current();
+  anlock_lock(&info->lock);
+  task_t * task = info->currentTask;
+  thread_t * thread = info->currentThread;
+  anlock_unlock(&info->lock);
+  uint64_t mask = __sync_fetch_and_and(&thread->interruptMask, 0);
+  if (mask) {
+    thread->state.rax = mask;
+    task_switch(task, thread);
+  } else {
+    anlock_lock(&thread->statusLock);
+    thread->status |= 2;
+    thread->status ^= 1;
+    anlock_unlock(&thread->statusLock);
+
+    anlock_lock(&info->lock);
+    info->currentThread = NULL;
+    info->currentTask = NULL;
+    anlock_unlock(&info->lock);
+    __asm__ __volatile__ ("int $0x20");
+  }
 }
 
 static bool print_line(const char * ptr) {

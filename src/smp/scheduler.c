@@ -2,6 +2,7 @@
 #include "context.h"
 #include "thread.h"
 #include <anlock.h>
+#include <shared/addresses.h>
 #include "cpu_list.h"
 
 void scheduler_switch_task(task_t * task, thread_t * thread) {
@@ -63,6 +64,24 @@ bool scheduler_generate_task(void * code, uint64_t len) {
 }
 
 void scheduler_handle_interrupt(uint64_t irqMask) {
-  // TODO: activate interrupted tasks here
+  tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
+  anlock_lock(&root->lock);
+  task_t * task = root->firstTask;
+  while (task) {
+    anlock_lock(&task->threadsLock);
+    thread_t * thread = task->firstThread;
+    while (thread) {
+      __asm__ ("lock or %0, (%1)" :
+               : "a" (irqMask), "b" (&thread->interruptMask)
+               : "memory");
+      anlock_lock(&thread->statusLock);
+      thread->status &= 0b11111101;
+      anlock_unlock(&thread->statusLock);
+      thread = thread->nextThread;
+    }
+    anlock_unlock(&task->threadsLock);
+    task = task->nextTask;
+  }
+  anlock_unlock(&root->lock);
 }
 
