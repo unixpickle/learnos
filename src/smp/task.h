@@ -70,7 +70,7 @@ struct thread_t {
   struct state_t state;
 
   task_t * containingTask; // strong
-  uint8_t runState; // bit 1 = isRunning, bit 2 = waiting for interrupt
+  bool isRunning;
   uint8_t isSystem; // if 1, this thread can't be killed
 } __attribute__((packed));
 

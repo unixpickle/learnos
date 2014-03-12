@@ -9,7 +9,7 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
   anlock_lock(&info->lock);
   if (info->currentThread) {
     // TODO: figure out a better way than with sync
-    __sync_fetch_and_and(&info->currentThread->runState, 0b11111110);
+    __sync_fetch_and_and(&info->currentThread->isRunning, 0);
   }
   ref_release(info->currentTask);
   ref_release(info->currentThread);
@@ -34,7 +34,7 @@ void scheduler_run_next() {
   anlock_lock(&info->lock);
   // TODO: see if we need to use __sync
   if (info->currentThread) {
-    __sync_fetch_and_and(&info->currentThread->runState, 0b11111110);
+    __sync_fetch_and_and(&info->currentThread->isRunning, 0);
   }
   ref_release(info->currentTask);
   ref_release(info->currentThread);

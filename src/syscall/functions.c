@@ -25,12 +25,7 @@ void syscall_sleep_method(uint64_t time) {
 }
 
 void syscall_getint_method() {
-  cpu_info * info = cpu_get_current();
-  anlock_lock(&info->lock);
-  thread_t * thread = info->currentThread;
-  anlock_unlock(&info->lock);
-  if (thread) __sync_fetch_and_or(&thread->runState, 2);
-  scheduler_run_next();
+  // TODO: NYI
 }
 
 static bool print_line(const char * ptr) {
