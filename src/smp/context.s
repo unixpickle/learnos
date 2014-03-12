@@ -196,10 +196,6 @@ task_switch:
 
 global task_switch_interrupt
 task_switch_interrupt:
-  mov ax, 0x10
-  mov ss, ax
-  mov ds, ax
-
   call task_save_state
   call cpu_get_dedicated_stack
   mov rsp, rax
@@ -208,7 +204,7 @@ task_switch_interrupt:
   call lapic_send_eoi
   mov rdi, 0x20
   mov rsi, 0x100000
-  mov rdx, 0x4
+  mov rdx, 0x1 ; divide by 4, for now
   call lapic_timer_set
   call scheduler_run_next ; only returns if #CPU's > #tasks
 

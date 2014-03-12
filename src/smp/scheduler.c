@@ -36,14 +36,11 @@ void scheduler_run_next() {
   if (info->currentThread) {
     __sync_fetch_and_and(&info->currentThread->runState, 0b11111110);
   }
-  task_t * oldTask = info->currentTask;
   ref_release(info->currentTask);
   ref_release(info->currentThread);
   info->currentTask = NULL;
   info->currentThread = NULL;
   anlock_unlock(&info->lock);
-
-  if (oldTask) return;
 
   task_t * task;
   thread_t * thread;
