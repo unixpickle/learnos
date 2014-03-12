@@ -145,6 +145,7 @@ void int_page_fault(void * rip, uint64_t flags) {
   print(", RSP = 0x");
   printHex(rrsp);
   print("\n");
+  __asm__ ("cli\nhlt");
 }
 
 void int_math_fault() {

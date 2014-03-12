@@ -53,7 +53,7 @@ static bool print_line(const char * ptr) {
   task_critical_start();
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);
-  task_t * task = ref_retain(info->currentTask);
+  task_t * task = info->currentTask;
   anlock_unlock(&info->lock);
 
   int i;
@@ -64,7 +64,6 @@ static bool print_line(const char * ptr) {
     uint64_t entry = task_vm_lookup_raw(task, page);
     anlock_unlock(&task->pml4Lock);
     if ((entry & 5) != 5) { // they're being sneaky, just stop printing
-      ref_release(task);
       task_critical_stop();
       return false;
     }
@@ -72,7 +71,6 @@ static bool print_line(const char * ptr) {
     uint64_t virAddr = (((uint64_t)addr) & 0xfff) + (virPage << 12);
     char buff[2] = {*((const char *)virAddr), 0};
     if (buff[0] == 0) {
-      ref_release(task);
       task_critical_stop();
       return false;
     }
@@ -81,7 +79,6 @@ static bool print_line(const char * ptr) {
     print_unlock();
   }
 
-  ref_release(task);
   task_critical_stop();
   return true;
 }

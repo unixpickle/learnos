@@ -91,28 +91,11 @@ global bootstrap_task
 bootstrap_task:
 .start:
   int 0x23
-  mov rdi, (.msg_tick - bootstrap_task + 0x10500400000)
+  mov rdi, (.msg_event - bootstrap_task + 0x10500400000)
   int 0x21
-.hang:
-  jmp $
-
-  mov rdi, 100
-  int 0x22
-  mov rdi, (.msg_tick - bootstrap_task + 0x10500400000)
-  int 0x21
-
-  mov rdi, 100
-  int 0x22
-  mov rdi, (.msg_tock - bootstrap_task + 0x10500400000)
-  int 0x21
-
-  ; cause a GP fault
-  ; hlt
   jmp .start
-.msg_tick:
-  db 'Tick ', 0
-.msg_tock:
-  db 'Tock ', 0
+.msg_event:
+  db 'Got interrupt', 0x0a, 0
 
 global bootstrap_task_end
 bootstrap_task_end:

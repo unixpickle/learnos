@@ -85,6 +85,7 @@ thread_t * thread_create_user(task_t * task, void * rip) {
   thread->state.rdi = (uint64_t)rip;
   thread->state.rip = (uint64_t)thread_configure_user_stack;
   thread->state.flags = 0x200; // threads don't start in critical sections
+  thread->interruptMask = 0;
 
   return thread;
 }

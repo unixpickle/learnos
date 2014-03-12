@@ -71,11 +71,19 @@ void scheduler_handle_interrupt(uint64_t irqMask) {
     anlock_lock(&task->threadsLock);
     thread_t * thread = task->firstThread;
     while (thread) {
-      __asm__ ("lock or %0, (%1)" :
+      __asm__ ("lock orq %0, (%1)" :
                : "a" (irqMask), "b" (&thread->interruptMask)
                : "memory");
       anlock_lock(&thread->statusLock);
-      thread->status &= 0b11111101;
+      if (thread->status & 0x2) {
+        thread->status ^= 2;
+        uint64_t newRax = 0;
+        __asm__ ("lock xchgq %0, (%1)"
+                 : "=a" (newRax)
+                 : "r" (&thread->interruptMask)
+                 : "memory");
+        thread->state.rax = newRax;
+      }
       anlock_unlock(&thread->statusLock);
       thread = thread->nextThread;
     }

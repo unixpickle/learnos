@@ -45,9 +45,7 @@ task_save_state:
   call anlock_lock
   pop rsi
   mov rdi, [rsi + 0x24]
-  mov rax, rdi
-  pop rdi
-  push rax
+  xchg [rsp], rdi
   call anlock_unlock
 
   pop rdi ; thread_t structure
@@ -105,7 +103,7 @@ task_switch_to_kernpage:
 .return:
   ret
 
-; leapfrog off a thread's stack and setup the context for an iretq
+; leapfrog off a thread's stack and setup the context
 global task_switch
 task_switch:
   ; immediately, we jump into the thread's kernel stack
@@ -118,7 +116,7 @@ task_switch:
   mov rsp, rax
   mov rbp, rax
 
-  ; unset the NT flag so that iretq has the expected behavior
+  ; unset the NT flag (should never be set anyways)
   pushfq
   pop rax
   mov rcx, (0xffffffffffffffff ^ (1 << 14))
@@ -128,7 +126,8 @@ task_switch:
 
   add rsi, 0x10 ; start of state_t structure
 
-  ; push state for iretq
+  ; start pushing state for IRETQ
+
   mov rax, 0x0 ; TODO: set PL in the data segment
   push rax ; push SS
   mov rax, [rsi]
