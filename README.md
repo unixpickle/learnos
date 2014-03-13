@@ -1,5 +1,7 @@
 # TODO
 
+ * Create PS/2 driver
+ * Implement socket system and test multitasking
  * Replace all appropriate `uint64_t` with `page_t`
 
 # Subtrees
