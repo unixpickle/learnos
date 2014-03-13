@@ -31,3 +31,16 @@ syscall_getint:
   mov rsp, rax
   call syscall_getint_method ; never returns
 
+; syscall_pinio(bool isInput, uint16_t pin[, uint8_t value])
+global syscall_pinio
+syscall_pinio:
+  test rdi, 1
+  jz .outputPin
+  in al, dx
+  iretq
+.outputPin:
+  mov al, dl
+  mov dx, si
+  out dx, al
+  iretq
+

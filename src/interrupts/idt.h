@@ -5,6 +5,7 @@
 #define IDT_VECTOR_PRINT 0x21
 #define IDT_VECTOR_SLEEP 0x22
 #define IDT_VECTOR_GETINT 0x23
+#define IDT_VECTOR_PINIO 0x24
 
 typedef struct {
   uint16_t limit;

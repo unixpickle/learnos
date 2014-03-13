@@ -14,3 +14,8 @@ void syscall_sleep();
  */
 void syscall_getint();
 
+/**
+ * Read or write from a CPU port.
+ */
+void syscall_pinio();
+

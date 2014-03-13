@@ -54,6 +54,9 @@ void configure_global_idt() {
   _make_entry(&entry, syscall_getint);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_GETINT] = entry;
+  _make_entry(&entry, syscall_pinio);
+  entry.flags |= 0x60; // dpl
+  ((idt_entry *)IDT_PTR)[IDT_VECTOR_PINIO] = entry;
 
   load_idtr((void *)idtr);
 }

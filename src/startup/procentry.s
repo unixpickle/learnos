@@ -89,11 +89,25 @@ initiate_routine:
 
 global bootstrap_task
 bootstrap_task:
+  jmp .readNextChar
 .start:
   int 0x23
+.readNextChar:
+  ; read the scan code
+  mov rdi, 1
+  mov rsi, 0x64
+  int 0x24
+  test al, 1
+  jz .readScan
+  jmp .start
+.readScan:
+  mov rdi, 0
+  mov rsi, 0x60
+  int 0x24
+  ; al is scan code
   mov rdi, (.msg_event - bootstrap_task + 0x10500400000)
   int 0x21
-  jmp .start
+  jmp .readNextChar
 .msg_event:
   db 'Got interrupt', 0x0a, 0
 
