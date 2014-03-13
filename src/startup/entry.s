@@ -26,7 +26,7 @@ CUROFFSET equ 0x200000
 MBOOT_PTR equ 0x200004
 PML4_START equ 0x300000
 
-section .text
+section .multiboot
 
 align 4
 global multiboot_header
@@ -39,6 +39,8 @@ multiboot_header:
   dd 0                ; loadEndAddr - can be 0 to default
   dd 0                ; bssEndAddr, 0 = no BSS segment
   dd start            ; entry point
+
+section .text
 
 ; this should be jumped to by GRUB2
 start:
