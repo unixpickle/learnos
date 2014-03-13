@@ -1,9 +1,6 @@
 # TODO
 
- * Fix keyboard overflow etc.
  * Replace all appropriate `uint64_t` with `page_t`
- * Fix stack alignment issues (maybe, but maybe it's not so bad the way it is)
- * Lock on `print()`
 
 # Subtrees
 
