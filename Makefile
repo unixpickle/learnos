@@ -1,5 +1,5 @@
-SOURCE_DIRS=src/startup src/startup/libkern32 src/libkern src/interrupts src/smp src/syscall
-BUILD_FILES=src/startup/build/*.o src/startup/libkern32/build/*.o src/libkern/build/*.o src/interrupts/build/*.o src/smp/build/*.o src/syscall/build/*.o
+SOURCE_DIRS=src/startup src/startup/libkern32 src/libkern src/interrupts src/smp src/syscall src/programs
+BUILD_FILES=src/startup/build/*.o src/startup/libkern32/build/*.o src/libkern/build/*.o src/interrupts/build/*.o src/smp/build/*.o src/syscall/build/*.o src/programs/build/*.o
 LIBS=libs/anpages libs/anlock libs/anidxset
 LIB_BUILD=libs/anpages/build/*.o libs/anlock/build/*.o libs/anidxset/build/*.o
 

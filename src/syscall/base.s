@@ -36,6 +36,7 @@ global syscall_pinio
 syscall_pinio:
   test rdi, 1
   jz .outputPin
+  mov dx, si
   in al, dx
   iretq
 .outputPin:
