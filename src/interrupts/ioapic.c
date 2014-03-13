@@ -7,6 +7,8 @@
 
 #define IOAPIC_BASE 0xfec00000L
 
+static void * ioapicPtr;
+
 static void _ioapic_configure_irqs();
 static void _ioapic_configure_pci();
 static void _ioapic_disable_others();
@@ -21,9 +23,9 @@ void ioapic_initialize() {
   uint64_t page = (uint64_t)(IOAPIC_BASE >> 12);
   uint64_t virtualPage = kernpage_last_virtual() + 1;
   if (!kernpage_map(virtualPage, page)) die("failed to map");
-  IOAPIC_PTR = (void *)(virtualPage << 12);
+  ioapicPtr = (void *)(virtualPage << 12);
   print("mapped to 0x");
-  printHex((uint64_t)IOAPIC_PTR);
+  printHex((uint64_t)ioapicPtr);
   print(" [OK]\n");
 
   _ioapic_configure_irqs();
@@ -39,13 +41,13 @@ void ioapic_initialize() {
 }
 
 void ioapic_write_reg(uint8_t reg, uint32_t val) {
-  volatile uint32_t * regs = (volatile uint32_t *)IOAPIC_PTR;
+  volatile uint32_t * regs = (volatile uint32_t *)ioapicPtr;
   regs[0] = (uint32_t)reg;
   regs[4] = val;
 }
 
 uint32_t ioapic_read_reg(uint8_t reg) {
-  volatile uint32_t * regs = (volatile uint32_t *)IOAPIC_PTR;
+  volatile uint32_t * regs = (volatile uint32_t *)ioapicPtr;
   regs[0] = (uint32_t)reg;
   return regs[4];
 }

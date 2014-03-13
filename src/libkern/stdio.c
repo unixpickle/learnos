@@ -5,6 +5,8 @@
 
 #define buffer ((unsigned char *)SCREEN_BUFFER)
 
+static uint64_t printLock;
+
 static void setPosition(unsigned short x, unsigned short y);
 static void scrollUp();
 
@@ -60,15 +62,15 @@ void die(const char * msg) {
 }
 
 void print_initialize() {
-  anlock_initialize((uint64_t *)PRINT_LOCK_PTR);
+  anlock_initialize(&printLock);
 }
 
 void print_lock() {
-  anlock_lock((uint64_t *)PRINT_LOCK_PTR);
+  anlock_lock(&printLock);
 }
 
 void print_unlock() {
-  anlock_unlock((uint64_t *)PRINT_LOCK_PTR);
+  anlock_unlock(&printLock);
 }
 
 static void setPosition(unsigned short x, unsigned short y) {

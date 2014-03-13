@@ -7,6 +7,8 @@
 
 #define LAPIC_BASE_ADDR 0xfee00000
 
+static void * lapicPtr;
+
 void lapic_initialize() {
   if (!acpi_count_lapics()) {
     die("No LAPICs exist");
@@ -21,9 +23,9 @@ void lapic_initialize() {
     uint64_t page = (uint64_t)(LAPIC_BASE_ADDR >> 12);
     uint64_t virtualPage = kernpage_last_virtual() + 1;
     if (!kernpage_map(virtualPage, page)) die("failed to map");
-    LAPIC_PTR = (void *)(virtualPage << 12);
+    lapicPtr = (void *)(virtualPage << 12);
     print("mapped to 0x");
-    printHex((uint64_t)LAPIC_PTR);
+    printHex((uint64_t)lapicPtr);
     print(" [OK]\n");
   }
 
@@ -90,7 +92,7 @@ void lapic_set_register(uint16_t reg, uint64_t value) {
   if (lapic_is_x2_available()) {
     msr_write(reg + 0x800, value);
   } else {
-    uint64_t base = (uint64_t)LAPIC_PTR;
+    uint64_t base = (uint64_t)lapicPtr;
     if (reg != 0x30) {
       *((volatile uint32_t *)(base + (reg * 0x10))) = (uint32_t)(value & 0xffffffff);
     } else {
@@ -104,7 +106,7 @@ uint64_t lapic_get_register(uint16_t reg) {
   if (lapic_is_x2_available()) {
     return msr_read(reg + 0x800);
   } else {
-    uint64_t base = (uint64_t)LAPIC_PTR;
+    uint64_t base = (uint64_t)lapicPtr;
     if (reg != 0x30) {
       return (uint64_t)(*((volatile uint32_t *)(base + (reg * 0x10))));
     } else {

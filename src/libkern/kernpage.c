@@ -5,6 +5,11 @@
 #include <anpages.h>
 #include <anlock.h>
 
+static uint64_t anpagesData[4];
+static anpages_t anpagesStructure = (anpages_t)anpagesData;
+static uint64_t anpagesLock;
+static uint64_t phyMapCount;
+
 static void _kernpage_get_regions();
 static void _kernpage_make_mapping();
 static void _kernpage_configure_anpages();
@@ -38,7 +43,7 @@ page_t kernpage_calculate_virtual(page_t phys) {
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
   uint64_t virtual = 0;
-  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
+  for (i = 0; i < phyMapCount; i++) {
     if (maps[i].start > phys) return 0; // we've gone too far
     if (maps[i].start <= phys && maps[i].start + maps[i].length > phys) {
       return virtual + phys - maps[i].start;
@@ -51,7 +56,7 @@ page_t kernpage_calculate_virtual(page_t phys) {
 page_t kernpage_calculate_physical(page_t virt) {
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
-  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
+  for (i = 0; i < phyMapCount; i++) {
     if (maps[i].start + maps[i].length > virt) {
       return maps[i].start + virt;
     }
@@ -143,24 +148,22 @@ bool kernpage_lookup_virtual(page_t phys, page_t * virt) {
 }
 
 page_t kernpage_alloc_virtual() {
-  anpages_t pages = (anpages_t)ANPAGES_STRUCT;
-  page_t p = anpages_alloc(pages);
+  page_t p = anpages_alloc(anpagesStructure);
   if (p) LAST_PAGE++;
   return p;
 }
 
 void kernpage_free_virtual(page_t virt) {
-  anpages_t pages = (anpages_t)ANPAGES_STRUCT;
   LAST_PAGE--;
-  return anpages_free(pages, virt);
+  return anpages_free(anpagesStructure, virt);
 }
 
 void kernpage_lock() {
-  anlock_lock((anlock_t)ANPAGES_LOCK);
+  anlock_lock(&anpagesLock);
 }
 
 void kernpage_unlock() {
-  anlock_unlock((anlock_t)ANPAGES_LOCK);
+  anlock_unlock(&anpagesLock);
 }
 
 uint64_t kernpage_count_allocated() {
@@ -282,7 +285,7 @@ static void _kernpage_get_regions() {
   if (count < 1) {
     die("no immediate upper memory");
   }
-  PHYSICAL_MAP_COUNT = (uint8_t)count;
+  phyMapCount = (uint8_t)count;
   print("There are ");
   printHex(count);
   print(" memory maps: ");
@@ -308,7 +311,7 @@ static void _kernpage_make_mapping() {
   print(", vpage = ");
   printHex(LAST_VPAGE);
   print("\n");
-  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
+  for (i = 0; i < phyMapCount; i++) {
     for (j = maps[i].start; j < maps[i].length + maps[i].start; j++) {
       if (!kernpage_is_mapped(virtual)) {
         _kernpage_lin_map(virtual, j);
@@ -333,9 +336,8 @@ static void _kernpage_configure_anpages() {
   printHex(vpageLen);
   print("\n");
 
-  anpages_t pages = (anpages_t)ANPAGES_STRUCT;
-  anpages_initialize(pages, firstVpage, vpageLen);
-  anlock_initialize((anlock_t)ANPAGES_LOCK);
+  anpages_initialize(anpagesStructure, firstVpage, vpageLen);
+  anlock_initialize(&anpagesLock);
 
   LAST_PAGE = 0;
 }
@@ -348,12 +350,12 @@ static page_t _kernpage_next_physical() {
   uint64_t page = LAST_PAGE;
   int i;
   const kernpage_info * maps = (const kernpage_info *)PHYSICAL_MAP_ADDR;
-  for (i = 0; i < PHYSICAL_MAP_COUNT; i++) {
+  for (i = 0; i < phyMapCount; i++) {
     kernpage_info map = maps[i];
     if (map.start + map.length > page && map.start <= page) {
       if (page < map.start + map.length - 1) {
         return page + 1;
-      } else if (i == PHYSICAL_MAP_COUNT - 1) {
+      } else if (i == phyMapCount - 1) {
         return 0;
       } else {
         return maps[i + 1].start;

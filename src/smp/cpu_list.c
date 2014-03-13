@@ -6,6 +6,9 @@
 #include <shared/addresses.h>
 #include "gdt.h"
 
+static uint64_t cpuListLock;
+static cpu_info * cpuInfoFirst;
+
 static void cpu_list_lock();
 static void cpu_list_unlock();
 
@@ -22,8 +25,8 @@ void cpu_list_initialize(uint32_t cpuId) {
   info->lock = 0;
   info->currentThread = NULL;
   info->currentTask = NULL;
-  CPU_INFO_FIRST = page;
-  anlock_initialize((anlock_t)CPU_LIST_LOCK);
+  cpuInfoFirst = info;
+  anlock_initialize(&cpuListLock);
 
   info->tssSelector = (uint16_t)gdt_get_size();
   info->tss = gdt_add_tss();
@@ -31,7 +34,7 @@ void cpu_list_initialize(uint32_t cpuId) {
 
 cpu_info * cpu_list_lookup(uint32_t cpuId) {
   cpu_list_lock();
-  cpu_info * cur = (cpu_info *)(CPU_INFO_FIRST << 12);
+  cpu_info * cur = cpuInfoFirst;
   while (cur->nextCPU) {
     if (cur->cpuId == cpuId) {
       cpu_list_unlock();
@@ -49,7 +52,7 @@ cpu_info * cpu_list_lookup(uint32_t cpuId) {
 
 void cpu_list_add(uint64_t page) {
   cpu_list_lock();
-  cpu_info * cur = (cpu_info *)(CPU_INFO_FIRST << 12);
+  cpu_info * cur = cpuInfoFirst;
   while (cur->nextCPU) {
     cur = (cpu_info *)(cur->nextCPU << 12);
   }
@@ -68,12 +71,10 @@ void * cpu_get_dedicated_stack() {
 }
 
 static void cpu_list_lock() {
-  anlock_t lock = (anlock_t)CPU_LIST_LOCK;
-  anlock_lock(lock);
+  anlock_lock(&cpuListLock);
 }
 
 static void cpu_list_unlock() {
-  anlock_t lock = (anlock_t)CPU_LIST_LOCK;
-  anlock_unlock(lock);
+  anlock_unlock(&cpuListLock);
 }
 

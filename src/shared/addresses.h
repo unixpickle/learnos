@@ -32,13 +32,13 @@
 #define LAST_VPAGE (*((volatile unsigned long long *)0x200014))
 
 /**
- * A 1-byte counter for the map which follows.
+ * A 1-byte counter for the map which follows. No longer used.
  */
 #define PHYSICAL_MAP_COUNT (*((volatile unsigned char *)0x20001c))
 
 /**
- * A 1-byte flag; if 1, then the kernpage_ functions may be used. This flag
- * no longer actually does anything.
+ * A 1-byte flag; if 1, then the kernpage_ functions may be used.
+ * Not used for anything.
  */
 #define KERNPAGE_ENABLED (*((volatile unsigned char *)0x20001d))
 
@@ -54,11 +54,13 @@
 
 /**
  * The (virtual kernpage) address which 0xFEE... is mapped to
+ * No longer used.
  */
 #define LAPIC_PTR (*((volatile void **)0x20101e))
 
 /**
  * The (virtual kernpage) address which 0xFEC... is mapped to
+ * No longer used.
  */
 #define IOAPIC_PTR (*((volatile void **)0x201026))
 
@@ -74,38 +76,33 @@
 #define PIT_TICK_COUNT (*((volatile uint64_t *)0x201038))
 
 /**
- * First bit = IRQ0, etc.
- */
-#define INT_FLAGS (*((volatile uint64_t *)0x201040))
-
-/**
  * The address of the IDT to be used by the whole system.
  * 16*256 = 4096 bytes, so one page for this table is reserved.
  */
 #define IDT_PTR 0x202000
 
 /**
- * One 0x1000 byte page, containing the MADT data structure.
+ * One 0x1000 byte page containing the MADT table
  */
 #define ACPI_MADT_PTR 0x203000
 
 /**
- * The global 0x20 byte anpages_t structure.
+ * No longer in use.
  */
 #define ANPAGES_STRUCT 0x205000
 
 /**
- * The global anlock_t for paging. (8 bytes)
+ * No longer in use.
  */
 #define ANPAGES_LOCK 0x205020
 
 /**
- * The page index of the first cpu_info structure.
+ * No longer in use. This should be used for other things.
  */
 #define CPU_INFO_FIRST (*((volatile uint64_t *)0x205028))
 
 /**
- * The anlock_t structure for the CPU list.
+ * No longer in use. This should be used for other things.
  */
 #define CPU_LIST_LOCK 0x205030
 
@@ -113,11 +110,6 @@
  * The 0x40 byte structure containing the task list.
  */
 #define TASK_LIST_PTR 0x205038
-
-/**
- * Lock for print_lock() and print_unlock().
-  */
-#define PRINT_LOCK_PTR 0x205078
 
 /**
  * The GDT which is used for processors after SMP is started up. This is
