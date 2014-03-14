@@ -11,8 +11,8 @@
 extern void GDT64_pointer();
 extern void proc_entry();
 extern void proc_entry_end();
-extern void keyboard_driver_start();
-extern void keyboard_driver_end();
+extern char _binary_keyboard_build_keyboard_bin_start;
+extern char _binary_keyboard_build_keyboard_bin_end;
 
 static void copy_init_code();
 
@@ -32,8 +32,14 @@ void smp_initialize() {
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
   task_critical_start();
-  uint64_t taskEnd = ((uint64_t)keyboard_driver_end);
-  uint64_t taskStart = ((uint64_t)keyboard_driver_start);
+  uint64_t taskEnd = (uint64_t)(&_binary_keyboard_build_keyboard_bin_start);
+  uint64_t taskStart = (uint64_t)(&_binary_keyboard_build_keyboard_bin_end);
+  taskEnd = taskStart + 0x10;
+  print("taskEnd ");
+  printHex(taskEnd);
+  print(" taskStart ");
+  printHex(taskStart);
+  print("\n");
   scheduler_generate_task((void *)taskStart, taskEnd - taskStart);
   task_critical_stop();
 

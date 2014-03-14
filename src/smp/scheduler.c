@@ -16,6 +16,9 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
   info->currentTask = task;
   info->currentThread = thread;
   thread_configure_tss(thread, info->tss);
+  if (thread->state.cr3 != 0x300000) {
+    print("switching to user task\n");
+  }
 
   // get the TSS and set it if it's wrong
   // TODO: see if we need to reload the TSS

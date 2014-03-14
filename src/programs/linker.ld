@@ -1,9 +1,9 @@
 SECTIONS {
 
-  . = 1M;
+  . = 0x10500400000;
 
   .text BLOCK(4K) : ALIGN(4K) {
-    *(.multiboot)
+    *(.entrypoint)
     *(.text)
   }
   .rodata BLOCK(4K) : ALIGN(4K) {
@@ -16,4 +16,5 @@ SECTIONS {
     *(COMMON)
     *(.bss)
   }
+
 }

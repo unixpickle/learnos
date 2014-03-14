@@ -1,3 +1,5 @@
+bits 64
+
 global sys_print
 sys_print:
   int 0x21

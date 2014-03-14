@@ -1,3 +1,5 @@
+bits 64
+
 extern printf_impl
 
 ; this is a hack if i've seen one, but it's kinda nice!
