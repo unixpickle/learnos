@@ -1,41 +1,41 @@
-#include "task.h"
+#include <stdint.h>
 
 /**
- * Jump to a specific task. The current task's state must be saved in order for
- * this to work.
- * @param task - The task to launch.
- * @param thread - The thread to launch. Note that this must already have
- * isRunning set to true.
- * @return This function will never return.
- * @discussion This must be run from a critical section.
- */
-void scheduler_switch_task(task_t * task, thread_t * thread);
-
-/**
- * Triggered when a timer event goes off. Resets a timer to the nearest
- * unscheduled delay and then, if on the root CPU, increments the system time as
- * well.
+ * Should be called after a LAPIC timer event. Never returns.
  */
 void scheduler_handle_timer();
 
 /**
- * Called (usually by an interrupt) when the current CPU would like to run a new
- * task.
- * @return If this function returns, that means no available tasks where found.
- * If this happens, this function is responsible for setting up a timer to wake
- * it up in the future to look for a task again.
- * @discussion This must be called from a critical section.
+ * Called whenever the LAPIC timer should be put back into the idle state.
+ */
+void scheduler_flush_timer();
+
+/**
+ * Returns the current global timestamp.
+ */
+uint64_t scheduler_get_timestamp();
+
+/**
+ * Disassociates the current thread with the current CPU. If the thread is not
+ * in a special sleeping state, it will be added back to the end of the task
+ * queue.
+ */
+void scheduler_stop_current();
+
+/**
+ * This will start scheduling the next thread.
  */
 void scheduler_run_next();
 
-/**
- * Creates a new task with one thread and adds it to the task queue.
- * @discussion This must be called from a critical section.
- */
-bool scheduler_generate_task(void * code, uint64_t len);
+/***********************
+ * Task queue methods. *
+ ***********************/
 
-/**
- * Call this when an external IRQ comes in.
- */
-void scheduler_handle_interrupt(uint64_t irqMask);
+void task_queue_lock();
+void task_queue_unlock();
+
+void task_queue_push(thread_t * item);
+void task_queue_push_first(thread_t * item);
+thread_t * task_queue_pop();
+void task_queue_remove(thread_t * item);
 

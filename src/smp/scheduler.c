@@ -1,110 +1,160 @@
 #include "scheduler.h"
+#include "cpu.h"
 #include "context.h"
-#include "thread.h"
+
 #include <anlock.h>
-#include <shared/addresses.h>
-#include "cpu_list.h"
+#include <libkern_base.h>
 
-void scheduler_switch_task(task_t * task, thread_t * thread) {
-  cpu_info * info = cpu_get_current();
-  anlock_lock(&info->lock);
-  if (info->currentThread) {
-    anlock_lock(&thread->statusLock);
-    thread->status ^= 1;
-    anlock_unlock(&thread->statusLock);
-  }
-  info->currentTask = task;
-  info->currentThread = thread;
-  thread_configure_tss(thread, info->tss);
 
-  // get the TSS and set it if it's wrong
-  // TODO: see if we need to reload the TSS
-  uint16_t currentTss;
-  __asm__ ("str %0" : "=r" (currentTss));
-  if (currentTss != info->tssSelector) {
-    __asm__ ("ltr %0" : : "r" (info->tssSelector));
-  }
-
-  anlock_unlock(&info->lock);
-  task_switch(task, thread); // changes our execution context
-}
+static thread_t * firstThread = NULL;
+static thread_t * lastThread = NULL;
+static uint64_t queueLock = 0;
+static uint64_t systemTimestamp = 0;
 
 void scheduler_handle_timer() {
-  lapic_send_eoi();
+  scheduler_flush_timer();
+  scheduler_run_next();
 
-  if (lapic_is_boot()) {
-    uint64_t current = lapic_get_register(LAPIC_REG_TMRCURRCNT);
-    LAPIC_TIMESTAMP += LAPIC_LAST_DELAY - current;
+  lapic_timeout_set(0x20, 0xb, lapic_get_bus_speed() >> 7);
+  enable_interrupts();
+  while (1) halt();
+}
+
+void scheduler_flush_timer() {
+  cpu_t * cpu = cpu_current();
+  uint64_t passed = cpu->lastTimeout - lapic_get_register(LAPIC_REG_TMRCURRCNT);
+  // do an atomic addition
+  __asm__("lock add %1, (%0)"
+          :
+          : "b" (&systemTimestamp), "a" (passed)
+          : "memory");
+  lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000); // disable timer
+}
+
+uint64_t scheduler_get_timestamp() {
+  uint64_t timestamp;
+  __asm__("lock mov (%1), %0",
+          : "=a" (timestamp)
+          : "b" (&systemTimestamp));
+  return timestamp;
+}
+
+void scheduler_stop_current() {
+  cpu_t * cpu = cpu_current();
+  if (!cpu->thread) return;
+  thread_t * thread = cpu->thread;
+  task_t * task = cpu->task;
+
+  anlock_lock(&thread->stateLock);
+  uint64_t state = (thread->state ^= 1);
+  if (!state) {
+    // push it back to the queue
+    task_queue_lock();
+    task_queue_push(thread);
+    task_queue_unlock();
   }
-
-  // TODO: look for pending timers here
-  uint64_t bus = lapic_get_bus_speed();
-  lapic_timer_set(0x20, 0xc, bus >> 7);
-
-  
+  anlock_unlock(&thread->stateLock);
 }
 
 void scheduler_run_next() {
-  cpu_info * info = cpu_get_current();
-  anlock_lock(&info->lock);
-  if (info->currentThread) {
-    anlock_lock(&info->currentThread->statusLock);
-    info->currentThread->status ^= 1;
-    anlock_unlock(&info->currentThread->statusLock);
-  }
-  info->currentTask = NULL;
-  info->currentThread = NULL;
-  anlock_unlock(&info->lock);
+  // TODO: this function should also keep track of how much time passes while
+  // trying to find the next task in the queue to run.
 
-  task_t * task;
-  thread_t * thread;
-  if (task_get_next_job(&task, &thread)) {
-    scheduler_switch_task(task, thread);
-  }
-}
+  uint64_t timestamp = scheduler_get_timestamp();
 
-bool scheduler_generate_task(void * code, uint64_t len) {
-  task_t * task = task_create();
-  if (!task) return false;
+  // minimum of 32 ticks/second
+  uint64_t nextTimestamp = timestamp + (lapic_get_bus_speed() >> 5);
 
-  thread_t * thread = thread_create_first(task, code, len);
+  task_queue_lock();
+  thread_t * thread = task_queue_pop();
+  thread_t * firstThread = thread;
+
   if (!thread) {
-    return false;
+    task_queue_unlock();
+    return;
   }
 
-  task->nextThread = thread;
-  task->firstThread = thread;
-  task_list_add(task);
-  return true;
+  do {
+    if (thread->nextTimestamp <= timestamp) {
+      break;
+    }
+    if (thread->nextTimestamp < nextTimestamp) {
+      nextTimestamp = thread->nextTimestamp;
+    }
+    task_queue_push(thread);
+    thread = task_queue_pop();
+  } while (thread != firstThread);
+  task_queue_unlock();
+
+  if (thread->nextTimestamp > timestamp) return;
+
+  cpu_t * cpu = cpu_current();
+  cpu->lastTimeout = nextTimestamp - timestamp;
+  lapic_timer_set(0x20, 0xb, nextTimestamp - timestamp);
+
+  // do logic here
+  anlock_lock(&thread->stateLock);
+  thread->state |= 1;
+  anlock_unlock(&thread->stateLock);
+  cpu->thread = thread;
+  cpu->task = thread->task;
+
+  task_switch(thread->task, thread);
 }
 
-void scheduler_handle_interrupt(uint64_t irqMask) {
-  tasks_root_t * root = (tasks_root_t *)TASK_LIST_PTR;
-  anlock_lock(&root->lock);
-  task_t * task = root->firstTask;
-  while (task) {
-    anlock_lock(&task->threadsLock);
-    thread_t * thread = task->firstThread;
-    while (thread) {
-      __asm__ ("lock orq %0, (%1)" :
-               : "a" (irqMask), "b" (&thread->interruptMask)
-               : "memory");
-      anlock_lock(&thread->statusLock);
-      if (thread->status & 0x2) {
-        thread->status ^= 2;
-        uint64_t newRax = 0;
-        __asm__ ("lock xchgq %0, (%1)"
-                 : "=a" (newRax)
-                 : "r" (&thread->interruptMask)
-                 : "memory");
-        thread->state.rax = newRax;
-      }
-      anlock_unlock(&thread->statusLock);
-      thread = thread->nextThread;
-    }
-    anlock_unlock(&task->threadsLock);
-    task = task->nextTask;
+/**************
+ * Task queue *
+ *************/
+
+void task_queue_lock() {
+  anlock_lock(&queueLock);
+}
+
+void task_queue_unlock() {
+  anlock_unlock(&queueLock);
+}
+
+void task_queue_push(thread_t * item) {
+  item->queueNext = NULL;
+  item->queueLast = lastThread;
+  if (lastThread) {
+    lastThread->queueNext = item;
+  } else {
+    firstThread = item;
   }
-  anlock_unlock(&root->lock);
+  lastThread = item;
+}
+
+void task_queue_push_first(thread_t * item) {
+  item->queueLast = NULL;
+  item->queueNext = firstThread;
+  if (firstThread) firstThread->queueLast = item;
+  firstThread = item;
+}
+
+thread_t * task_queue_pop() {
+  thread_t * first = firstThread;
+  if (!first) return NULL;
+
+  firstThread = first->queueNext;
+  if (firstThread) {
+    firstThread->queueLast = NULL;
+  } else {
+    lastThread = NULL;
+  }
+  return first;
+}
+
+void task_queue_remove(thread_t * item) {
+  if (item->queueLast) {
+    item->queueLast->next = item->queueNext;
+  } else {
+    firstThread = item->next;
+  }
+  if (item->next) {
+    item->next->last = item->last;
+  } else {
+    lastThread = item->last;
+  }
 }
 
