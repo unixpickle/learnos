@@ -23,4 +23,5 @@ void cpu_list_add(uint64_t page);
 
 cpu_info * cpu_get_current();
 void * cpu_get_dedicated_stack();
+bool cpu_is_boot();
 

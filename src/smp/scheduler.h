@@ -12,6 +12,13 @@
 void scheduler_switch_task(task_t * task, thread_t * thread);
 
 /**
+ * Triggered when a timer event goes off. Resets a timer to the nearest
+ * unscheduled delay and then, if on the root CPU, increments the system time as
+ * well.
+ */
+void scheduler_handle_timer();
+
+/**
  * Called (usually by an interrupt) when the current CPU would like to run a new
  * task.
  * @return If this function returns, that means no available tasks where found.

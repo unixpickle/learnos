@@ -31,5 +31,6 @@ void apic_initialize() {
   print("now accepting interrupts.\n");
 
   pit_set_divisor(11932);
+  lapic_calculate_bus_speed();
 }
 

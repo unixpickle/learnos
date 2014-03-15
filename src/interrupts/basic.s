@@ -190,6 +190,10 @@ handle_simd_exception:
   endframe
   iretq
 
+global handle_spurious
+handle_spurious:
+  iretq
+
 global handle_unknown_exception
 handle_unknown_exception:
   push rbp

@@ -29,6 +29,21 @@ void scheduler_switch_task(task_t * task, thread_t * thread) {
   task_switch(task, thread); // changes our execution context
 }
 
+void scheduler_handle_timer() {
+  lapic_send_eoi();
+
+  if (lapic_is_boot()) {
+    uint64_t current = lapic_get_register(LAPIC_REG_TMRCURRCNT);
+    LAPIC_TIMESTAMP += LAPIC_LAST_DELAY - current;
+  }
+
+  // TODO: look for pending timers here
+  uint64_t bus = lapic_get_bus_speed();
+  lapic_timer_set(0x20, 0xc, bus >> 7);
+
+  
+}
+
 void scheduler_run_next() {
   cpu_info * info = cpu_get_current();
   anlock_lock(&info->lock);

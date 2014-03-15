@@ -70,6 +70,10 @@ void * cpu_get_dedicated_stack() {
   return (void *)((info->baseStack + 1) << 0xc);
 }
 
+bool cpu_is_boot() {
+  return cpuInfoFirst->cpuId == lapic_get_id();
+}
+
 static void cpu_list_lock() {
   anlock_lock(&cpuListLock);
 }

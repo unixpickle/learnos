@@ -3,13 +3,12 @@ bits 64
 PML4_START equ 0x300000
 
 extern task_critical_stop
-extern cpu_get_current
+extern cpu_get_current, cpu_is_boot
 extern kernpage_calculate_virtual
 extern thread_resume_kernel_stack
-extern scheduler_run_next
+extern scheduler_handle_timer, scheduler_run_next
 extern anlock_unlock
 extern anlock_lock
-extern lapic_timer_set
 extern lapic_send_eoi
 extern thread_translate_kernel_stack, cpu_get_dedicated_stack
 extern stack_log
@@ -196,12 +195,7 @@ task_switch_interrupt:
   call cpu_get_dedicated_stack
   mov rsp, rax
 
-  ; well, we should set an interrupt
-  call lapic_send_eoi
-  mov rdi, 0x20
-  mov rsi, 0x100000
-  mov rdx, 0x1 ; divide by 4, for now
-  call lapic_timer_set
+  call scheduler_handle_timer
   call scheduler_run_next ; only returns if #CPU's > #tasks
 
   ; hang here until another timer interrupt

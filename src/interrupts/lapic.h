@@ -35,6 +35,9 @@ void lapic_enable();
 uint32_t lapic_get_id();
 void lapic_clear_errors();
 
+uint64_t lapic_calculate_bus_speed();
+uint64_t lapic_get_bus_speed();
+
 void lapic_send_eoi();
 void lapic_set_priority(uint8_t pri);
 void lapic_set_register(uint16_t reg, uint64_t value);

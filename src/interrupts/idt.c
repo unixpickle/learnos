@@ -43,17 +43,26 @@ void configure_global_idt() {
   _set_irqs((idt_entry *)IDT_PTR);
 
   idt_entry entry;
+
+  // create spurious handler
+  _make_entry(&entry, handle_spurious);
+  ((idt_entry *)IDT_PTR)[0xff] = entry;
+
   _make_entry(&entry, task_switch_interrupt);
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_TIMER] = entry;
+
   _make_entry(&entry, syscall_print);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_PRINT] = entry;
+
   _make_entry(&entry, syscall_sleep);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_SLEEP] = entry;
+
   _make_entry(&entry, syscall_getint);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_GETINT] = entry;
+
   _make_entry(&entry, syscall_pinio);
   entry.flags |= 0x60; // dpl
   ((idt_entry *)IDT_PTR)[IDT_VECTOR_PINIO] = entry;

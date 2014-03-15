@@ -4,10 +4,12 @@
 #include <kernpage.h>
 #include <shared/addresses.h>
 #include "acpi.h"
+#include "pit.h"
 
 #define LAPIC_BASE_ADDR 0xfee00000
 
 static void * lapicPtr;
+static uint64_t lapicBusSpeed;
 
 void lapic_initialize() {
   if (!acpi_count_lapics()) {
@@ -78,6 +80,20 @@ uint32_t lapic_get_id() {
 
 void lapic_clear_errors() {
   lapic_set_register(LAPIC_REG_ESR, 0);
+}
+
+uint64_t lapic_calculate_bus_speed() {
+  lapic_set_register(LAPIC_REG_LVT_TMR, 0xff);
+  lapic_set_register(LAPIC_REG_TMRINITCNT, 0xffffffff);
+  lapic_set_register(LAPIC_REG_TMRDIV, 0xb);
+  pit_sleep(1);
+  uint64_t value = lapic_get_register(LAPIC_REG_TMRCURRCNT);
+  lapic_set_register(LAPIC_REG_LVT_TMR, 0xffffffff);
+  return (lapicBusSpeed = (0xffffffffL - value) * 100L);
+}
+
+uint64_t lapic_get_bus_speed() {
+  return lapicBusSpeed;
 }
 
 void lapic_send_eoi() {

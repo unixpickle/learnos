@@ -19,6 +19,7 @@ void handle_math_fault();
 void handle_alignment_check();
 void handle_machine_check();
 void handle_simd_exception();
+void handle_spurious();
 
 void handle_dummy_lower();
 void handle_dummy_upper();
