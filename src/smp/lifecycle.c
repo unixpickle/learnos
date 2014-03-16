@@ -1,8 +1,12 @@
 #include "lifecycle.h"
 #include "vm.h"
+#include "tasks.h"
+#include "scheduler.h"
 #include <shared/addresses.h>
 #include <kernpage.h>
 #include <anlock.h>
+
+static void _mask_interrupt(uint64_t mask, task_t * task);
 
 void thread_configure_tss(thread_t * thread, tss_t * tss) {
   uint64_t kStack = thread->stack + PROC_KERN_STACKS;
@@ -26,5 +30,32 @@ void * thread_translate_kernel_stack(task_t * task,
                                      void * ptr) {
   page_t localPage = thread->stack + PROC_KERN_STACKS;
   return (void *)((localPage << 12) | (((uint64_t)ptr) & 0xfff));
+}
+
+void scheduler_handle_interrupt(uint64_t irqMask) {
+  tasks_lock();
+  tasks_iterate(irqMask, _mask_interrupt);
+  tasks_unlock();
+}
+
+static void _mask_interrupt(uint64_t mask, task_t * task) {
+  anlock_lock(&task->threadsLock);
+  thread_t * thread = task->firstThread;
+  while (thread) {
+    anlock_lock(&thread->statusLock);
+    if (!(thread->status &= 0xd)) {
+      thread->state.rax = mask;
+      task_queue_lock();
+      task_queue_push(thread);
+      task_queue_unlock();
+    } else {
+      __asm__ ("lock or %0, (%1)"
+               : : "a" (mask), "b" (&thread->interruptMask)
+               : "memory");
+    }
+    anlock_unlock(&thread->statusLock);
+    thread = thread->nextThread;
+  }
+  anlock_unlock(&task->threadsLock);
 }
 

@@ -65,6 +65,14 @@ task_t * tasks_find(uint64_t pid) {
   return NULL;
 }
 
+void tasks_iterate(uint64_t value, void (* iterator)(uint64_t v, task_t * t)) {
+  task_t * cur = firstTask;
+  while (cur) {
+    iterator(value, cur);
+    cur = cur->nextTask;
+  }
+}
+
 void tasks_unlock() {
   anlock_unlock(&tasksLock);
 }

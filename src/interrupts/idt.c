@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <libkern_base.h>
 #include <syscall/base.h>
-#include <smp/scheduler.h>
+#include <smp/lifecycle.h>
 
 extern void task_switch_interrupt();
 

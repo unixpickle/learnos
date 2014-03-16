@@ -25,3 +25,9 @@ void * thread_translate_kernel_stack(task_t * task,
                                      thread_t * thread,
                                      void * ptr);
 
+/**
+ * Call when an external IRQ is set.
+ * @param irqMask = (1 << IRQ#)
+ */
+void scheduler_handle_interrupt(uint64_t irqMask);
+
