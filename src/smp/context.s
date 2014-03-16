@@ -49,15 +49,15 @@ task_save_state:
   je .end ; there is no current thread_t running on the CPU
 
   ; store each of our variables in the thread_t structure
-  mov rax, [rsp + 0x60] ; 0x40 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
+  mov rax, [rsp + 0xa0] ; 0x80 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
   mov [rdi + 0x10], rax ; rsp
   mov rax, [rsp]
   mov [rdi + 0x18], rax ; rbp
   mov rax, [rsp + 8]
   mov [rdi + 0x20], rax ; cr3
-  mov rax, [rsp + 0x48]
+  mov rax, [rsp + 0x88]
   mov [rdi + 0x28], rax ; rip
-  mov rax, [rsp + 0x58]
+  mov rax, [rsp + 0x98]
   mov [rdi + 0x30], rax ; flags
   
   ; store rax, rbx, rcx, rdx, rsi, rdi, r8, ..., r15

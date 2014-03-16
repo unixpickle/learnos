@@ -41,7 +41,6 @@ void syscall_getint_method() {
     thread->status |= 2;
     anlock_unlock(&thread->statusLock);
 
-    print("stopping task for interrupt waiting.\n");
     scheduler_stop_current();
     scheduler_task_loop();
   }

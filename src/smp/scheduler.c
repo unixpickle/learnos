@@ -56,9 +56,6 @@ void scheduler_stop_current() {
 }
 
 void scheduler_run_next() {
-  // TODO: this function should also keep track of how much time passes while
-  // trying to find the next task in the queue to run.
-
   uint64_t timestamp = scheduler_get_timestamp();
 
   // minimum of 32 ticks/second
@@ -89,7 +86,7 @@ void scheduler_run_next() {
 
   cpu_t * cpu = cpu_current();
   cpu->lastTimeout = nextTimestamp - timestamp;
-  lapic_timer_set(0x20, 0, (nextTimestamp - timestamp) >> 1);
+  lapic_timer_set(0x20, (nextTimestamp - timestamp), 0xb);
 
   // do logic here
   anlock_lock(&thread->statusLock);
@@ -108,7 +105,7 @@ void scheduler_task_loop() {
   scheduler_flush_timer();
   scheduler_run_next();
 
-  lapic_timer_set(0x20, 0, lapic_get_bus_speed() >> 8);
+  lapic_timer_set(0x20, lapic_get_bus_speed() >> 7, 0xb);
   enable_interrupts();
   while (1) halt();
 }
@@ -126,6 +123,7 @@ void task_queue_unlock() {
 }
 
 void task_queue_push(thread_t * item) {
+  if (item->queueNext || item->queueLast) return;
   item->queueNext = NULL;
   item->queueLast = lastThread;
   if (lastThread) {
@@ -137,6 +135,7 @@ void task_queue_push(thread_t * item) {
 }
 
 void task_queue_push_first(thread_t * item) {
+  if (item->queueNext || item->queueLast) return;
   item->queueLast = NULL;
   item->queueNext = firstThread;
   if (firstThread) firstThread->queueLast = item;

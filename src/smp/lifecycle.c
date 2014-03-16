@@ -43,7 +43,7 @@ static void _mask_interrupt(uint64_t mask, task_t * task) {
   thread_t * thread = task->firstThread;
   while (thread) {
     anlock_lock(&thread->statusLock);
-    if (!(thread->status &= 0xd)) {
+    if (!(thread->status &= 0xfd)) {
       thread->state.rax = mask;
       task_queue_lock();
       task_queue_push(thread);
