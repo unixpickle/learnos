@@ -132,6 +132,9 @@ static void _unlink_thread(void * threadObj) {
   }
   anlock_unlock(&task->threadsLock);
 
+  // we do not have to unilnk it from the work queue here because it is already
+  // absent from the work queue: we know this because *we're* running it.
+
   cpu_t * cpu = cpu_current();
   cpu->task = NULL;
   cpu->thread = NULL;

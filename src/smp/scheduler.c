@@ -89,7 +89,7 @@ void scheduler_run_next() {
 
   cpu_t * cpu = cpu_current();
   cpu->lastTimeout = nextTimestamp - timestamp;
-  lapic_timer_set(0x20, 0xb, nextTimestamp - timestamp);
+  lapic_timer_set(0x20, 0, (nextTimestamp - timestamp) >> 1);
 
   // do logic here
   anlock_lock(&thread->statusLock);
@@ -100,13 +100,7 @@ void scheduler_run_next() {
 
   thread_configure_tss(thread, cpu->tss);
 
-  // get the TSS and set it if it's wrong
   // TODO: see if we need to reload the TSS
-  uint16_t currentTss;
-  __asm__ ("str %0" : "=r" (currentTss));
-  if (currentTss != cpu->tssSelector) {
-    __asm__ ("ltr %0" : : "r" (cpu->tssSelector));
-  }
   task_switch(thread->task, thread);
 }
 
@@ -114,7 +108,7 @@ void scheduler_task_loop() {
   scheduler_flush_timer();
   scheduler_run_next();
 
-  lapic_timer_set(0x20, 0xb, lapic_get_bus_speed() >> 7);
+  lapic_timer_set(0x20, 0, lapic_get_bus_speed() >> 8);
   enable_interrupts();
   while (1) halt();
 }

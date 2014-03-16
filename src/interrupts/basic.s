@@ -145,8 +145,8 @@ handle_stack_fault:
 global handle_general_protection_fault
 handle_general_protection_fault:
   beginframe
-  mov rdi, [rsp + 0x78]
-  mov rsi, [rsp + 0x70]
+  mov rdi, [rsp + 0x88]
+  mov rsi, [rsp + 0x80]
   call int_general_protection_fault
   endframe
   add rsp, 8

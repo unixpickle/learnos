@@ -91,7 +91,7 @@ initiate_routine:
 
 global load_new_gdt
 load_new_gdt:
-  mov rbx, GDT64_PTR
-  lgdt [rbx]
+  mov rax, GDT64_PTR
+  lgdt [rax]
   ret
 

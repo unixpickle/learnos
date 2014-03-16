@@ -279,8 +279,10 @@ static bool _allocate_user_code(void * program, uint64_t len) {
     // map the new page in
     uint64_t entry = 7 | (kernpage_calculate_physical(newPage) << 12);
     disable_interrupts();
+    anlock_lock(&task->pml4Lock);
     bool result = task_vm_set(task, page, entry);
     task_vm_make_user(task, page);
+    anlock_unlock(&task->pml4Lock);
     if (!result) {
       kernpage_lock();
       kernpage_free_virtual(newPage);

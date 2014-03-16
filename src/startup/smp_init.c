@@ -16,6 +16,7 @@ extern void proc_entry();
 extern void proc_entry_end();
 extern void _binary_keyboard_build_keyboard_bin_start();
 extern void _binary_keyboard_build_keyboard_bin_end();
+extern void load_new_gdt();
 
 static void copy_init_code();
 
@@ -24,6 +25,7 @@ static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry);
 static void initialize_cpu(uint32_t cpuId);
 
 void proc_initialize(page_t stack);
+void load_tss();
 
 void smp_initialize() {
   print("initializing basic scheduling structures...\n");
@@ -48,6 +50,8 @@ void smp_initialize() {
   uint64_t taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
   task_generate((void *)taskStart, taskEnd - taskStart);
 
+  load_new_gdt();
+  load_tss();
   scheduler_task_loop();
 }
 
@@ -57,7 +61,18 @@ void proc_initialize(page_t stack) {
   lapic_set_priority(0);
   load_idtr((void *)IDTR_PTR);
   cpu_add_current(stack);
+  load_new_gdt();
+  load_tss();
   scheduler_task_loop();
+}
+
+void load_tss() {
+  cpu_t * cpu = cpu_current();
+  uint16_t currentTss;
+  __asm__ ("str %0" : "=r" (currentTss));
+  if (currentTss != cpu->tssSelector) {
+    __asm__ ("ltr %0" : : "r" (cpu->tssSelector));
+  }
 }
 
 static void copy_init_code() {

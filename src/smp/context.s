@@ -168,20 +168,20 @@ task_switch:
   mov rsp, rax
 
 .avoidRecalc:
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop r11
-  pop r10
-  pop r9
-  pop r8
-  pop rdi
-  pop rsi
-  pop rdx
-  pop rcx
-  pop rbx
   pop rax
+  pop rbx
+  pop rcx
+  pop rdx
+  pop rsi
+  pop rdi
+  pop r8
+  pop r9
+  pop r10
+  pop r11
+  pop r12
+  pop r13
+  pop r14
+  pop r15
   pop rbp
 
   iretq ; will reset the interrupts flag in the FLAGS register
