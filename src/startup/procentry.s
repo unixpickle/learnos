@@ -7,7 +7,7 @@ START_STACK equ 0x4000
 extern kernpage_alloc_virtual
 extern kernpage_lock
 extern kernpage_unlock
-extern smp_entry
+extern proc_initialize
 extern print
 
 bits 16
@@ -79,13 +79,15 @@ initiate_routine:
 
   ; now that we have our new stack, call smp_entry(page)
   mov rdi, rax
-  call smp_entry
+  call proc_initialize
+
+  ; should never happen
   mov rdi, .donemessage
   call print
   cli
   hlt
 .donemessage:
-  db 'somehow, smp_entry returned', 0x0a, 0
+  db 'somehow, proc_initialize returned', 0x0a, 0
 
 global load_new_gdt
 load_new_gdt:
