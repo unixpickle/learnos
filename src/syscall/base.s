@@ -18,11 +18,10 @@ syscall_print:
 
 global syscall_sleep
 syscall_sleep:
-  beginframe
-  mov rdi, [rsp + 0x50]
+  call task_save_state
+  call cpu_dedicated_stack
+  mov rsp, rax
   call syscall_sleep_method
-  endframe
-  iretq
 
 global syscall_getint
 syscall_getint:

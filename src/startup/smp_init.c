@@ -16,6 +16,8 @@ extern void proc_entry();
 extern void proc_entry_end();
 extern void _binary_keyboard_build_keyboard_bin_start();
 extern void _binary_keyboard_build_keyboard_bin_end();
+extern void _binary_ticktock_build_ticktock_bin_start();
+extern void _binary_ticktock_build_ticktock_bin_end();
 extern void load_new_gdt();
 
 static void copy_init_code();
@@ -43,11 +45,16 @@ void smp_initialize() {
   print("initializing x2APIC's...\n");
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
-  print("starting the bootstrap task...\n");
+  print("starting bootstrap tasks...\n");
 
   disable_interrupts();
+
   uint64_t taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
   uint64_t taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
+  task_generate((void *)taskStart, taskEnd - taskStart);
+
+  taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);
+  taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);
   task_generate((void *)taskStart, taskEnd - taskStart);
 
   load_new_gdt();

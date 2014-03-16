@@ -4,8 +4,14 @@
 #include <libkern_base.h>
 
 static cpu_t * firstCPU = NULL;
+static uint64_t count = 0;
+
+uint64_t cpu_count() {
+  return count;
+}
 
 void cpu_add(cpu_t * cpu) {
+  count++;
   if (!firstCPU) {
     firstCPU = cpu;
   } else {

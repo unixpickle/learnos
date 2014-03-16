@@ -21,11 +21,14 @@ void syscall_print_method(void * ptr) {
   disable_interrupts();
 }
 
-void syscall_sleep_method(uint64_t time) {
-  // TODO: this can obviously be redone
-  enable_interrupts();
-  pit_sleep(time);
-  disable_interrupts();
+void syscall_sleep_method() {
+  cpu_t * cpu = cpu_current();
+  uint64_t time = cpu->thread->state.rdi;
+
+  uint64_t cycles = (scheduler_get_second_duration() / 1000) * time;
+  cpu->thread->nextTimestamp = scheduler_get_timestamp() + cycles;
+  scheduler_stop_current();
+  scheduler_task_loop();
 }
 
 void syscall_getint_method() {

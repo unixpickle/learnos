@@ -37,6 +37,12 @@ uint64_t scheduler_get_timestamp() {
   return __sync_fetch_and_or(&systemTimestamp, 0);
 }
 
+uint64_t scheduler_get_second_duration() {
+  uint64_t clock = lapic_get_bus_speed();
+  clock *= cpu_count();
+  return clock;
+}
+
 void scheduler_stop_current() {
   cpu_t * cpu = cpu_current();
   if (!cpu->thread) return;
@@ -80,9 +86,13 @@ void scheduler_run_next() {
     task_queue_push(thread);
     thread = task_queue_pop();
   } while (thread != firstThread);
-  task_queue_unlock();
 
-  if (thread->nextTimestamp > timestamp) return;
+  if (thread->nextTimestamp > timestamp) {
+    task_queue_push(thread);
+    task_queue_unlock();
+    return;
+  }
+  task_queue_unlock();
 
   cpu_t * cpu = cpu_current();
   cpu->lastTimeout = nextTimestamp - timestamp;
@@ -105,7 +115,9 @@ void scheduler_task_loop() {
   scheduler_flush_timer();
   scheduler_run_next();
 
-  lapic_timer_set(0x20, lapic_get_bus_speed() >> 7, 0xb);
+  cpu_t * cpu = cpu_current();
+  cpu->lastTimeout = lapic_get_bus_speed() >> 7;
+  lapic_timer_set(0x20, cpu->lastTimeout, 0xb);
   enable_interrupts();
   while (1) halt();
 }

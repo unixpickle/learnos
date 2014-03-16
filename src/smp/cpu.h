@@ -5,6 +5,11 @@
 #include "types.h"
 
 /**
+ * Returns the number of CPUs on this system.
+ */
+uint64_t cpu_count();
+
+/**
  * Adds a CPU to the CPU list. This does not lock anything, so this may not be
  * called after the CPU list has been populated and is being actively used.
  */
