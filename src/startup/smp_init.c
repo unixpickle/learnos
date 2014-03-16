@@ -3,9 +3,12 @@
 #include <interrupts/lapic.h>
 #include <interrupts/acpi.h>
 #include <interrupts/pit.h>
-#include <smp/cpu_config.h>
+#include <interrupts/basic.h>
+#include <smp/cpu.h>
 #include <smp/gdt.h>
 #include <smp/scheduler.h>
+#include <smp/creation.h>
+#include <smp/tasks.h>
 #include <kernpage.h>
 
 extern void GDT64_pointer();
@@ -13,6 +16,9 @@ extern void proc_entry();
 extern void proc_entry_end();
 extern void _binary_keyboard_build_keyboard_bin_start();
 extern void _binary_keyboard_build_keyboard_bin_end();
+extern void _binary_ticktock_build_ticktock_bin_start();
+extern void _binary_ticktock_build_ticktock_bin_end();
+extern void load_new_gdt();
 
 static void copy_init_code();
 
@@ -20,24 +26,60 @@ static bool lapic_startup(void * unused, acpi_entry_lapic * entry);
 static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry);
 static void initialize_cpu(uint32_t cpuId);
 
+void proc_initialize(page_t stack);
+void load_tss();
+
 void smp_initialize() {
+  print("initializing basic scheduling structures...\n");
+  pids_initialize();
   print_initialize();
   gdt_initialize();
-  cpu_list_initialize(lapic_get_id());
   copy_init_code();
 
-  print("initializing xAPIC's\n");
+  page_t page = kernpage_alloc_virtual();
+  if (!page) die("failed to allocate kernel stack");
+  cpu_add_current(page);
+
+  print("initializing xAPIC's...\n");
   acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
-  print("initializing x2APIC's\n");
+  print("initializing x2APIC's...\n");
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
-  task_critical_start();
+  print("starting bootstrap tasks...\n");
+
+  disable_interrupts();
+
   uint64_t taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
   uint64_t taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
-  scheduler_generate_task((void *)taskStart, taskEnd - taskStart);
-  task_critical_stop();
+  task_generate((void *)taskStart, taskEnd - taskStart);
 
-  task_loop();
+  taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);
+  taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);
+  task_generate((void *)taskStart, taskEnd - taskStart);
+
+  load_new_gdt();
+  load_tss();
+  scheduler_task_loop();
+}
+
+void proc_initialize(page_t stack) {
+  lapic_enable();
+  lapic_set_defaults();
+  lapic_set_priority(0);
+  load_idtr((void *)IDTR_PTR);
+  cpu_add_current(stack);
+  load_new_gdt();
+  load_tss();
+  scheduler_task_loop();
+}
+
+void load_tss() {
+  cpu_t * cpu = cpu_current();
+  uint16_t currentTss;
+  __asm__ ("str %0" : "=r" (currentTss));
+  if (currentTss != cpu->tssSelector) {
+    __asm__ ("ltr %0" : : "r" (cpu->tssSelector));
+  }
 }
 
 static void copy_init_code() {
@@ -90,7 +132,7 @@ static void initialize_cpu(uint32_t cpuId) {
   lapic_send_ipi(cpuId, vector, 6, 1, 0);
   pit_sleep(20);
 
-  if (cpu_list_lookup(cpuId)) {
+  if (cpu_lookup(cpuId)) {
     print("[OK]\n");
     return;
   }
@@ -99,7 +141,6 @@ static void initialize_cpu(uint32_t cpuId) {
   lapic_send_ipi(cpuId, vector, 6, 1, 0);
   pit_sleep(20);
 
-  if (cpu_list_lookup(cpuId)) print("[OK]\n");
+  if (cpu_lookup(cpuId)) print("[OK]\n");
   else print("[FAILED]\n");
 }
-

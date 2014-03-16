@@ -6,7 +6,7 @@ bits 64
 extern print
 
 extern syscall_print_method, syscall_sleep_method, syscall_getint_method
-extern task_switch_to_kernpage, task_save_state, cpu_get_dedicated_stack
+extern task_switch_to_kernpage, task_save_state, cpu_dedicated_stack
 
 global syscall_print
 syscall_print:
@@ -18,16 +18,15 @@ syscall_print:
 
 global syscall_sleep
 syscall_sleep:
-  beginframe
-  mov rdi, [rsp + 0x50]
+  call task_save_state
+  call cpu_dedicated_stack
+  mov rsp, rax
   call syscall_sleep_method
-  endframe
-  iretq
 
 global syscall_getint
 syscall_getint:
   call task_save_state
-  call cpu_get_dedicated_stack
+  call cpu_dedicated_stack
   mov rsp, rax
   call syscall_getint_method ; never returns
 

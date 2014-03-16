@@ -1,4 +1,4 @@
-PROGRAMS=keyboard
+PROGRAMS=keyboard ticktock
 
 programs: libprog/build build
 	for dir in $(PROGRAMS); do \
@@ -20,3 +20,4 @@ clean:
 	for dir in $(PROGRAMS); do \
 		cd $$dir && make clean && cd ..; \
 	done
+

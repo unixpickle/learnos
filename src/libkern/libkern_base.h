@@ -54,4 +54,9 @@ void disable_interrupts();
  */
 void stack_log(uint64_t count);
 
+/**
+ * Uses rep stosq to zero a page of RAM.
+ */
+void zero_page(page_t page);
+
 #endif

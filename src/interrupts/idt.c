@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <libkern_base.h>
 #include <syscall/base.h>
-#include <smp/scheduler.h>
+#include <smp/lifecycle.h>
 
 extern void task_switch_interrupt();
 
@@ -202,7 +202,6 @@ void int_irq0() {
 void int_irq1() {
   lapic_send_eoi();
   scheduler_handle_interrupt(1 << 1);
-  // lapic_set_priority(0);
 }
 
 void int_irq2() {

@@ -117,3 +117,12 @@ stack_log:
   db ' ', 0
 .endmessage:
   db 0xa, 0
+
+global zero_page
+zero_page:
+  mov rax, 0
+  shl rdi, 12
+  mov rcx, 0x200
+  rep stosq
+  ret
+

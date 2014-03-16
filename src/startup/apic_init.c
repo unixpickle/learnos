@@ -7,11 +7,8 @@
 #include <interrupts/acpi.h>
 #include <interrupts/pit.h>
 #include <interrupts/basic.h>
-#include <smp/task.h>
 
 void apic_initialize() {
-  tasks_initialize();
-
   if (!acpi_find_madt()) die("Failed to find MADT");
 
   // suck away all the dummy interrupts
@@ -32,5 +29,8 @@ void apic_initialize() {
 
   pit_set_divisor(11932);
   lapic_calculate_bus_speed();
+  print("calculated bus speed at 0x");
+  printHex(lapic_get_bus_speed());
+  print(" Hz\n");
 }
 

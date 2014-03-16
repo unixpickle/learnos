@@ -53,15 +53,12 @@
 #define PHYSICAL_MAP_ADDR 0x20001e
 
 /**
- * The counter of how many bus cycles have currently elapsed (maintained by the
- * first CPU.
+ * Unused again
  */
 #define LAPIC_TIMESTAMP (*((volatile uint64_t *)0x20101e))
 
 /**
- * The number of bus cycles the LAPIC timer on the boot CPU was last set to.
- * This way, when a timer interrupt is received, LAPIC_TIMESTAMP is added with
- * LAPIC_LAST_DELAY - lapicCurrentTime.
+ * Unused again.
  */
 #define LAPIC_LAST_DELAY (*((volatile void **)0x201026))
 

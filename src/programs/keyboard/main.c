@@ -12,7 +12,7 @@ int main() {
     uint32_t input = scancode_in();
     if (input == 0x1c) {
       printf("A");
-    }
+    } else printf("unknown scancode\n");
   }
 
   return 0;

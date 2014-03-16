@@ -2,16 +2,13 @@ bits 64
 
 PML4_START equ 0x300000
 
-extern task_critical_stop
-extern cpu_get_current, cpu_is_boot
 extern kernpage_calculate_virtual
 extern thread_resume_kernel_stack
-extern scheduler_handle_timer, scheduler_run_next
+extern scheduler_handle_timer
 extern anlock_unlock
 extern anlock_lock
-extern lapic_send_eoi
-extern thread_translate_kernel_stack, cpu_get_dedicated_stack
-extern stack_log
+extern cpu_current, cpu_dedicated_stack
+extern thread_translate_kernel_stack
 
 global task_run_with_stack
 task_run_with_stack:
@@ -23,6 +20,14 @@ task_run_with_stack:
 global task_save_state
 task_save_state:
   ; immediately save the state of the 8 general purpose registers
+  push r15
+  push r14
+  push r13
+  push r12
+  push r11
+  push r10
+  push r9
+  push r8
   push rdi
   push rsi
   push rdx
@@ -35,49 +40,36 @@ task_save_state:
   ; stack: flags, cs, rip, ret_addr, [registers]
 
   call task_switch_to_kernpage
-  call cpu_get_current
+  call cpu_current
+
   ; get the current thread running on this CPU
   mov rsi, rax
-  lea rdi, [rsi + 0x14]
-  push rdi
-  push rsi
-  call anlock_lock
-  pop rsi
-  mov rdi, [rsi + 0x24]
-  xchg [rsp], rdi
-  call anlock_unlock
-
-  pop rdi ; thread_t structure
+  mov rdi, [rsi + 0x18] ; thread_t structure
   cmp rdi, 0
   je .end ; there is no current thread_t running on the CPU
 
   ; store each of our variables in the thread_t structure
-  mov rax, [rsp + 0x60] ; 0x40 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
+  mov rax, [rsp + 0xa0] ; 0x80 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
   mov [rdi + 0x10], rax ; rsp
   mov rax, [rsp]
   mov [rdi + 0x18], rax ; rbp
   mov rax, [rsp + 8]
   mov [rdi + 0x20], rax ; cr3
-  mov rax, [rsp + 0x48]
+  mov rax, [rsp + 0x88]
   mov [rdi + 0x28], rax ; rip
-  mov rax, [rsp + 0x58]
+  mov rax, [rsp + 0x98]
   mov [rdi + 0x30], rax ; flags
-  mov rax, [rsp + 0x10]
-  mov [rdi + 0x38], rax ; rax
-  mov rax, [rsp + 0x18]
-  mov [rdi + 0x40], rax ; rbx
-  mov rax, [rsp + 0x20]
-  mov [rdi + 0x48], rax ; rcx
-  mov rax, [rsp + 0x28]
-  mov [rdi + 0x50], rax ; rdx
-  mov rax, [rsp + 0x30]
-  mov [rdi + 0x58], rax ; rsi
-  mov rax, [rsp + 0x38]
-  mov [rdi + 0x60], rax ; rdi
+  
+  ; store rax, rbx, rcx, rdx, rsi, rdi, r8, ..., r15
+  lea rsi, [rsp + 0x10]
+  lea rax, [rdi + 0x38]
+  mov rdi, rax
+  mov rcx, 0xe
+  rep movsq
 
 .end:
   ; return after relieving our stack of its registers!
-  add rsp, 0x40
+  add rsp, 0x80
   ret
   
 global task_switch_to_kernpage
@@ -127,7 +119,7 @@ task_switch:
 
   ; start pushing state for IRETQ
 
-  mov rax, 0x0 ; TODO: set PL in the data segment
+  mov rax, 0x0
   push rax ; push SS
   mov rax, [rsi]
   push rax ; push RSP
@@ -152,18 +144,16 @@ task_switch:
   ; push the appropriate registers to the stack for the next thingy
   mov rax, [rsi + 0x8] ; rbp
   push rax
-  mov rax, [rsi + 0x28] ; rax
-  push rax
-  mov rax, [rsi + 0x30] ; rbx
-  push rax
-  mov rax, [rsi + 0x38] ; rcx
-  push rax
-  mov rax, [rsi + 0x40] ; rdx
-  push rax
-  mov rax, [rsi + 0x48] ; rsi
-  push rax
-  mov rax, [rsi + 0x50] ; rdi
-  push rax
+
+  ; push all general purpose registers to the stack, all 0xe of them
+  sub rsp, 0x70
+  mov rdi, rsp
+  mov rax, rsi
+  lea rsi, [rax + 0x28]
+  mov rcx, 0xe
+  rep movsq
+
+  mov rsi, rax
 
   ; check if we need to calculate a translated stack
   mov rbx, [rsi + 0x10] ; the cr3 field
@@ -178,12 +168,20 @@ task_switch:
   mov rsp, rax
 
 .avoidRecalc:
-  pop rdi
-  pop rsi
-  pop rdx
-  pop rcx
-  pop rbx
   pop rax
+  pop rbx
+  pop rcx
+  pop rdx
+  pop rsi
+  pop rdi
+  pop r8
+  pop r9
+  pop r10
+  pop r11
+  pop r12
+  pop r13
+  pop r14
+  pop r15
   pop rbp
 
   iretq ; will reset the interrupts flag in the FLAGS register
@@ -192,17 +190,9 @@ task_switch:
 global task_switch_interrupt
 task_switch_interrupt:
   call task_save_state
-  call cpu_get_dedicated_stack
+  call cpu_dedicated_stack
   mov rsp, rax
-
-  call scheduler_handle_timer
-  call scheduler_run_next ; only returns if #CPU's > #tasks
-
-  ; hang here until another timer interrupt
-  sti
-.hang:
-  hlt
-  jmp .hang
+  call scheduler_handle_timer ; hangs if no tasks can be run, never returns
 
 ; looks up and returns an entry in a page table
 ; uint64_t virtual_table_lookup(uint64_t index, page_t kernpageAddress);
