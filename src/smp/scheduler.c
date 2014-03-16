@@ -12,8 +12,8 @@ static uint64_t queueLock = 0;
 static uint64_t systemTimestamp = 0;
 
 void scheduler_handle_timer() {
+  lapic_send_eoi();
   scheduler_stop_current();
-  scheduler_flush_timer();
   scheduler_task_loop();
 }
 
@@ -41,6 +41,8 @@ void scheduler_stop_current() {
   if (!cpu->thread) return;
   thread_t * thread = cpu->thread;
   task_t * task = cpu->task;
+  cpu->thread = NULL;
+  cpu->task = NULL;
 
   anlock_lock(&thread->stateLock);
   uint64_t state = (thread->state ^= 1);
@@ -100,6 +102,7 @@ void scheduler_run_next() {
 }
 
 void scheduler_task_loop() {
+  scheduler_flush_timer();
   scheduler_run_next();
 
   lapic_timeout_set(0x20, 0xb, lapic_get_bus_speed() >> 7);

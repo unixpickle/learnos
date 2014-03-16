@@ -4,6 +4,7 @@
 #include "scheduler.h"
 #include "vm.h"
 #include "context.h"
+#include "creation.h"
 #include <kernpage.h>
 #include <libkern_base.h>
 #include <shared/addresses.h>
@@ -11,6 +12,8 @@
 
 static void _unlink_thread(void * threadObj);
 static void _task_cleanup(task_t * task);
+static bool _are_threads_being_run(task_t * task);
+static void _task_kill_thread(task_t * task);
 
 void thread_dealloc(thread_t * thread) {
   task_t * task = thread->task;
@@ -67,6 +70,36 @@ void thread_exit() {
   task_run_with_stack(stack, thread, _unlink_thread);
 }
 
+void task_kill(task_t * task) {
+  if (!__sync_fetch_and_and(&task->isActive, 0)) return;
+
+  // set bit 2 in every single task's status, ensuring that each task will
+  // not be able to be run again
+  anlock_lock(&task->threadsLock);
+  thread_t * thread = task->firstThread;
+  while (thread) {
+    if (!thread->isSystem) {
+      anlock_lock(&thread->statusLock);
+      thread->status |= 4;
+      anlock_unlock(&thread->statusLock);
+    }
+    thread = thread->nextThread;
+  }
+  anlock_unlock(&task->threadsLock);
+
+  // get all the CPUs to stop running the damn thing
+  cpu_notify_task_dead(task);
+
+  // create axe murderer
+  thread_t * murderer = thread_alloc(task);
+  murderer->state.cr3 = PML4_START;
+  murderer->state.rip = (uint64_t)_task_kill_thread;
+  murderer->state.rdi = (uint64_t)task;
+  murderer->state.flags = 0;
+  murderer->isSystem = true;
+  task_add_thread(task, murderer);
+}
+
 static void _unlink_thread(void * threadObj) {
   thread_t * thread = (thread_t *)threadObj;
   task_t * task = thread->task;
@@ -93,6 +126,11 @@ static void _unlink_thread(void * threadObj) {
     task->firstThread = thread->nextThread;
   }
   anlock_unlock(&task->threadsLock);
+
+  cpu_t * cpu = cpu_current();
+  cpu->task = NULL;
+  cpu->thread = NULL;
+
   thread_dealloc(thread);
 
   if (taskKilled) {
@@ -103,7 +141,6 @@ static void _unlink_thread(void * threadObj) {
     pids_release(pid);
   }
 
-  scheduler_flush_timer();
   scheduler_task_loop();
 }
 
@@ -131,5 +168,49 @@ static void _task_cleanup(task_t * task) {
     kernpage_unlock();
     enable_interrupts();
   }
+}
+
+static bool _are_threads_being_run(task_t * task) {
+  anlock_lock(&task->threadsLock);
+  thread_t * thread = task->firstThread;
+  while (thread) {
+    anlock_lock(&thread->statusLock);
+    uint64_t status = thread->status;
+    anlock_unlock(&thread->statusLock);
+    if ((status & 1) && !thread->isSystem) {
+      anlock_unlock(&task->threadsLock);
+      return true;
+    }
+    thread = thread->nextThread;
+  }
+  anlock_unlock(&task->threadsLock);
+  return false;
+}
+
+static void _task_kill_thread(task_t * task) {
+  // let the threads gradually stop running
+  while (_are_threads_being_run(task)) {
+    enable_interrupts();
+    disable_interrupts();
+  }
+
+  // make every thread a thread_exit call, mwahahahahahahahahahahahahahaha
+  anlock_lock(&task->threadsLock);
+  thread_t * thread = task->firstThread;
+  while (thread) {
+    thread->isSystem = true;
+    thread->state.rip = (uint64_t)thread_exit;
+    thread->state.cr3 = PML4_START;
+    thread->state.flags = 0x200;
+    anlock_lock(&thread->statusLock);
+    thread->status = 0;
+    anlock_unlock(&thread->statusLock);
+    task_queue_lock();
+    task_queue_push(thread);
+    task_queue_unlock();
+  }
+  anlock_unlock(&task->threadsLock);
+
+  scheduler_task_loop();
 }
 

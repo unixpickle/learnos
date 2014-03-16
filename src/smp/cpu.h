@@ -25,3 +25,8 @@ cpu_t * cpu_current();
  */
 void * cpu_dedicated_stack();
 
+/**
+ * Notifies every CPU running a task to task-switch early.
+ */
+void cpu_notify_task_dead(task_t * task);
+

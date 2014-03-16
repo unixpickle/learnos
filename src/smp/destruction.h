@@ -21,3 +21,9 @@ void task_dealloc(task_t * task);
  */
 void thread_exit();
 
+/**
+ * Requests that a task be MURDERED MWAHAHA.
+ * @discussion Call from a critical section.
+ */
+void task_kill(task_t * task);
+

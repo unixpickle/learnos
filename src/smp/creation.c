@@ -36,6 +36,7 @@ task_t * task_alloc() {
   task_t * task = (task_t *)(taskPage << 12);
   task->pml4 = kernpage_calculate_physical(pml4);
   task->pid = pids_next();
+  task->isActive = true;
 
   if (!anidxset_initialize(&task->descriptors,
                            task_idxset_alloc,
@@ -153,7 +154,7 @@ static void _generate_user_stack(void * rip) {
     kernpage_unlock();
     enable_interrupts();
     if (!next) {
-      // TODO: we need to destroy the thread here.
+      thread_exit();
       return;
     }
     uint64_t entry = 7 | (kernpage_calculate_physical(next) << 12);
@@ -166,8 +167,8 @@ static void _generate_user_stack(void * rip) {
       kernpage_lock();
       kernpage_free_virtual(next);
       kernpage_unlock();
-      // TODO: somehow, destroy the thread here
       enable_interrupts();
+      thread_exit();
       return;
     }
     enable_interrupts();
@@ -175,6 +176,10 @@ static void _generate_user_stack(void * rip) {
   }
 
   disable_interrupts();
+  thread->isSystem = false;
+  if (!task->isActive) {
+    thread_exit();
+  }
   thread->state.rip = (uint64_t)rip;
   thread->state.rsp = (page << 12);
   thread->state.rbp = thread->state.rsp;
@@ -185,7 +190,7 @@ static void _generate_user_stack(void * rip) {
 
 static void _bootstrap_thread(void * program, uint64_t len) {
   if (!_allocate_user_code(program, len)) {
-    // TODO: somehow, delete the thread here
+    thread_exit();
     return;
   }
   _generate_user_stack((void *)(PROC_CODE_BUFF << 12));

@@ -34,3 +34,13 @@ void * cpu_dedicated_stack() {
   return (void *)((cpu->baseStack + 1) << 12);
 }
 
+void cpu_notify_task_dead(task_t * task) {
+  cpu_t * cpu = firstCPU;
+  while (cpu) {
+    if (cpu->task == task) {
+      lapic_send_ipi(cpu->cpuId, 0x20, 0, 1, 0); // real simple IPI
+    }
+    cpu = cpu->next;
+  }
+}
+
