@@ -1,5 +1,7 @@
 #include "cpu.h"
 #include <interrupts/lapic.h>
+#include <kernpage.h>
+#include <libkern_base.h>
 
 static cpu_t * firstCPU = NULL;
 
@@ -13,6 +15,22 @@ void cpu_add(cpu_t * cpu) {
     }
     aCPU->next = cpu;
   }
+}
+
+void cpu_add_current(page_t stack) {
+  kernpage_lock();
+  uint64_t page = kernpage_alloc_virtual();
+  kernpage_unlock();
+
+  if (!page) return;
+  zero_page(page);
+
+  cpu_t * cpu = (cpu_t *)(page << 12);
+  cpu->cpuId = lapic_get_id();
+  cpu->baseStack = stack;
+  cpu->tssSelector = (uint16_t)gdt_get_size();
+  cpu->tss = gdt_add_tss();
+  cpu_add(cpu);
 }
 
 cpu_t * cpu_lookup(uint32_t ident) {

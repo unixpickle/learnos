@@ -21,6 +21,8 @@ void scheduler_handle_timer() {
 
 void scheduler_flush_timer() {
   cpu_t * cpu = cpu_current();
+  if (!cpu->lastTimeout) return;
+  // TODO: here, check if a timer interrupt is in progress. If so, do nothing.
   uint64_t passed = cpu->lastTimeout - lapic_get_register(LAPIC_REG_TMRCURRCNT);
   // do an atomic addition
   __asm__("lock add %1, (%0)"

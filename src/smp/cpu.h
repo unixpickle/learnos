@@ -11,6 +11,11 @@
 void cpu_add(cpu_t * cpu);
 
 /**
+ * Gets all info about the current CPU and adds it to the CPU list.
+ */
+void cpu_add_current(page_t stack);
+
+/**
  * Finds a CPU in the CPU list with a given APIC ID.
  */
 cpu_t * cpu_lookup(uint32_t ident);

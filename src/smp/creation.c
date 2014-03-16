@@ -5,6 +5,7 @@
 #include "cpu.h"
 #include "vm.h"
 #include "context.h"
+#include "scheduler.h"
 #include <kernpage.h>
 #include <libkern_base.h>
 #include <shared/addresses.h>
@@ -131,6 +132,26 @@ void task_add_thread(task_t * task, thread_t * thread) {
   }
   task->firstThread = thread;
   anlock_unlock(&task->threadsLock);
+}
+
+bool task_generate(void * code, uint64_t length) {
+  task_t * task = task_alloc();
+  if (!task) return false;
+  thread_t * thread = thread_alloc(task);
+  if (!thread) {
+    task_dealloc(task);
+    return false;
+  }
+  thread_setup_first(thread, code, length);
+  task_add_thread(task, thread);
+  tasks_lock();
+  tasks_add(task);
+  tasks_unlock();
+
+  task_queue_lock();
+  task_queue_push(thread);
+  task_queue_unlock();
+  return true;
 }
 
 /**********************

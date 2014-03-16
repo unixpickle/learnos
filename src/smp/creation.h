@@ -9,3 +9,8 @@ void thread_setup(thread_t * thread, void * rip);
  */
 void task_add_thread(task_t * task, thread_t * thread);
 
+/**
+ * Creates a task by copying code from the kernel. The task will automatically
+ * be launched and queued. This should be called from a critical section.
+ */
+bool task_generate(void * code, uint64_t length);
