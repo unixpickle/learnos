@@ -1,6 +1,6 @@
 PROJECT_ROOT=../..
 
-CSOURCES=cpu_config.c cpu_list.c task.c vm.c thread.c scheduler.c gdt.c queue.c
+CSOURCES=cpu.c gdt.c tasks.c vm.c util.c creation.c destruction.c
 
 all: csources build/context.o
 

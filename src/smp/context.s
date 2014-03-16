@@ -7,7 +7,8 @@ extern thread_resume_kernel_stack
 extern scheduler_handle_timer
 extern anlock_unlock
 extern anlock_lock
-extern thread_translate_kernel_stack, cpu_dedicated_stack
+extern cpu_current, cpu_dedicated_stack
+extern thread_translate_kernel_stack
 
 global task_run_with_stack
 task_run_with_stack:

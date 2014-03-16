@@ -1,7 +1,8 @@
 #ifndef __TASK_TYPES_H__
 #define __TASK_TYPES_H__
 
-#include "queue.h"
+#include "gdt.h"
+#include "socket.h"
 #include <anidxset.h>
 
 typedef struct task_t task_t;
@@ -9,7 +10,9 @@ typedef struct thread_t thread_t;
 typedef struct cpu_t cpu_t;
 
 struct task_t {
-  task_t * nextTask; // for linked list
+  // for linked list
+  task_t * nextTask;
+  task_t * lastTask;
 
   uint64_t pid;
   uint64_t uid;
@@ -73,7 +76,7 @@ struct thread_t {
 
   thread_t * queueNext;
   thread_t * queueLast;
-}
+} __attribute__((packed));
 
 struct cpu_t {
   cpu_t * next; // linked list

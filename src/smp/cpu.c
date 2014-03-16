@@ -29,8 +29,8 @@ cpu_t * cpu_current() {
 }
 
 void * cpu_dedicated_stack() {
-  cpu_t * this = cpu_get_current();
-  if (!this) return NULL;
-  return (this->baseStack + 1) << 12;
+  cpu_t * cpu = cpu_current();
+  if (!cpu) return NULL;
+  return (void *)((cpu->baseStack + 1) << 12);
 }
 

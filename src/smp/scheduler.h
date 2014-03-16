@@ -1,4 +1,8 @@
+#ifndef __TASK_SCHEDULER_H__
+#define __TASK_SCHEDULER_H__
+
 #include <stdint.h>
+#include "types.h"
 
 /**
  * Should be called after a LAPIC timer event. Never returns.
@@ -39,3 +43,4 @@ void task_queue_push_first(thread_t * item);
 thread_t * task_queue_pop();
 void task_queue_remove(thread_t * item);
 
+#endif
