@@ -58,8 +58,8 @@ void scheduler_stop_current() {
 void scheduler_run_next() {
   uint64_t timestamp = scheduler_get_timestamp();
 
-  // minimum of 32 ticks/second
-  uint64_t nextTimestamp = timestamp + (lapic_get_bus_speed() >> 5);
+  // the absolute maximum amount of time we can wait
+  uint64_t nextTimestamp = timestamp + (lapic_get_bus_speed() >> 7);
 
   task_queue_lock();
   thread_t * thread = task_queue_pop();

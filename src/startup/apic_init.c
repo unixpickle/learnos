@@ -29,5 +29,8 @@ void apic_initialize() {
 
   pit_set_divisor(11932);
   lapic_calculate_bus_speed();
+  print("calculated bus speed at 0x");
+  printHex(lapic_get_bus_speed());
+  print(" Hz\n");
 }
 
