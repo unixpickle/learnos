@@ -12,12 +12,9 @@ static uint64_t queueLock = 0;
 static uint64_t systemTimestamp = 0;
 
 void scheduler_handle_timer() {
+  scheduler_stop_current();
   scheduler_flush_timer();
-  scheduler_run_next();
-
-  lapic_timeout_set(0x20, 0xb, lapic_get_bus_speed() >> 7);
-  enable_interrupts();
-  while (1) halt();
+  scheduler_task_loop();
 }
 
 void scheduler_flush_timer() {
@@ -100,6 +97,14 @@ void scheduler_run_next() {
   cpu->task = thread->task;
 
   task_switch(thread->task, thread);
+}
+
+void scheduler_task_loop() {
+  scheduler_run_next();
+
+  lapic_timeout_set(0x20, 0xb, lapic_get_bus_speed() >> 7);
+  enable_interrupts();
+  while (1) halt();
 }
 
 /**************

@@ -59,10 +59,14 @@ typedef struct {
 } __attribute__((packed)) state_t;
 
 struct thread_t {
-  thread_t * nextThread; // for linked list
+  // for linked list
+  thread_t * nextThread;
+  thread_t * lastThread;
 
-  uint64_t stack; // index from 0 to 0xfffff
   state_t state;
+
+  uint64_t nextTimestamp; // 0 = not waiting on timer
+  uint64_t stack; // index from 0 to 0xfffff
 
   task_t * task;
 
@@ -72,7 +76,6 @@ struct thread_t {
   uint8_t reserved[6];
 
   uint64_t interruptMask;
-  uint64_t nextTimestamp; // 0 = not waiting on timer
 
   thread_t * queueNext;
   thread_t * queueLast;

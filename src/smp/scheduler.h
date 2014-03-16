@@ -31,6 +31,13 @@ void scheduler_stop_current();
  */
 void scheduler_run_next();
 
+/**
+ * Call this whenever a point of execution for a CPU needs to end and you want
+ * to fill the void by running tasks and stuff.
+ * @dicussion Call from a critical section.
+ */
+void scheduler_task_loop();
+
 /***********************
  * Task queue methods. *
  ***********************/

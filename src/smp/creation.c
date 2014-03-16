@@ -122,6 +122,16 @@ void thread_setup(thread_t * thread, void * rip) {
   thread->state.rip = (uint64_t)_generate_user_stack;
 }
 
+void task_add_thread(task_t * task, thread_t * thread) {
+  anlock_lock(&task->threadsLock);
+  thread->nextThread = task->firstThread;
+  if (task->firstThread) {
+    task->firstThread->lastThread = thread;
+  }
+  task->firstThread = thread;
+  anlock_unlock(&task->threadsLock);
+}
+
 /**********************
  * Task bootstrapping *
  **********************/
