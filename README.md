@@ -3,6 +3,7 @@
  * Create PS/2 driver
  * Implement socket system and test multitasking
  * Replace all appropriate `uint64_t` with `page_t`
+ * Rewrite the scheduler to be queue based and to support timers
 
 # Subtrees
 
