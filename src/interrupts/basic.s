@@ -155,8 +155,8 @@ handle_general_protection_fault:
 global handle_page_fault
 handle_page_fault:
   beginframe
-  mov rdi, [rsp + 0x78]
-  mov rsi, [rsp + 0x70]
+  mov rdi, [rsp + 0x88]
+  mov rsi, [rsp + 0x80]
   call int_page_fault
   endframe
   add rsp, 8
