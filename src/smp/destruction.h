@@ -18,6 +18,7 @@ void task_dealloc(task_t * task);
  * so the thread must first start using a CPU stack.
  * This function will automatically ensure that the current thread is a
  * "system" thread--that is, it can't be killed.
+ * @discussion Call from a critical section.
  */
 void thread_exit();
 

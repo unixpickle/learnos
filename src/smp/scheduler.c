@@ -1,7 +1,9 @@
 #include "scheduler.h"
 #include "cpu.h"
+#include "lifecycle.h"
 #include "context.h"
 
+#include <interrupts/lapic.h>
 #include <anlock.h>
 #include <libkern_base.h>
 
@@ -29,30 +31,26 @@ void scheduler_flush_timer() {
 }
 
 uint64_t scheduler_get_timestamp() {
-  uint64_t timestamp;
-  __asm__("lock mov (%1), %0",
-          : "=a" (timestamp)
-          : "b" (&systemTimestamp));
-  return timestamp;
+  // TODO: this is prettyl lowsy, but it'll do
+  return __sync_fetch_and_or(&systemTimestamp, 0);
 }
 
 void scheduler_stop_current() {
   cpu_t * cpu = cpu_current();
   if (!cpu->thread) return;
   thread_t * thread = cpu->thread;
-  task_t * task = cpu->task;
   cpu->thread = NULL;
   cpu->task = NULL;
 
-  anlock_lock(&thread->stateLock);
-  uint64_t state = (thread->state ^= 1);
+  anlock_lock(&thread->statusLock);
+  uint64_t state = (thread->status ^= 1);
   if (!state) {
     // push it back to the queue
     task_queue_lock();
     task_queue_push(thread);
     task_queue_unlock();
   }
-  anlock_unlock(&thread->stateLock);
+  anlock_unlock(&thread->statusLock);
 }
 
 void scheduler_run_next() {
@@ -92,12 +90,21 @@ void scheduler_run_next() {
   lapic_timer_set(0x20, 0xb, nextTimestamp - timestamp);
 
   // do logic here
-  anlock_lock(&thread->stateLock);
-  thread->state |= 1;
-  anlock_unlock(&thread->stateLock);
+  anlock_lock(&thread->statusLock);
+  thread->status |= 1;
+  anlock_unlock(&thread->statusLock);
   cpu->thread = thread;
   cpu->task = thread->task;
 
+  thread_configure_tss(thread, cpu->tss);
+
+  // get the TSS and set it if it's wrong
+  // TODO: see if we need to reload the TSS
+  uint16_t currentTss;
+  __asm__ ("str %0" : "=r" (currentTss));
+  if (currentTss != cpu->tssSelector) {
+    __asm__ ("ltr %0" : : "r" (cpu->tssSelector));
+  }
   task_switch(thread->task, thread);
 }
 
@@ -105,7 +112,7 @@ void scheduler_task_loop() {
   scheduler_flush_timer();
   scheduler_run_next();
 
-  lapic_timeout_set(0x20, 0xb, lapic_get_bus_speed() >> 7);
+  lapic_timer_set(0x20, 0xb, lapic_get_bus_speed() >> 7);
   enable_interrupts();
   while (1) halt();
 }
@@ -150,19 +157,24 @@ thread_t * task_queue_pop() {
   } else {
     lastThread = NULL;
   }
+  first->queueNext = (first->queueLast = NULL);
   return first;
 }
 
 void task_queue_remove(thread_t * item) {
+  if (!item->queueLast && !item->queueNext && item != firstThread) {
+    return;
+  }
   if (item->queueLast) {
-    item->queueLast->next = item->queueNext;
+    item->queueLast->queueNext = item->queueNext;
   } else {
-    firstThread = item->next;
+    firstThread = item->queueNext;
   }
-  if (item->next) {
-    item->next->last = item->last;
+  if (item->queueNext) {
+    item->queueNext->queueLast = item->queueLast;
   } else {
-    lastThread = item->last;
+    lastThread = item->queueLast;
   }
+  item->queueNext = (item->queueLast = NULL);
 }
 

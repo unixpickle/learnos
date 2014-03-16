@@ -2,35 +2,36 @@
 #include <stdio.h>
 #include <kernpage.h>
 #include <smp/vm.h>
-#include <smp/cpu_list.h>
+#include <smp/context.h>
+#include <smp/scheduler.h>
+#include <smp/cpu.h>
 #include <interrupts/pit.h>
 #include <shared/addresses.h>
-#include <smp/scheduler.h>
-#include <smp/context.h>
+#include <libkern_base.h>
+#include <anlock.h>
 
 static bool print_line(const char * ptr);
 
 void syscall_print_method(void * ptr) {
   // for each page worth of data, we need to go back and make sure it's mapped
-  task_critical_stop();
+  enable_interrupts();
   while (print_line(ptr)) {
     ptr += 0x50;
   }
-  task_critical_start();
+  disable_interrupts();
 }
 
 void syscall_sleep_method(uint64_t time) {
-  task_critical_stop();
+  // TODO: this can obviously be redone
+  enable_interrupts();
   pit_sleep(time);
-  task_critical_start();
+  disable_interrupts();
 }
 
 void syscall_getint_method() {
-  cpu_info * info = cpu_get_current();
-  anlock_lock(&info->lock);
-  task_t * task = info->currentTask;
-  thread_t * thread = info->currentThread;
-  anlock_unlock(&info->lock);
+  cpu_t * info = cpu_current();
+  task_t * task = info->task;
+  thread_t * thread = info->thread;
   uint64_t mask = __sync_fetch_and_and(&thread->interruptMask, 0);
   if (mask) {
     thread->state.rax = mask;
@@ -38,23 +39,17 @@ void syscall_getint_method() {
   } else {
     anlock_lock(&thread->statusLock);
     thread->status |= 2;
-    thread->status ^= 1;
     anlock_unlock(&thread->statusLock);
 
-    anlock_lock(&info->lock);
-    info->currentThread = NULL;
-    info->currentTask = NULL;
-    anlock_unlock(&info->lock);
-    __asm__ __volatile__ ("int $0x20");
+    scheduler_stop_current();
+    scheduler_task_loop();
   }
 }
 
 static bool print_line(const char * ptr) {
-  task_critical_start();
-  cpu_info * info = cpu_get_current();
-  anlock_lock(&info->lock);
-  task_t * task = info->currentTask;
-  anlock_unlock(&info->lock);
+  disable_interrupts();
+  cpu_t * info = cpu_current();
+  task_t * task = info->task;
 
   int i;
   for (i = 0; i < 0x50; i++) {
@@ -64,14 +59,14 @@ static bool print_line(const char * ptr) {
     uint64_t entry = task_vm_lookup_raw(task, page);
     anlock_unlock(&task->pml4Lock);
     if ((entry & 5) != 5) { // they're being sneaky, just stop printing
-      task_critical_stop();
+      enable_interrupts();
       return false;
     }
     page_t virPage = kernpage_calculate_virtual(entry >> 12);
     uint64_t virAddr = (((uint64_t)addr) & 0xfff) + (virPage << 12);
     char buff[2] = {*((const char *)virAddr), 0};
     if (buff[0] == 0) {
-      task_critical_stop();
+      enable_interrupts();
       return false;
     }
     print_lock();
@@ -79,7 +74,7 @@ static bool print_line(const char * ptr) {
     print_unlock();
   }
 
-  task_critical_stop();
+  enable_interrupts();
   return true;
 }
 
