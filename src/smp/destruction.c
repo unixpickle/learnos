@@ -10,8 +10,15 @@
 #include <shared/addresses.h>
 #include <anlock.h>
 
+#include <stdio.h> // for debugging
+
+typedef struct {
+  thread_t * thread;
+  bool isLast;
+} destroythread_args;
+
 static void _task_kill_impl(task_t * task);
-static void _unlink_thread(void * threadObj);
+static void _destroy_thread(destroythread_args * args);
 static void _task_cleanup(task_t * task);
 static bool _are_threads_being_run(task_t * task);
 static void _task_kill_thread(task_t * task);
@@ -79,9 +86,38 @@ void thread_exit() {
   }
 
   disable_interrupts();
+
+  // kill 
+  anlock_lock(&task->threadsLock);
+
+  // cleanup task resources if this is the last thread to go
+  bool taskKilled = !thread->nextThread && task->firstThread == thread;
+  if (taskKilled) {
+    anlock_unlock(&task->threadsLock);
+    enable_interrupts();
+    _task_cleanup(task);
+    disable_interrupts();
+    anlock_lock(&task->threadsLock);
+  }
+
+  if (thread->nextThread) {
+    thread->nextThread->lastThread = thread->lastThread;
+  }
+  if (thread->lastThread) {
+    thread->lastThread->nextThread = thread->nextThread;
+  } else {
+    task->firstThread = thread->nextThread;
+  }
+  anlock_unlock(&task->threadsLock);
+
+  // we need to deallocate the thread on a different stack because the thread's
+  // kernel stack is about to get deallocated itself!
   cpu = cpu_current();
   void * stack = (void *)((cpu->baseStack + 1) << 12);
-  task_run_with_stack(stack, thread, _unlink_thread);
+  destroythread_args args;
+  args.thread = thread;
+  args.isLast = taskKilled;
+  task_run_with_stack(stack, &args, (void (*)(void *))_destroy_thread);
 }
 
 void task_kill(task_t * task) {
@@ -132,55 +168,25 @@ static void _task_kill_impl(task_t * task) {
   task_add_thread(task, murderer);
 }
 
-static void _unlink_thread(void * threadObj) {
-  print("in _unlink_thread()\n");
-  thread_t * thread = (thread_t *)threadObj;
-  task_t * task = thread->task;
-
-  // remove it from the doubly-linked list
-  anlock_lock(&task->threadsLock);
-
-  // here's where we'll quickly cleanup the major resources used by the task
-  bool taskKilled = !thread->nextThread && task->firstThread == thread;
-  if (taskKilled) {
-    print("calling task cleanup.\n");
-    anlock_unlock(&task->threadsLock);
-    task->isActive = 0; // make sure the task is not marked as active
-    enable_interrupts();
-    _task_cleanup(task);
-    disable_interrupts();
-    anlock_lock(&task->threadsLock);
-  }
-
-  print("removing from linked list.\n");
-
-  if (thread->nextThread) {
-    thread->nextThread->lastThread = thread->lastThread;
-  }
-  if (thread->lastThread) {
-    thread->lastThread->nextThread = thread->nextThread;
-  } else {
-    task->firstThread = thread->nextThread;
-  }
-  anlock_unlock(&task->threadsLock);
+static void _destroy_thread(destroythread_args * _args) {
+  destroythread_args args = *_args;
+  thread_t * thread = args.thread;
 
   // we do not have to unilnk it from the work queue here because it is already
   // absent from the work queue: we know this because *we're* running it.
 
-  print("cleaning up thread.\n");
   cpu_t * cpu = cpu_current();
   cpu->task = NULL;
   cpu->thread = NULL;
 
   thread_dealloc(thread);
 
-  if (taskKilled) {
-    print("deallocating task.\n");
+  if (!args.isLast) {
+    task_t * task = thread->task;
     uint64_t pid = task->pid;
     tasks_lock();
     tasks_remove(task);
     tasks_unlock();
-    print("releasing pid and freeing task.\n");
     pids_release(pid);
     task_dealloc(task);
   }
@@ -191,9 +197,7 @@ static void _unlink_thread(void * threadObj) {
 static void _task_cleanup(task_t * task) {
   // Here, we will close all the task's sockets and free its heap
 
-  disable_interrupts();
   task->isActive = false;
-  enable_interrupts();
 
   // deallocate the code data
   page_t page = PROC_CODE_BUFF;
