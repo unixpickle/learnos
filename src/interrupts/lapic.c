@@ -48,6 +48,8 @@ void lapic_set_defaults() {
   // reset might have shut them off
   lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
   lapic_set_register(LAPIC_REG_LVT_LINT1, 0x400);
+
+  lapic_set_register(LAPIC_REG_TMRDIV, 0xb);
 }
 
 bool lapic_is_x2_available() {
@@ -100,6 +102,18 @@ void lapic_send_eoi() {
   lapic_set_register(LAPIC_REG_EOI, 0);
 }
 
+bool lapic_is_requested(uint8_t vector) {
+  uint64_t regIndex = 0x20 + (vector >> 5);
+  uint32_t mask = (1 << (vector & 0x1f));
+  return (lapic_get_register(regIndex) & mask) != 0;
+}
+
+bool lapic_is_in_service(uint8_t vector) {
+  uint64_t regIndex = 0x10 + (vector >> 5);
+  uint32_t mask = (1 << (vector & 0x1f));
+  return (lapic_get_register(regIndex) & mask) != 0;
+}
+
 void lapic_set_priority(uint8_t pri) {
   lapic_set_register(LAPIC_REG_TASKPRIOR, pri);
 }
@@ -150,10 +164,9 @@ void lapic_send_ipi(uint32_t cpu,
   lapic_set_register(0x30, value);
 }
 
-void lapic_timer_set(uint8_t vector, uint32_t count, uint32_t div) {
+void lapic_timer_set(uint8_t vector, uint32_t count) {
   uint32_t timerField = vector;// | (2 << 17); // mode is bit 17
   lapic_set_register(LAPIC_REG_LVT_TMR, timerField);
   lapic_set_register(LAPIC_REG_TMRINITCNT, count);
-  lapic_set_register(LAPIC_REG_TMRDIV, div);
 }
 

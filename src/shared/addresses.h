@@ -48,19 +48,16 @@
  *   uint64_t basePage;
  *   uint64_t pagesLong;
  * }
- * This can have up to 256 entries, so the size is 4096 bytes.
+ * This can have up to 0x100 entries, so the size is 0x1000 bytes.
  */
 #define PHYSICAL_MAP_ADDR 0x20001e
 
 /**
- * Unused again
+ * Free space starts at 0x20101e and ends at 0x20102e.
+ * I am using 0x201020 to store the timestamp because it's aligned.
  */
-#define LAPIC_TIMESTAMP (*((volatile uint64_t *)0x20101e))
 
-/**
- * Unused again.
- */
-#define LAPIC_LAST_DELAY (*((volatile void **)0x201026))
+#define SYS_TIMESTAMP 0x201020
 
 /**
  * The address which contains the "IDTR" to load with lidt

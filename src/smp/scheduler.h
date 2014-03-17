@@ -10,21 +10,6 @@
 void scheduler_handle_timer();
 
 /**
- * Called whenever the LAPIC timer should be put back into the idle state.
- */
-void scheduler_flush_timer();
-
-/**
- * Returns the current global timestamp.
- */
-uint64_t scheduler_get_timestamp();
-
-/**
- * Returns the number of time units per second.
- */
-uint64_t scheduler_get_second_duration();
-
-/**
  * Disassociates the current thread with the current CPU. If the thread is not
  * in a special sleeping state, it will be added back to the end of the task
  * queue.

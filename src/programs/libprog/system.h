@@ -34,4 +34,9 @@ uint8_t sys_in(uint16_t pin);
  */
 void sys_out(uint16_t pin, uint8_t out);
 
+/**
+ * Returns the system time in milliseconds.
+ */
+uint64_t sys_get_time();
+
 #endif

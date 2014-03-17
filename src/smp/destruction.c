@@ -82,9 +82,8 @@ void task_kill(task_t * task) {
       anlock_lock(&thread->statusLock);
       thread->status |= 4;
       anlock_unlock(&thread->statusLock);
-
-      // remove the thread from the queue if it is in the queue
       task_queue_lock();
+      // remove the thread from the queue if it is in the queue
       task_queue_remove(thread);
       task_queue_unlock();
     }

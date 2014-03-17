@@ -4,6 +4,7 @@
 #include <smp/vm.h>
 #include <smp/context.h>
 #include <smp/scheduler.h>
+#include <smp/timer.h>
 #include <smp/cpu.h>
 #include <interrupts/pit.h>
 #include <shared/addresses.h>
@@ -25,8 +26,14 @@ void syscall_sleep_method() {
   cpu_t * cpu = cpu_current();
   uint64_t time = cpu->thread->state.rdi;
 
-  uint64_t cycles = (scheduler_get_second_duration() / 1000) * time;
-  cpu->thread->nextTimestamp = scheduler_get_timestamp() + cycles;
+  if (!time) {
+    cpu->thread->state.rax = timer_get_time() / (timer_second_length() / 1000);
+    task_switch(cpu->task, cpu->thread);
+    return;
+  }
+
+  uint64_t cycles = (timer_second_length() / 1000) * time;
+  cpu->thread->nextTimestamp = timer_get_time() + cycles;
   scheduler_stop_current();
   scheduler_task_loop();
 }

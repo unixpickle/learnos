@@ -38,6 +38,9 @@ void lapic_clear_errors();
 uint64_t lapic_calculate_bus_speed();
 uint64_t lapic_get_bus_speed();
 
+bool lapic_is_requested(uint8_t vector);
+bool lapic_is_in_service(uint8_t vector);
+
 void lapic_send_eoi();
 void lapic_set_priority(uint8_t pri);
 void lapic_set_register(uint16_t reg, uint64_t value);
@@ -47,5 +50,5 @@ void lapic_send_ipi(uint32_t cpu,
                     uint8_t mode,
                     uint8_t level,
                     uint8_t trigger);
-void lapic_timer_set(uint8_t vector, uint32_t count, uint32_t div);
+void lapic_timer_set(uint8_t vector, uint32_t count);
 

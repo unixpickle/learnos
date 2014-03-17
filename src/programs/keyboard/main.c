@@ -2,17 +2,22 @@
 
 static uint8_t get_next_byte();
 static uint32_t scancode_in();
-static void byte_out(uint8_t byte);
+static bool byte_out(uint8_t byte);
 
 int main() {
   sys_print("loading keyboard driver.\n");
-  // TODO: here, make sure it's scan code set 2
+
+  // set scan code set 2
+  if (byte_out(0xf0)) {
+    printf("writing out scan code set\n");
+    byte_out(1);
+  }
 
   while (1) {
     uint32_t input = scancode_in();
     if (input == 0x1c) {
       printf("A");
-    } else printf("unknown scancode\n");
+    } else printf("unknown scancode %x\n", input);
   }
 
   return 0;
@@ -46,8 +51,18 @@ static uint32_t scancode_in() {
   }
 }
 
-static void byte_out(uint8_t byte) {
-  // TODO: do byte out proceedure here
-  // this requires good timers, which I shall implement soon enough
+static bool byte_out(uint8_t byte) {
+  // wait up to 100 ms to write a byte
+  uint64_t startTime = sys_get_time();
+  bool ready = false;
+  while (sys_get_time() < startTime + 100) {
+    if (sys_in(0x64) & 1) {
+      ready = true;
+      break;
+    }
+  }
+  if (!ready) return false;
+  sys_out(0x60, byte);
+  return true;
 }
 

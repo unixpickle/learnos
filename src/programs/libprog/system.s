@@ -30,3 +30,9 @@ sys_out:
   int 0x24
   ret
 
+global sys_get_time
+sys_get_time:
+  mov rdi, 0
+  int 0x22
+  ret
+

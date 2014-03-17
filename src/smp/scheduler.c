@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "lifecycle.h"
 #include "context.h"
+#include "timer.h"
 
 #include <interrupts/lapic.h>
 #include <anlock.h>
@@ -11,36 +12,11 @@
 static thread_t * firstThread = NULL;
 static thread_t * lastThread = NULL;
 static uint64_t queueLock = 0;
-static uint64_t systemTimestamp = 0;
 
 void scheduler_handle_timer() {
-  lapic_send_eoi();
+  timer_send_eoi();
   scheduler_stop_current();
   scheduler_task_loop();
-}
-
-void scheduler_flush_timer() {
-  cpu_t * cpu = cpu_current();
-  if (!cpu->lastTimeout) return;
-  // TODO: here, check if a timer interrupt is in progress. If so, do nothing.
-  uint64_t passed = cpu->lastTimeout - lapic_get_register(LAPIC_REG_TMRCURRCNT);
-  // do an atomic addition
-  __asm__("lock add %1, (%0)"
-          :
-          : "b" (&systemTimestamp), "a" (passed)
-          : "memory");
-  lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000); // disable timer
-}
-
-uint64_t scheduler_get_timestamp() {
-  // TODO: this is prettyl lowsy, but it'll do
-  return __sync_fetch_and_or(&systemTimestamp, 0);
-}
-
-uint64_t scheduler_get_second_duration() {
-  uint64_t clock = lapic_get_bus_speed();
-  clock *= cpu_count();
-  return clock;
 }
 
 void scheduler_stop_current() {
@@ -52,17 +28,18 @@ void scheduler_stop_current() {
 
   anlock_lock(&thread->statusLock);
   uint64_t state = (thread->status ^= 1);
+  anlock_unlock(&thread->statusLock);
   if (!state) {
     // push it back to the queue
     task_queue_lock();
     task_queue_push(thread);
     task_queue_unlock();
   }
-  anlock_unlock(&thread->statusLock);
 }
 
 void scheduler_run_next() {
-  uint64_t timestamp = scheduler_get_timestamp();
+  timer_set_far_timeout(); // start timing this little excursion
+  uint64_t timestamp = timer_get_time();
 
   // the absolute maximum amount of time we can wait
   uint64_t nextTimestamp = timestamp + (lapic_get_bus_speed() >> 7);
@@ -76,8 +53,10 @@ void scheduler_run_next() {
     return;
   }
 
+  bool foundOne = false;
   do {
     if (thread->nextTimestamp <= timestamp) {
+      foundOne = true;
       break;
     }
     if (thread->nextTimestamp < nextTimestamp) {
@@ -87,37 +66,35 @@ void scheduler_run_next() {
     thread = task_queue_pop();
   } while (thread != firstThread);
 
-  if (thread->nextTimestamp > timestamp) {
+  if (!foundOne) {
     task_queue_push(thread);
     task_queue_unlock();
     return;
   }
-  task_queue_unlock();
 
-  cpu_t * cpu = cpu_current();
-  cpu->lastTimeout = nextTimestamp - timestamp;
-  lapic_timer_set(0x20, (nextTimestamp - timestamp), 0xb);
-
-  // do logic here
   anlock_lock(&thread->statusLock);
   thread->status |= 1;
   anlock_unlock(&thread->statusLock);
+
+  task_queue_unlock();
+
+  cpu_t * cpu = cpu_current();
+  timer_set_timeout(nextTimestamp - timestamp);
+
+  // do logic here
   cpu->thread = thread;
   cpu->task = thread->task;
 
   thread_configure_tss(thread, cpu->tss);
 
-  // TODO: see if we need to reload the TSS
+  // TODO: check if we need to change the TSS
   task_switch(thread->task, thread);
 }
 
 void scheduler_task_loop() {
-  scheduler_flush_timer();
   scheduler_run_next();
 
-  cpu_t * cpu = cpu_current();
-  cpu->lastTimeout = lapic_get_bus_speed() >> 7;
-  lapic_timer_set(0x20, cpu->lastTimeout, 0xb);
+  timer_set_timeout(lapic_get_bus_speed() >> 7);
   enable_interrupts();
   while (1) halt();
 }

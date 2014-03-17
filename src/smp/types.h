@@ -88,8 +88,6 @@ struct cpu_t {
   task_t * task;
   thread_t * thread;
 
-  uint64_t lastTimeout; // last LAPIC timer period setting
-  
   tss_t * tss;
   uint32_t cpuId;
   uint16_t tssSelector;
