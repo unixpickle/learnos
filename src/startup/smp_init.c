@@ -47,6 +47,10 @@ void smp_initialize() {
 
   print("starting bootstrap tasks...\n");
 
+  print("initial memory count is 0x");
+  printHex(kernpage_count_allocated());
+  print("\n");
+
   disable_interrupts();
 
   uint64_t taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
@@ -55,7 +59,7 @@ void smp_initialize() {
 
   taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);
   taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);
-  task_generate((void *)taskStart, taskEnd - taskStart);
+  // task_generate((void *)taskStart, taskEnd - taskStart);
 
   load_new_gdt();
   load_tss();

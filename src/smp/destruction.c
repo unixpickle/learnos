@@ -9,7 +9,6 @@
 #include <libkern_base.h>
 #include <shared/addresses.h>
 #include <anlock.h>
-
 #include <stdio.h> // for debugging
 
 typedef struct {
@@ -190,6 +189,10 @@ static void _destroy_thread(destroythread_args * _args) {
     pids_release(pid);
     task_dealloc(task);
   }
+
+  print("memory after thread exit is 0x");
+  printHex(kernpage_count_allocated());
+  print("\n");
 
   scheduler_task_loop();
 }
