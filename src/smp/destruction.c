@@ -10,6 +10,7 @@
 #include <shared/addresses.h>
 #include <anlock.h>
 
+static void _task_kill_impl(task_t * task);
 static void _unlink_thread(void * threadObj);
 static void _task_cleanup(task_t * task);
 static bool _are_threads_being_run(task_t * task);
@@ -84,7 +85,21 @@ void thread_exit() {
 
 void task_kill(task_t * task) {
   if (!__sync_fetch_and_and(&task->isActive, 0)) return;
+  _task_kill_impl(task);
+}
 
+void task_kill_pid(uint64_t pid) {
+  tasks_lock();
+  task_t * task = tasks_find(pid);
+  if (!__sync_fetch_and_and(&task->isActive, 0)) {
+    tasks_unlock();
+    return;
+  }
+  tasks_unlock();
+  _task_kill_impl(task);
+}
+
+static void _task_kill_impl(task_t * task) {
   // set bit 2 in every single task's status, ensuring that each task will
   // not be able to be run again
   anlock_lock(&task->threadsLock);

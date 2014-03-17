@@ -64,11 +64,7 @@ void syscall_thread_exit_method() {
 
 void syscall_pid_kill_method(uint64_t pid) {
   // TODO: verify caller permissions
-  tasks_lock();
-  task_t * task = tasks_find(pid);
-  bool isActive = task->isActive;
-  tasks_unlock();
-  if (isActive) task_kill(task);
+  task_kill_pid(pid);
 }
 
 static bool print_line(const char * ptr) {

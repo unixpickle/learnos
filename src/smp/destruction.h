@@ -28,3 +28,8 @@ void thread_exit();
  */
 void task_kill(task_t * task);
 
+/**
+ * Kills a task by PID.
+ */
+void task_kill_pid(uint64_t pid);
+
