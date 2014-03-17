@@ -14,6 +14,7 @@ static void _unlink_thread(void * threadObj);
 static void _task_cleanup(task_t * task);
 static bool _are_threads_being_run(task_t * task);
 static void _task_kill_thread(task_t * task);
+static void _deallocate_table(uint64_t * table, int depth);
 
 void thread_dealloc(thread_t * thread) {
   task_t * task = thread->task;
@@ -36,6 +37,18 @@ void thread_dealloc(thread_t * thread) {
 }
 
 void task_dealloc(task_t * task) {
+  uint64_t vPml4 = kernpage_calculate_virtual(task->pml4);
+  uint64_t * pml4 = (uint64_t *)(vPml4 << 12);
+  _deallocate_table(pml4, 0);
+  kernpage_lock();
+  kernpage_free_virtual(vPml4);
+  kernpage_unlock();
+
+  // the cleanup workers should have already free'd these appropriately, but
+  // just in case, we do it here.
+  anidxset_free(&task->descriptors);
+  anidxset_free(&task->stacks);
+
   kernpage_lock();
   kernpage_free_virtual(((page_t)task) >> 12);
   kernpage_unlock();
@@ -146,6 +159,7 @@ static void _unlink_thread(void * threadObj) {
     tasks_remove(task);
     tasks_unlock();
     pids_release(pid);
+    task_dealloc(task);
   }
 
   scheduler_task_loop();
@@ -219,5 +233,21 @@ static void _task_kill_thread(task_t * task) {
   anlock_unlock(&task->threadsLock);
 
   scheduler_task_loop();
+}
+
+static void _deallocate_table(uint64_t * table, int depth) {
+  if (depth == 3) return;
+
+  int i;
+  for (i = 0; i < 0x200; i++) {
+    if (!(table[i] & 1)) continue;
+    page_t tablePage = table[i] >> 12;
+    page_t vPage = kernpage_calculate_virtual(tablePage);
+    uint64_t * subtable = (uint64_t *)(vPage << 12);
+    _deallocate_table(subtable, depth + 1);
+    kernpage_lock();
+    kernpage_free_virtual(vPage);
+    kernpage_unlock();
+  }
 }
 
