@@ -1,5 +1,6 @@
 # TODO
 
+ * Get rid of startup thread and replace with page based allocation
  * Implement a socket system
  * Create PS/2 driver
  * Wake up thread when an interrupt is received
