@@ -152,6 +152,8 @@ static void _unlink_thread(void * threadObj) {
     anlock_lock(&task->threadsLock);
   }
 
+  print("removing from linked list.\n");
+
   if (thread->nextThread) {
     thread->nextThread->lastThread = thread->lastThread;
   }
@@ -165,6 +167,7 @@ static void _unlink_thread(void * threadObj) {
   // we do not have to unilnk it from the work queue here because it is already
   // absent from the work queue: we know this because *we're* running it.
 
+  print("cleaning up thread.\n");
   cpu_t * cpu = cpu_current();
   cpu->task = NULL;
   cpu->thread = NULL;
