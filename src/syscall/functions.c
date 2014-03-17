@@ -6,6 +6,8 @@
 #include <smp/scheduler.h>
 #include <smp/timer.h>
 #include <smp/cpu.h>
+#include <smp/tasks.h>
+#include <smp/destruction.h>
 #include <interrupts/pit.h>
 #include <shared/addresses.h>
 #include <libkern_base.h>
@@ -54,6 +56,15 @@ void syscall_getint_method() {
     scheduler_stop_current();
     scheduler_task_loop();
   }
+}
+
+void syscall_thread_exit_method() {
+  thread_exit();
+}
+
+void syscall_pid_kill_method(uint64_t pid) {
+  // TODO: verify caller permissions
+  task_kill_pid(pid);
 }
 
 static bool print_line(const char * ptr) {

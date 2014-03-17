@@ -39,4 +39,14 @@ void sys_out(uint16_t pin, uint8_t out);
  */
 uint64_t sys_get_time();
 
+/**
+ * Exits the current thread's point of execution.
+ */
+void sys_thread_exit();
+
+/**
+ * Initiates the kill process for a given PID.
+ */
+void sys_pid_kill(uint64_t pid);
+
 #endif
