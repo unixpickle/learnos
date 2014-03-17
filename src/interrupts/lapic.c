@@ -85,6 +85,7 @@ void lapic_clear_errors() {
 }
 
 uint64_t lapic_calculate_bus_speed() {
+  pit_sleep(1);
   lapic_set_register(LAPIC_REG_LVT_TMR, 0xff);
   lapic_set_register(LAPIC_REG_TMRINITCNT, 0xffffffff);
   lapic_set_register(LAPIC_REG_TMRDIV, 0xb);

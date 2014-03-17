@@ -1,9 +1,9 @@
 # TODO
 
+ * Implement a socket system
  * Create PS/2 driver
- * Implement socket system and test multitasking
+ * Wake up thread when an interrupt is received
  * Replace all appropriate `uint64_t` with `page_t`
- * Implement task dealloc method.
 
 # Subtrees
 

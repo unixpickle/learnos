@@ -45,13 +45,8 @@ void smp_initialize() {
   print("initializing x2APIC's...\n");
   acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
 
-  print("starting bootstrap tasks...\n");
-
-  print("initial memory count is 0x");
-  printHex(kernpage_count_allocated());
-  print("\n");
-
   disable_interrupts();
+  print("starting bootstrap tasks...\n");
 
   uint64_t taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
   uint64_t taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
@@ -59,11 +54,7 @@ void smp_initialize() {
 
   taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);
   taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);
-  // task_generate((void *)taskStart, taskEnd - taskStart);
-
-  print("memory count after task start is 0x");
-  printHex(kernpage_count_allocated());
-  print("\n");
+  task_generate((void *)taskStart, taskEnd - taskStart);
 
   load_new_gdt();
   load_tss();

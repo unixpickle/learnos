@@ -7,9 +7,6 @@ static bool byte_out(uint8_t byte);
 int main() {
   printf("loading keyboard driver.\n");
 
-  printf("JK it doesn't even work i'm gonna exit now.\n");
-  sys_thread_exit();
-
   // set scan code set 2
   if (byte_out(0xf0)) {
     printf("writing out scan code set\n");
