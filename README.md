@@ -3,8 +3,6 @@
  * Create PS/2 driver
  * Implement socket system and test multitasking
  * Replace all appropriate `uint64_t` with `page_t`
- * Rewrite the scheduler to be queue based and to support timers
- * Check that we don't flush the timer while an interrupt is pending
 
 # Subtrees
 
