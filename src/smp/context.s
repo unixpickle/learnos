@@ -19,7 +19,7 @@ task_run_with_stack:
 
 global task_save_state
 task_save_state:
-  ; immediately save the state of the 8 general purpose registers
+  ; immediately save the state of the registers
   push r15
   push r14
   push r13
@@ -70,6 +70,64 @@ task_save_state:
 .end:
   ; return after relieving our stack of its registers!
   add rsp, 0x80
+  ret
+
+global task_save_caller_state
+task_save_caller_state:
+  ; immediately save the state of the general purpose regs
+  push r15
+  push r14
+  push r13
+  push r12
+  push r11
+  push r10
+  push r9
+  push r8
+  push rdi
+  push rsi
+  push rdx
+  push rcx
+  push rbx
+  mov rax, 0x1 ; fake rax value for return
+  push rax
+  mov rax, cr3
+  push rax
+  push rbp
+
+  call cpu_current
+
+  ; get the current thread running on this CPU
+  mov rsi, rax
+  mov rdi, [rsi + 0x18] ; thread_t structure
+  cmp rdi, 0
+  je .end ; there is no current thread_t running on the CPU
+
+  ; store each of our variables in the thread_t structure
+  ; TODO: see if i can use lea here, but I don't think i can
+  mov rax, rsp
+  add rax, 0x88
+  mov [rdi + 0x10], rax ; rsp
+  mov rax, [rsp]
+  mov [rdi + 0x18], rax ; rbp
+  mov rax, [rsp + 8]
+  mov [rdi + 0x20], rax ; cr3
+  mov rax, [rsp + 0x80]
+  mov [rdi + 0x28], rax ; rip
+  pushfq
+  pop rax
+  mov [rdi + 0x30], rax ; flags
+  
+  ; store rax, rbx, rcx, rdx, rsi, rdi, r8, ..., r15
+  lea rsi, [rsp + 0x10]
+  lea rax, [rdi + 0x38]
+  mov rdi, rax
+  mov rcx, 0xe
+  rep movsq
+
+.end:
+  ; return after relieving our stack of its registers!
+  add rsp, 0x80
+  xor rax, rax
   ret
   
 global task_switch_to_kernpage

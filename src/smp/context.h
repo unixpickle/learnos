@@ -17,7 +17,15 @@ void task_run_with_stack(void * stack,
  * switches to the kernpage address space automatically and keeps the same
  * stack page just like task_switch_to_kernpage().
  */
-void task_state_save();
+void task_save_state();
+
+/**
+ * Call this anywhere from a critical section in the execution context of a
+ * thread and save the state as it would be upon returning from the call.
+ * @return 0 if this is a normal return, 1 if this return occurred later on as
+ * a result of a task switch.
+ */
+uint64_t task_save_caller_state();
 
 /**
  * Call this soon after receiving an interrupt if the handler does not call

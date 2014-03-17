@@ -2,12 +2,12 @@
 #define __TASK_TYPES_H__
 
 #include "gdt.h"
-#include "socket.h"
 #include <anidxset.h>
 
 typedef struct task_t task_t;
 typedef struct thread_t thread_t;
 typedef struct cpu_t cpu_t;
+typedef struct socket_t socket_t;
 
 struct task_t {
   // for linked list
@@ -91,6 +91,21 @@ struct cpu_t {
   tss_t * tss;
   uint32_t cpuId;
   uint16_t tssSelector;
+} __attribute__((packed));
+
+struct socket_t {
+  uint64_t tasksLock;
+  task_t * source;
+  task_t * destination;
+
+  page_t buffer[4];
+
+  // linked list structures
+  socket_t * sourceNext;
+  socket_t * sourceLast;
+
+  socket_t * destinationNext;
+  socket_t * destinationLast;
 } __attribute__((packed));
 
 #endif
