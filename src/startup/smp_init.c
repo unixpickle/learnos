@@ -61,6 +61,10 @@ void smp_initialize() {
   taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);
   // task_generate((void *)taskStart, taskEnd - taskStart);
 
+  print("memory count after task start is 0x");
+  printHex(kernpage_count_allocated());
+  print("\n");
+
   load_new_gdt();
   load_tss();
   scheduler_task_loop();

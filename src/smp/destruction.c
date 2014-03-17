@@ -75,8 +75,11 @@ void thread_exit() {
     disable_interrupts();
     anlock_lock(&task->pml4Lock);
     page_t phyPage = task_vm_lookup(task, stackStart + i);
+    if (phyPage) {
+      task_vm_unmap(task, stackStart + i);
+    }
     anlock_unlock(&task->pml4Lock);
-    if (phyPage & 1) {
+    if (phyPage) {
       kernpage_lock();
       kernpage_free_virtual(kernpage_calculate_virtual(phyPage));
       kernpage_unlock();
@@ -180,7 +183,7 @@ static void _destroy_thread(destroythread_args * _args) {
 
   thread_dealloc(thread);
 
-  if (!args.isLast) {
+  if (args.isLast) {
     task_t * task = thread->task;
     uint64_t pid = task->pid;
     tasks_lock();
@@ -208,6 +211,9 @@ static void _task_cleanup(task_t * task) {
     disable_interrupts();
     anlock_lock(&task->pml4Lock);
     uint64_t entry = task_vm_lookup(task, page);
+    if (entry) {
+      task_vm_unmap(task, page);
+    }
     anlock_unlock(&task->pml4Lock);
     enable_interrupts();
     if (!entry) break;
