@@ -55,7 +55,6 @@ void task_dealloc(task_t * task) {
 }
 
 void thread_exit() {
-  disable_interrupts();
   cpu_t * cpu = cpu_current();
   task_t * task = cpu->task;
   thread_t * thread = cpu->thread;
