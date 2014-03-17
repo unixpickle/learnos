@@ -61,11 +61,14 @@ syscall_pinout:
   iretq
 
 syscall_thread_exit:
+  beginframe
   call syscall_thread_exit_method
   ; iretq will never be called anyway
   ; iretq
 
 syscall_pid_kill:
+  beginframe
   call syscall_pid_kill_method
+  endframe
   iretq
 

@@ -133,6 +133,7 @@ static void _task_kill_impl(task_t * task) {
 }
 
 static void _unlink_thread(void * threadObj) {
+  print("in _unlink_thread()\n");
   thread_t * thread = (thread_t *)threadObj;
   task_t * task = thread->task;
 
@@ -142,7 +143,9 @@ static void _unlink_thread(void * threadObj) {
   // here's where we'll quickly cleanup the major resources used by the task
   bool taskKilled = !thread->nextThread && task->firstThread == thread;
   if (taskKilled) {
+    print("calling task cleanup.\n");
     anlock_unlock(&task->threadsLock);
+    task->isActive = 0; // make sure the task is not marked as active
     enable_interrupts();
     _task_cleanup(task);
     disable_interrupts();
@@ -169,10 +172,12 @@ static void _unlink_thread(void * threadObj) {
   thread_dealloc(thread);
 
   if (taskKilled) {
+    print("deallocating task.\n");
     uint64_t pid = task->pid;
     tasks_lock();
     tasks_remove(task);
     tasks_unlock();
+    print("releasing pid and freeing task.\n");
     pids_release(pid);
     task_dealloc(task);
   }
