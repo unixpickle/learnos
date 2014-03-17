@@ -79,6 +79,7 @@ void thread_exit() {
   }
 
   disable_interrupts();
+  cpu = cpu_current();
   void * stack = (void *)((cpu->baseStack + 1) << 12);
   task_run_with_stack(stack, thread, _unlink_thread);
 }
