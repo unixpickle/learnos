@@ -5,6 +5,7 @@
  * Create PS/2 driver
  * Wake up thread when an interrupt is received
  * Replace all appropriate `uint64_t` with `page_t`
+ * Disable PIT after LAPIC timers are initialized
 
 # Subtrees
 
