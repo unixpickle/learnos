@@ -41,7 +41,7 @@ void anscheduler_zero(void * buf, int len) {
             : "=D" (buf), "=c" (count)
             : "D" (buf), "c" (count)
             : "rax");
-    len -= count << 3;
+    len = len & 7;
   }
   for (; len > 0; len--) {
     (*(char *)(buf++)) = 0;
