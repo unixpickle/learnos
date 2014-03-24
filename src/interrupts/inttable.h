@@ -39,12 +39,6 @@ typedef struct {
   uint32_t reserved2;
 } __attribute__((packed)) idt_entry_t;
 
-typedef struct {
-  uint64_t vector;
-  uint64_t handler;
-  uint8_t flags;
-} idt_entry_marker_t;
-
 #define INT_HANDLER_INIT(arg, func) {"\x50\x50\x48\xB8", arg, "\x48\x89\x44\x24\x08\x48\xB8", func, "\x48\x87\x04\x24\xC3"}
 #define IDT_ENTRY_INIT(exc, flags) {exc & 0xffff, 8, 0, flags, (exc >> 16) & 0xffff, exc >> 32, 0}
 
