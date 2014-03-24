@@ -1,14 +1,13 @@
-PROJECT_ROOT=../..
+CFILES = $(wildcard src/*.c)
+override INCLUDES += -I./include -I./lib/anidxset/src
 
-CSOURCES=idt.c ioapic.c lapic.c acpi.c pic.c pit.c
+objects: build
+	for file in $(CFILES); do \
+		gcc $(CFLAGS) $(INCLUDES) -c $$file -o build/`basename $$file .c`.o; \
+	done
 
-all: csources build/basic.o
+build:
+	mkdir build
 
-include ../directives.mk
-include ../csources.mk
-
-build/basic.o: build
-	nasm -f elf64 basic.s -o build/basic.o
-
-include ../builddir.mk
-
+clean:
+	rm -rf build
