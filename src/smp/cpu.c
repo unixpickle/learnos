@@ -77,7 +77,7 @@ task_t * anscheduler_cpu_get_task() {
 
 thread_t * anscheduler_cpu_get_thread() {
   cpu_t * cpu = cpu_current();
-  return cpu->task;
+  return cpu->thread;
 }
 
 void anscheduler_cpu_set_task(task_t * task) {
@@ -113,7 +113,7 @@ void anscheduler_cpu_notify_dead(task_t * task) {
 void anscheduler_cpu_stack_run(void * arg, void (* fn)(void *)) {
   void * stack = cpu_dedicated_stack();
   __asm__("mov %0, %%rbp\n"
-          "call *%1" : "a" (stack), "b" (fn), "D" (arg));
+          "callq *%1" : : "a" (stack), "b" (fn), "D" (arg));
 }
 
 void anscheduler_cpu_halt() {

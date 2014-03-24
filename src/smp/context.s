@@ -1,130 +1,117 @@
-bits 64
+extern thread_resume_kernel_stack, thread_vm_kernel_stack
+extern anscheduler_cpu_get_thread
+extern kernpage_calculate_virtual
 
 PML4_START equ 0x300000
 
-extern kernpage_calculate_virtual
-extern thread_resume_kernel_stack
-extern scheduler_handle_timer
-extern anlock_unlock
-extern anlock_lock
-extern cpu_current, cpu_dedicated_stack
-extern thread_translate_kernel_stack
+global anscheduler_save_return_state
+anscheduler_save_return_state:
+  add rdi, 0x40 ; point to anscheduler_state_t structure
 
-global task_save_state
-task_save_state:
-  ; immediately save the state of the registers
-  push r15
-  push r14
-  push r13
-  push r12
-  push r11
-  push r10
-  push r9
-  push r8
-  push rdi
-  push rsi
-  push rdx
-  push rcx
-  push rbx
-  push rax
+  ; rsp
+  lea rax, [rsp + 8]
+  mov [rdi], rax
+  ; rbp
+  mov [rdi + 8], rbp
+  ; cr3
   mov rax, cr3
-  push rax
-  push rbp
-  ; stack: flags, cs, rip, ret_addr, [registers]
-
-  call task_switch_to_kernpage
-  call cpu_current
-
-  ; get the current thread running on this CPU
-  mov rsi, rax
-  mov rdi, [rsi + 0x18] ; thread_t structure
-  cmp rdi, 0
-  je .end ; there is no current thread_t running on the CPU
-
-  ; store each of our variables in the thread_t structure
-  mov rax, [rsp + 0xa0] ; 0x80 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
-  mov [rdi + 0x10], rax ; rsp
-  mov rax, [rsp]
-  mov [rdi + 0x18], rax ; rbp
-  mov rax, [rsp + 8]
-  mov [rdi + 0x20], rax ; cr3
-  mov rax, [rsp + 0x88]
-  mov [rdi + 0x28], rax ; rip
-  mov rax, [rsp + 0x98]
-  mov [rdi + 0x30], rax ; flags
-  
-  ; store rax, rbx, rcx, rdx, rsi, rdi, r8, ..., r15
-  lea rsi, [rsp + 0x10]
-  lea rax, [rdi + 0x38]
-  mov rdi, rax
-  mov rcx, 0xe
-  rep movsq
-
-.end:
-  ; return after relieving our stack of its registers!
-  add rsp, 0x80
-  ret
-
-global task_save_caller_state
-task_save_caller_state:
-  ; immediately save the state of the general purpose regs
-  push r15
-  push r14
-  push r13
-  push r12
-  push r11
-  push r10
-  push r9
-  push r8
-  push rdi
-  push rsi
-  push rdx
-  push rcx
-  push rbx
-  mov rax, 0x1 ; fake rax value for return
-  push rax
-  mov rax, cr3
-  push rax
-  push rbp
-
-  call cpu_current
-
-  ; get the current thread running on this CPU
-  mov rsi, rax
-  mov rdi, [rsi + 0x18] ; thread_t structure
-  cmp rdi, 0
-  je .end ; there is no current thread_t running on the CPU
-
-  ; store each of our variables in the thread_t structure
-  ; TODO: see if i can use lea here, but I don't think i can
-  mov rax, rsp
-  add rax, 0x88
-  mov [rdi + 0x10], rax ; rsp
-  mov rax, [rsp]
-  mov [rdi + 0x18], rax ; rbp
-  mov rax, [rsp + 8]
-  mov [rdi + 0x20], rax ; cr3
-  mov rax, [rsp + 0x80]
-  mov [rdi + 0x28], rax ; rip
-  pushfq
+  mov [rdi + 0x10], rax
+  ; rip
   pop rax
-  mov [rdi + 0x30], rax ; flags
-  
-  ; store rax, rbx, rcx, rdx, rsi, rdi, r8, ..., r15
-  lea rsi, [rsp + 0x10]
-  lea rax, [rdi + 0x38]
-  mov rdi, rax
+  mov [rdi + 0x18], rax
+  ; rbx
+  mov [rdi + 0x30], rbx
+  ; r12 - r15
+  mov [rdi + 0x78], r12
+  mov [rdi + 0x80], r13
+  mov [rdi + 0x88], r14
+  mov [rdi + 0x90], r15
+
+  mov rdi, rsi
+  call rdx ; should never return
+
+; void thread_run_state(thread_t * thread);
+global thread_run_state
+thread_run_state:
+  push rdi
+  call thread_resume_kernel_stack
+  mov rsp, rax
+  pop rdi
+  add rdi, 0x40
+
+  ; state for iretq
+
+  xor rax, rax
+  push rax ; push SS
+
+  mov rax, [rdi]
+  push rax ; push RSP
+
+  mov rax, [rdi + 0x20]
+  push rax ; RFLAGS
+
+  ; push CS with correct priviledge level
+  mov rax, 0x8
+  mov rcx, [rdi + 0x10]
+  cmp rcx, PML4_START
+  je .pushCS
+  mov rax, 0x1b ; PL = 3
+  mov word [rsp + 0x10], 0x23 ; the SS
+.pushCS:
+  push rax
+
+  ; push rip
+  mov rax, [rdi + 0x18]
+  push rax
+
+  ; push the appropriate registers to the stack for the final restoration
+  mov rax, [rdi + 0x8] ; rbp
+  push rax
+
+  ; push all general purpose registers to the stack, all 0xe of them
+  sub rsp, 0x70
+  mov rax, rdi
+  lea rsi, [rax + 0x28]
+  mov rdi, rsp
   mov rcx, 0xe
   rep movsq
 
-.end:
-  ; return after relieving our stack of its registers!
-  add rsp, 0x80
-  xor rax, rax
-  ret
-  
-global task_switch_to_kernpage
-task_switch_to_kernpage:
+  mov rdi, rax
+
+  ; check if we need to calculate a translated stack
+  mov rbx, [rdi + 0x10] ; the cr3 field
+  cmp rbx, PML4_START
+  je .restoreRegs
+
+  ; rdi is already a task, make rsi a thread_t* and rdx the stack to translate
+  sub rdi, 0x40 ; go back to the beginning of our thread
+  mov rsi, rsp
+  call thread_vm_kernel_stack
+  mov cr3, rbx ; rbx was preserved
+  mov rsp, rax
+
+.restoreRegs:
+  pop rax
+  pop rbx
+  pop rcx
+  pop rdx
+  pop rsi
+  pop rdi
+  pop r8
+  pop r9
+  pop r10
+  pop r11
+  pop r12
+  pop r13
+  pop r14
+  pop r15
+  pop rbp
+
+  iretq
+
+; void thread_switch_to_kernpage();
+global thread_switch_to_kernpage
+thread_switch_to_kernpage:
   mov rcx, cr3
   cmp rcx, PML4_START
   je .return
@@ -145,105 +132,56 @@ task_switch_to_kernpage:
 .return:
   ret
 
-; leapfrog off a thread's stack and setup the context
-global task_switch
-task_switch:
-  ; immediately, we jump into the thread's kernel stack
+;void thread_save_state(uint64_t fieldCount);
+global thread_save_state
+thread_save_state:
+  ; immediately save the state of the registers
+  push r15
+  push r14
+  push r13
+  push r12
+  push r11
+  push r10
+  push r9
+  push r8
   push rdi
   push rsi
-
-  call thread_resume_kernel_stack
-  pop rsi
-  pop rdi
-  mov rsp, rax
-  mov rbp, rax
-
-  ; unset the NT flag (should never be set anyways)
-  pushfq
-  pop rax
-  mov rcx, (0xffffffffffffffff ^ (1 << 14))
-  and rax, rcx
+  push rdx
+  push rcx
+  push rbx
   push rax
-  popfq
-
-  add rsi, 0x10 ; start of state_t structure
-
-  ; start pushing state for IRETQ
-
-  mov rax, 0x0
-  push rax ; push SS
-  mov rax, [rsi]
-  push rax ; push RSP
-
-  mov rax, [rsi + 0x20] ; flags
+  mov rax, cr3
   push rax
+  push rbp
+  ; stack: flags, cs, rip, ret_addr, [registers]
 
-  ; push CS with correct priviledge level
-  mov rax, 0x8
-  mov rcx, [rsi + 0x10]
-  cmp rcx, PML4_START
-  je .pushCS
-  mov rax, 0x1b ; PL = 3
-  mov word [rsp + 0x10], 0x23 ; the SS
-.pushCS:
-  push rax
+  call thread_switch_to_kernpage
+  call anscheduler_cpu_get_thread
+  test rax, rax
+  jz .end
 
-  ; push rip
-  mov rax, [rsi + 0x18]
-  push rax
-
-  ; push the appropriate registers to the stack for the next thingy
-  mov rax, [rsi + 0x8] ; rbp
-  push rax
-
-  ; push all general purpose registers to the stack, all 0xe of them
-  sub rsp, 0x70
-  mov rdi, rsp
-  mov rax, rsi
-  lea rsi, [rax + 0x28]
+  lea rdi, [rax + 40]
+  ; store each of our variables in the thread_t structure
+  mov rax, [rsp + 0xa0] ; 0x80 + 0x8 (ret addr) + 0x18 (rip, cs, flags)
+  mov [rdi], rax ; rsp
+  mov rax, [rsp]
+  mov [rdi + 0x8], rax ; rbp
+  mov rax, [rsp + 8]
+  mov [rdi + 0x10], rax ; cr3
+  mov rax, [rsp + 0x88]
+  mov [rdi + 0x18], rax ; rip
+  mov rax, [rsp + 0x98]
+  mov [rdi + 0x20], rax ; flags
+  
+  ; store rax, rbx, rcx, rdx, rsi, rdi, r8, ..., r15
+  lea rsi, [rsp + 0x10]
+  lea rdi, [rdi + 0x28]
   mov rcx, 0xe
   rep movsq
 
-  mov rsi, rax
-
-  ; check if we need to calculate a translated stack
-  mov rbx, [rsi + 0x10] ; the cr3 field
-  cmp rbx, PML4_START
-  je .avoidRecalc
-
-  ; rdi is already a task, make rsi a thread_t* and rdx the stack to translate
-  sub rsi, 0x10 ; go back to the beginning of our thread
-  mov rdx, rsp
-  call thread_translate_kernel_stack
-  mov cr3, rbx ; rbx was preserved
-  mov rsp, rax
-
-.avoidRecalc:
-  pop rax
-  pop rbx
-  pop rcx
-  pop rdx
-  pop rsi
-  pop rdi
-  pop r8
-  pop r9
-  pop r10
-  pop r11
-  pop r12
-  pop r13
-  pop r14
-  pop r15
-  pop rbp
-
-  iretq ; will reset the interrupts flag in the FLAGS register
-
-
-global task_switch_interrupt
-task_switch_interrupt:
-  call task_save_state
-  call cpu_dedicated_stack
-  mov rsp, rax
-  call scheduler_handle_timer ; hangs if no tasks can be run, never returns
+.end:
+  add rsp, 0x80
+  ret
 
 ; looks up and returns an entry in a page table
 ; uint64_t virtual_table_lookup(uint64_t index, page_t kernpageAddress);
@@ -302,4 +240,3 @@ universal_page_lookup:
   mov rax, 0
   leave
   ret
-

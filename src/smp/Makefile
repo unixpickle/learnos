@@ -1,11 +1,11 @@
 PROJECT_ROOT=../..
 
-CSOURCES=cpu.c gdt.c tasks.c vm.c util.c creation.c destruction.c lifecycle.c scheduler.c timer.c
+CSOURCES=$(wildcard *.c)
 
 all: csources build/context.o
 
-build/context.o: build
-	nasm -f elf64 context.s -o build/context.o
+build/context_s.o: build
+	nasm -f elf64 context.s -o build/context_s.o
 
 include ../directives.mk
 include ../csources.mk

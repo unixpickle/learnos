@@ -1,6 +1,11 @@
+#include <anscheduler/types.h>
+#include "gdt.h"
+
 /**
  * The cpu_ functions helps manage the CPU list and access CPU specific fields.
  */
+
+typedef struct cpu_t cpu_t;
 
 struct cpu_t {
   cpu_t * next; // linked list
