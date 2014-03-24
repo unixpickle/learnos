@@ -4,12 +4,14 @@
 #include <anscheduler/task.h>
 #include <anscheduler/functions.h>
 #include <kernpage.h>
+#include <syscall/config.h>
 
 void anscheduler_thread_run(task_t * task, thread_t * thread) {
   cpu_t * cpu = cpu_current();
   tss_t * tss = cpu->tss;
   uint64_t kStack = thread->stack + ANSCHEDULER_TASK_KERN_STACKS_PAGE;
   tss->rsp[0] = ((kStack + 1) << 12);
+  syscall_setup_for_thread(thread);
   thread_run_state(thread);
 }
 

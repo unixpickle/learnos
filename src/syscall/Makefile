@@ -1,11 +1,8 @@
 PROJECT_ROOT=../..
 
-CSOURCES=functions.c
+CSOURCES=$(wildcard *.c)
 
-all: csources build/base.o
-
-build/base.o: build
-	nasm -f elf64 base.s -o build/base.o
+all: csources
 
 include ../directives.mk
 include ../csources.mk

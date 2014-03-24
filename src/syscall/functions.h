@@ -1,8 +1,6 @@
 #include <stdint.h>
 
-void syscall_print_method(void * ptr);
-void syscall_sleep_method();
-void syscall_getint_method();
-void syscall_thread_exit_method();
-void syscall_pid_kill_method(uint64_t pid);
+uint64_t syscall_entry(uint64_t arg1, uint64_t arg2, uint64_t arg3);
+
+void syscall_print(void * ptr);
 

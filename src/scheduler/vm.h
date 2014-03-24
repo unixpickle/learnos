@@ -12,3 +12,4 @@ uint64_t anscheduler_vm_lookup(void * root,
                                uint64_t vpage,
                                uint16_t * flags);
 void anscheduler_vm_root_free(void * root);
+void anscheduler_vm_root_free_async(void * root);

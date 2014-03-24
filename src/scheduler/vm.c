@@ -3,6 +3,7 @@
 #include <anscheduler/functions.h>
 
 static void _table_free(uint64_t * table, int depth);
+static void _table_free_async(uint64_t * table, int depth);
 static void _backclear(uint64_t * indices, uint64_t ** tables);
 
 uint64_t anscheduler_vm_physical(uint64_t virt) {
@@ -103,6 +104,10 @@ void anscheduler_vm_root_free(void * root) {
   _table_free((uint64_t *)root, 0);
 }
 
+void anscheduler_vm_root_free_async(void * root) {
+  _table_free_async((uint64_t *)root, 0);
+}
+
 static void _table_free(uint64_t * table, int depth) {
   if (depth == 3) {
     return anscheduler_free(table);
@@ -112,6 +117,20 @@ static void _table_free(uint64_t * table, int depth) {
     if (table[i] & 1) {
       uint64_t * nTable = (uint64_t *)((table[i] >> 12) << 12);
       _table_free(nTable, depth + 1);
+    }
+  }
+  anscheduler_free(table);
+}
+
+static void _table_free_async(uint64_t * table, int depth) {
+  if (depth == 3) {
+    return anscheduler_free(table);
+  }
+  int i;
+  for (i = 0; i < 0x200; i++) {
+    if (table[i] & 1) {
+      uint64_t * nTable = (uint64_t *)((table[i] >> 12) << 12);
+      _table_free_async(nTable, depth + 1);
     }
   }
   anscheduler_free(table);
