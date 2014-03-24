@@ -48,28 +48,14 @@ cpu_t * cpu_current();
  */
 void * cpu_dedicated_stack();
 
-/**
- * Notifies every CPU running a task to task-switch early.
- */
-void cpu_notify_task_dead(task_t * task);
-
 void anscheduler_cpu_lock();
-
 void anscheduler_cpu_unlock();
-
 task_t * anscheduler_cpu_get_task();
-
 thread_t * anscheduler_cpu_get_thread();
-
 void anscheduler_cpu_set_task(task_t * task);
-
 void anscheduler_cpu_set_thread(thread_t * thread);
-
 void anscheduler_cpu_notify_invlpg(task_t * task);
-
 void anscheduler_cpu_notify_dead(task_t * task);
-
 void anscheduler_cpu_stack_run(void * arg, void (* fn)(void *));
-
 void anscheduler_cpu_halt();
 

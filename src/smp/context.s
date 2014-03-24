@@ -10,13 +10,6 @@ extern anlock_lock
 extern cpu_current, cpu_dedicated_stack
 extern thread_translate_kernel_stack
 
-global task_run_with_stack
-task_run_with_stack:
-  mov rsp, rdi
-  mov rbp, rdi
-  mov rdi, rsi
-  jmp rdx
-
 global task_save_state
 task_save_state:
   ; immediately save the state of the registers
