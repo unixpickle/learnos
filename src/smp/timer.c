@@ -3,7 +3,7 @@
 #include <interrupts/lapic.h>
 #include <shared/addresses.h>
 
-static uint64_t secondLength = 0;
+static uint64_t secondLength __attribute__((aligned(8))) = 0;
 
 static void save_timer_slice();
 
@@ -13,33 +13,30 @@ void timer_send_eoi() {
   }
 }
 
-void timer_set_timeout(uint32_t ticks) {
+void anscheduler_timer_set(uint32_t ticks) {
   save_timer_slice();
   if (lapic_is_requested(0x20)) return;
   lapic_timer_set(0x20, ticks);
 }
 
-void timer_set_far_timeout() {
+void anscheduler_timer_set_far() {
   save_timer_slice();
   lapic_timer_set(0xff, 0xffffffff);
 }
 
-void timer_cancel_timeout() {
+void anscheduler_timer_cancel() {
   save_timer_slice();
   lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
 }
 
-uint64_t timer_get_time() {
+uint64_t anscheduler_get_time() {
   return *((volatile uint64_t *)SYS_TIMESTAMP);
 }
 
-uint64_t timer_second_length() {
+uint64_t anscheduler_second_length() {
   if (!secondLength) {
     uint64_t len = lapic_get_bus_speed() * cpu_count();
-    // TODO: I like locking things, but maybe I shouldn't
-    __asm__("lock xchgq %%rax, %2"
-            : "=a" (len)
-            : "a" (len), "m" (secondLength));
+    secondLength = len;
   }
   return secondLength;
 }

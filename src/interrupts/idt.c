@@ -1,35 +1,30 @@
 #include "idt.h"
-#include "basic.h"
 #include "lapic.h"
-#include "ioapic.h"
+#include "basic.h"
+#include "inttable.h"
+#include <shared/addresses.h> // for PIT
 #include <stdio.h>
-#include <libkern_base.h>
-#include <syscall/base.h>
-#include <smp/lifecycle.h>
 
-extern void task_switch_interrupt();
-
-static void _initialize_idt(idt_entry * ptr);
-static void _set_irqs(idt_entry * ptr);
-static void _make_entry(idt_entry * out, void (* ptr)());
+static void _initialize_idt(idt_entry_t * ptr);
 
 void configure_dummy_idt() {
-  volatile idt_pointer * idtr = (idt_pointer *)IDTR_PTR;
+  idt_pointer * idtr = (idt_pointer *)IDTR_PTR;
   idtr->limit = 0x1000 - 1;
   idtr->virtualAddress = IDT_PTR;
 
   // create entries for low IRQs
-  volatile idt_entry * table = (idt_entry *)IDT_PTR;
-  idt_entry entry;
+  idt_entry_t * table = (idt_entry_t *)IDT_PTR;
+  _initialize_idt((idt_entry_t *)table);
+
+  idt_entry_t lowerEntry = IDT_ENTRY_INIT(((uint64_t)handle_dummy_lower), 0x8e);
+  idt_entry_t upperEntry = IDT_ENTRY_INIT(((uint64_t)handle_dummy_upper), 0x8e);
+
   int i;
-  _initialize_idt((idt_entry *)table);
-  _make_entry(&entry, handle_dummy_lower);
   for (i = 0x8; i <= 0xf; i++) {
-    table[i] = entry;
+    table[i] = lowerEntry;
   }
-  _make_entry(&entry, handle_dummy_upper);
   for (i = 0x70; i <= 0x78; i++) {
-    table[i] = entry;
+    table[i] = upperEntry;
   }
 
   load_idtr((void *)idtr);
@@ -39,261 +34,74 @@ void configure_global_idt() {
   volatile idt_pointer * idtr = (volatile idt_pointer *)IDTR_PTR;
   idtr->limit = 0x1000 - 1;
   idtr->virtualAddress = IDT_PTR;
-  _initialize_idt((idt_entry *)IDT_PTR);
-  _set_irqs((idt_entry *)IDT_PTR);
 
-  idt_entry entry;
+  idt_entry_t * table = (idt_entry_t *)IDT_PTR;
+  _initialize_idt(table);
 
-  // create spurious handler
-  _make_entry(&entry, handle_spurious);
-  ((idt_entry *)IDT_PTR)[0xff] = entry;
+  // setup the interrupt handlers
+  uint64_t callRoutines[4] = {
+    (uint64_t)&handle_interrupt_exception,
+    (uint64_t)&handle_interrupt_exception_code,
+    (uint64_t)&handle_interrupt_irq,
+    (uint64_t)&handle_interrupt_ipi,
+  };
 
-  _make_entry(&entry, task_switch_interrupt);
-  ((idt_entry *)IDT_PTR)[IDT_VECTOR_TIMER] = entry;
+  int i;
+  for (i = 0; i < sizeof(gIDTHandlers) / sizeof(int_handler_t); i++) {
+    uint64_t handler = (uint64_t)&gIDTHandlers[i];
+    uint64_t flags = 0x8e;
 
-  _make_entry(&entry, syscall_interrupt);
-  entry.flags |= 0x60; // dpl
-  ((idt_entry *)IDT_PTR)[IDT_VECTOR_SYSCALL] = entry;
+    // set the correct method
+    gIDTHandlers[i].function = callRoutines[gIDTHandlers[i].function];
+    
+    idt_entry_t entry = IDT_ENTRY_INIT(handler, flags);
+    table[gIDTHandlers[i].argument] = entry;
+  }
 
   load_idtr((void *)idtr);
 }
 
-void int_keyboard() {
-  print("Got keyboard interrupt.\n");
-}
-
-void int_div_zero() {
-  print("got div zero\n");
-}
-
-void int_debugger() {
-  print("got debugger\n");
-  hang();
-}
-
-void int_nmi() {
-  print("got nmi\n");
-}
-
-void int_breakpoint() {
-  print("got breakpoint\n");
-}
-
-void int_overflow() {
-  print("got overflow\n");
-}
-
-void int_bounds() {
-  print("got bounds\n");
-}
-
-void int_invalid_opcode(uint64_t ptr) {
-  print("got invalid opcode: ");
-  printHex(ptr);
-  print(" CPU ");
-  printHex(lapic_get_id());
+void int_interrupt_exception(uint64_t vec) {
+  print("Got exception vector ");
+  printHex(vec);
   print("\n");
-  hang();
+  __asm__("cli\nhlt");
+  // TODO: here, save task state and terminate it
 }
 
-void int_coprocessor_not_available() {
-  print("got coprocessor not available\n");
-}
-
-void int_double_fault(uint64_t error) {
-  print("got double fault: ");
-  printHex(error);
-  print("\n");
-}
-
-void int_coprocessor_segment_overrun() {
-  print("got coprocessor segment overrun\n");
-}
-
-void int_invalid_tss() {
-  print("got invalid tss\n");
-}
-
-void int_segmentation_fault() {
-  print("got segmentation fault\n");
-}
-
-void int_stack_fault() {
-  print("got stack fault\n");
-}
-
-void int_general_protection_fault(void * rip, uint64_t code) {
-  print("got #gp(");
+void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
+  print("Got exception vector ");
+  printHex(vec);
+  print(" with code ");
   printHex(code);
-  print(") from 0x");
-  printHex((uint64_t)rip);
-  print(" in CPU ");
-  printHex(lapic_get_id());
   print("\n");
-  __asm__ __volatile__("cli\nhlt");
+  __asm__("cli\nhlt");
+  // TODO: here, save task state and terminate it, or do a page fault
 }
 
-void int_page_fault(void * rip, uint64_t flags) {
-  uint64_t error, rrsp;
-  __asm__ ("mov %%cr2, %0\nmov %%rsp, %%rax" : "=r" (error), "=a" (rrsp));
-  print("got page fault: ");
-  printHex(error);
-  print(" from ");
-  printHex((uint64_t)rip);
-  print(", error flags = ");
-  printHex(flags);
-  print(", RSP = 0x");
-  printHex(rrsp);
-  print("\n");
-  __asm__ ("cli\nhlt");
-}
-
-void int_math_fault() {
-  print("got math fault\n");
-}
-
-void int_alignment_check() {
-  print("got alignment check\n");
-}
-
-void int_machine_check() {
-  print("got machine check\n");
-}
-
-void int_simd_exception() {
-  print("got simd exception\n");
-}
-
-void int_unknown_exception(uint64_t retAddr, uint64_t codeSeg, uint64_t flags) {
-  print("INT, retAddr=");
-  printHex(retAddr);
-  print(", codeSeg=");
-  printHex(codeSeg);
-  print(", flags=");
-  printHex(flags);
-  print("\n");
-  lapic_send_eoi();
-}
-
-void int_irq0() {
-  PIT_TICK_COUNT++;
-  /*
-  if (PIT_TICK_COUNT % 200 == 0) {
-    print("tock ");
-  } else if (PIT_TICK_COUNT % 200 == 100) {
-    print("tick ");
+void int_interrupt_irq(uint64_t vec) {
+  if (vec == 0) {
+    PIT_TICK_COUNT++;
   }
-  */
-  lapic_send_eoi();
+  if (lapic_is_in_service(vec)) {
+    lapic_send_eoi();
+  }
 }
 
-void int_irq1() {
-  lapic_send_eoi();
-  scheduler_handle_interrupt(1 << 1);
+void int_interrupt_ipi(uint64_t vec) {
+  if (vec == 0x31) {
+    print("GOT PAGE IPI\n");
+  }
+  if (lapic_is_in_service(vec)) {
+    lapic_send_eoi();
+  }
 }
 
-void int_irq2() {
-  print("got IRQ2\n");
-  lapic_send_eoi();
-}
-
-void int_irq3() {
-  print("got IRQ3\n");
-  lapic_send_eoi();
-}
-
-void int_irq4() {
-  print("got IRQ4\n");
-  lapic_send_eoi();
-}
-
-void int_irq5() {
-  print("got IRQ5\n");
-  lapic_send_eoi();
-}
-
-void int_irq6() {
-  print("got IRQ6\n");
-  lapic_send_eoi();
-}
-
-void int_irq7() {
-  print("got IRQ7\n");
-  lapic_send_eoi();
-}
-
-void int_irq8() {
-  print("got IRQ8\n");
-  lapic_send_eoi();
-}
-
-void int_irq9() {
-  lapic_send_eoi();
-}
-
-void int_irq10() {
-  print("got IRQ10\n");
-  lapic_send_eoi();
-}
-
-void int_irq11() {
-  print("got IRQ11\n");
-  lapic_send_eoi();
-}
-
-void int_irq12() {
-  print("got IRQ12\n");
-  lapic_send_eoi();
-}
-
-void int_irq13() {
-  print("got IRQ13\n");
-  lapic_send_eoi();
-}
-
-void int_irq14() {
-  print("got IRQ14\n");
-  lapic_send_eoi();
-}
-
-void int_irq15() {
-  print("got IRQ15\n");
-  lapic_send_eoi();
-}
-
-static void _initialize_idt(idt_entry * ptr) {
-  void (* functions[])() = {handle_div_zero, handle_debugger, handle_nmi, handle_breakpoint, handle_overflow, handle_bounds, handle_invalid_opcode, handle_coprocessor_not_available, handle_double_fault, handle_coprocessor_segment_overrun, handle_invalid_tss, handle_segmentation_fault, handle_stack_fault, handle_general_protection_fault, handle_page_fault, handle_unknown_exception, handle_math_fault, handle_alignment_check, handle_machine_check, handle_simd_exception};
-  idt_entry def;
-
+static void _initialize_idt(idt_entry_t * ptr) {
+  idt_entry_t entry = IDT_ENTRY_INIT((uint64_t)handle_unknown_int, 0x8e);
   int i;
-  for (i = 0; i < 0x14; i++) {
-    _make_entry(&def, functions[i]);
-    ptr[i] = def;
+  for (i = 0; i < 0x100; i++) {
+    ptr[i] = entry;
   }
-  _make_entry(&def, handle_unknown_exception);
-  for (i = 0x14; i < 0x100; i++) {
-    ptr[i] = def;
-  }
-}
-
-static void _set_irqs(idt_entry * ptr) {
-  uint8_t vectors[] = IOAPIC_IRQ_VECTORS;
-  void (* functions[])() = {handle_irq0, handle_irq1, handle_irq2, handle_irq3, handle_irq4, handle_irq5, handle_irq6, handle_irq7, handle_irq8, handle_irq9, handle_irq10, handle_irq11, handle_irq12, handle_irq13, handle_irq14, handle_irq15};
-  uint8_t i;
-  for (i = 0; i < 0x10; i++) {
-    _make_entry(&ptr[vectors[i]], functions[i]);
-  }
-}
-
-static void _make_entry(idt_entry * out, void (* ptr)()) {
-  uint64_t excAddress = (uint64_t)ptr;
-  out->low_offset = excAddress & 0xffff;
-  out->mid_offset = (excAddress >> 16) & 0xffff;
-  out->high_offset = excAddress >> 32;
-
-  out->code_segment = 0x8;
-  out->reserved1 = 0;
-  out->reserved2 = 0;
-  out->flags = 0x8e; // make this a long mode interrupt gate
 }
 

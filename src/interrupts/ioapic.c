@@ -68,9 +68,6 @@ void ioapic_set_red_table(uint8_t index, ioapic_redirection entry) {
 }
 
 static void _ioapic_configure_irqs() {
-  // this idea was from http://www.osdever.net/tutorials/pdf/apic.pdf
-  uint8_t vectors[] = IOAPIC_IRQ_VECTORS;
-
   ioapic_redirection entry;
   entry.delmode = 0; // fixed
   entry.destmode = 0; // single CPU
@@ -82,9 +79,8 @@ static void _ioapic_configure_irqs() {
   uint8_t i;
 
   for (i = 0; i < 0x10; i++) {
-    if (!vectors[i]) continue;
     acpi_entry_iso * iso = acpi_iso_lookup(i);
-    entry.vector = vectors[i];
+    entry.vector = 0x20 + i;
     if (iso) {
       // Interrupt Source Override allows us to get more info about this IRQ
       if ((iso->flags & 0x3) == 0x3) entry.intpol = 1;

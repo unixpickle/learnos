@@ -68,3 +68,62 @@ void cpu_notify_task_dead(task_t * task) {
   }
 }
 
+void anscheduler_cpu_lock() {
+  __asm__("cli");
+}
+
+void anscheduler_cpu_unlock() {
+  __asm__("sti");
+}
+
+task_t * anscheduler_cpu_get_task() {
+  cpu_t * cpu = cpu_current();
+  return cpu->task;
+}
+
+thread_t * anscheduler_cpu_get_thread() {
+  cpu_t * cpu = cpu_current();
+  return cpu->task;
+}
+
+void anscheduler_cpu_set_task(task_t * task) {
+  cpu_t * cpu = cpu_current();
+  cpu->task = task;
+}
+
+void anscheduler_cpu_set_thread(thread_t * thread) {
+  cpu_t * cpu = cpu_current();
+  cpu->thread = thread;
+}
+
+void anscheduler_cpu_notify_invlpg(task_t * task) {
+  cpu_t * cpu = firstCPU;
+  while (cpu) {
+    if (cpu->task == task) {
+      lapic_send_ipi(cpu->cpuId, 0x20, 0, 1, 0); // real simple IPI
+    }
+    cpu = cpu->next;
+  }
+}
+
+void anscheduler_cpu_notify_dead(task_t * task) {
+  cpu_t * cpu = firstCPU;
+  while (cpu) {
+    if (cpu->task == task) {
+      lapic_send_ipi(cpu->cpuId, 0x20, 0, 1, 0); // real simple IPI
+    }
+    cpu = cpu->next;
+  }
+}
+
+void anscheduler_cpu_stack_run(void * arg, void (* fn)(void *)) {
+  void * stack = cpu_dedicated_stack();
+  __asm__("mov %0, %%rbp\n"
+          "call *%1" : "a" (stack), "b" (fn), "D" (arg));
+}
+
+void anscheduler_cpu_halt() {
+  // if only every function were THIS easy!
+  __asm__("hlt");
+}
+
