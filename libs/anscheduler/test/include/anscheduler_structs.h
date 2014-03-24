@@ -19,3 +19,8 @@ typedef struct {
   uint64_t flags;
   uint64_t cpuLocked;
 } __attribute__((packed)) anscheduler_state;
+
+typedef struct {
+  uint64_t reserved;
+} __attribute__((packed)) anscheduler_task_ui_t;
+

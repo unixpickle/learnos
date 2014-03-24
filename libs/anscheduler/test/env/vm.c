@@ -1,8 +1,10 @@
 #include "vm.h"
 #include "alloc.h"
+#include "threading.h"
 #include <string.h> // bzero
 
 static void _table_free(uint64_t * table, int depth);
+static void _table_free_async(uint64_t * table, int depth);
 
 uint64_t anscheduler_vm_physical(uint64_t virt) {
   return virt;
@@ -85,6 +87,11 @@ void anscheduler_vm_root_free(void * root) {
   _table_free((uint64_t *)root, 0);
 }
 
+void anscheduler_vm_root_free_async(void * root) {
+  // recursive table free
+  _table_free_async((uint64_t *)root, 0);
+}
+
 static void _table_free(uint64_t * table, int depth) {
   if (depth == 3) {
     return anscheduler_free(table);
@@ -98,3 +105,23 @@ static void _table_free(uint64_t * table, int depth) {
   }
   anscheduler_free(table);
 }
+
+static void _table_free_async(uint64_t * table, int depth) {
+  if (depth == 3) {
+    anscheduler_cpu_lock();
+    anscheduler_free(table);
+    return anscheduler_cpu_unlock();
+  }
+
+  int i;
+  for (i = 0; i < 0x200; i++) {
+    if (table[i] & 1) {
+      uint64_t * nTable = (uint64_t *)((table[i] >> 12) << 12);
+      _table_free_async(nTable, depth + 1);
+    }
+  }
+  anscheduler_cpu_lock();
+  anscheduler_free(table);
+  anscheduler_cpu_unlock();
+}
+

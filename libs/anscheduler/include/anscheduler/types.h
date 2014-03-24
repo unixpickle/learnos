@@ -2,7 +2,7 @@
 #define __ANSCHEDULER_TYPES_H__
 
 #include <anscheduler_consts.h> // should declare int types, etc.
-#include <anscheduler_state.h> // you must create this
+#include <anscheduler_structs.h> // you must create this
 #include <anidxset.h>
 
 #define ANSCHEDULER_MSG_TYPE_CONNECT 0
@@ -56,6 +56,9 @@ struct task_t {
   uint64_t refCount; // when this reaches 0 and isKilled = 1, kill this task
   uint64_t isKilled; // 0 or 1, starts at 0
   uint64_t killReason;
+
+  // API user info for this task; should be declared in anscheduler_structs.h
+  anscheduler_task_ui_t ui;
 } __attribute__((packed));
 
 struct thread_t {

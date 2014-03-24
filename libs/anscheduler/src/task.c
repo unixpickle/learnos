@@ -337,7 +337,7 @@ static void _free_task_method(task_t * task) {
   
   // wait for each socket to die so that we know nothing references the task
   _close_task_sockets_async(task);
-  
+
   // release the task's code
   if (!__sync_sub_and_fetch(task->codeRetainCount, 1)) {
     _dealloc_task_code_async(task);
@@ -358,12 +358,12 @@ static void _free_task_method(task_t * task) {
     anscheduler_cpu_unlock();
   }
   
+  anscheduler_vm_root_free_async(task->vm);
   anscheduler_cpu_lock();
-  
-  // free the general structures on the task
+
+  // free the general structures of the task
   anidxset_free(&task->stacks);
   anidxset_free(&task->descriptors);
-  anscheduler_vm_root_free(task->vm);
   
   anscheduler_pidmap_free_pid(task->pid);
   anscheduler_free(task);
