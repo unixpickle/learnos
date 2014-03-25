@@ -132,7 +132,7 @@ static void start_task(void * ptr, uint64_t len) {
   uint64_t stackStart = ANSCHEDULER_TASK_USER_STACKS_PAGE
     + (thread->stack << 8);
 
-  thread->state.cr3 = (uint64_t)task->vm;
+  thread->state.cr3 = kernpage_calculate_physical((uint64_t)task->vm);
   thread->state.rsp = (stackStart + 0x100) << 12;
   thread->state.rbp = (stackStart + 0x100) << 12;
   thread->state.flags = 0x200;

@@ -1,6 +1,6 @@
 bits 64
 
-extern syscall_entry
+extern syscall_entry, stack_log
 
 section .text
 
@@ -21,8 +21,9 @@ syscall_configure_stack:
 
   push rcx
   push r11
-  mov rax, syscall_entry
-  call rax
+  call syscall_entry
+  mov rdi, 0x18
+  call stack_log
 
   ; clear interrupts while our page table and stack are on the fritz
   cli
