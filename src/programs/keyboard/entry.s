@@ -1,10 +1,9 @@
 bits 64
 
-extern main, sys_print
+extern main
 
 section .entrypoint
 start:
-  mov r15, sys_print
   call main
 .hang:
   jmp .hang
