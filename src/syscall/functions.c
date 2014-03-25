@@ -57,12 +57,7 @@ void syscall_sleep(uint64_t usec) {
   uint64_t destTime = anscheduler_get_time() + units;
   thread_t * thread = anscheduler_cpu_get_thread();
   thread->nextTimestamp = destTime;
-  print("sleeping until ");
-  printHex(units);
-  print(" from ");
-  printHex(anscheduler_get_time());
-  print("\n");
-  anscheduler_cpu_unlock();
+  anscheduler_loop_save_and_resign();
 }
 
 static bool print_line(const char * ptr) {

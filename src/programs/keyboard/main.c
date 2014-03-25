@@ -1,12 +1,17 @@
 #include <stdio.h>
 
-static uint8_t get_next_byte();
-static uint32_t scancode_in();
-static bool byte_out(uint8_t byte);
+//static uint8_t get_next_byte();
+//static uint32_t scancode_in();
+//static bool byte_out(uint8_t byte);
 
 int main() {
   printf("loading keyboard driver.\n");
-  while (1) { sys_sleep(1000000); printf("poopy.\n"); }
+  while (1) {
+    sys_sleep(0x100000);
+    printf("system time is %x\n", sys_get_time());
+  }
+
+/**
 
   // set scan code set 2
   if (byte_out(0xf0)) {
@@ -20,10 +25,11 @@ int main() {
       printf("A");
     } else printf("unknown scancode %x\n", input);
   }
-
+**/
   return 0;
 }
 
+/*
 static uint8_t get_next_byte() {
   while (1) {
     uint8_t byte = sys_in(0x64);
@@ -66,4 +72,4 @@ static bool byte_out(uint8_t byte) {
   sys_out(0x60, byte);
   return true;
 }
-
+*/

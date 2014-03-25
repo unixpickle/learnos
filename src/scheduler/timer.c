@@ -3,8 +3,6 @@
 #include <interrupts/lapic.h>
 #include <shared/addresses.h>
 
-static uint64_t secondLength __attribute__((aligned(8))) = 0;
-
 static void save_timer_slice();
 
 void timer_send_eoi() {
@@ -34,11 +32,7 @@ uint64_t anscheduler_get_time() {
 }
 
 uint64_t anscheduler_second_length() {
-  if (!secondLength) {
-    uint64_t len = lapic_get_bus_speed() * cpu_count();
-    secondLength = len;
-  }
-  return secondLength;
+  return (uint64_t)lapic_get_bus_speed() * (uint64_t)cpu_count();
 }
 
 static void save_timer_slice() {
