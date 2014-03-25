@@ -8,7 +8,7 @@ static uint64_t secondLength __attribute__((aligned(8))) = 0;
 static void save_timer_slice();
 
 void timer_send_eoi() {
-  if (lapic_is_in_service(0x20)) {
+  if (lapic_is_in_service(0x30)) {
     lapic_send_eoi();
   }
 }
@@ -16,7 +16,7 @@ void timer_send_eoi() {
 void anscheduler_timer_set(uint32_t ticks) {
   save_timer_slice();
   if (lapic_is_requested(0x20)) return;
-  lapic_timer_set(0x20, ticks);
+  lapic_timer_set(0x30, ticks);
 }
 
 void anscheduler_timer_set_far() {
@@ -42,7 +42,7 @@ uint64_t anscheduler_second_length() {
 }
 
 static void save_timer_slice() {
-  if (lapic_is_in_service(0x20) || lapic_is_requested(0x20)) return;
+  if (lapic_is_in_service(0x30) || lapic_is_requested(0x30)) return;
   // read the last mask
   uint32_t lastLVT = lapic_get_register(LAPIC_REG_LVT_TMR);
   if (lastLVT & 0x10000) return;

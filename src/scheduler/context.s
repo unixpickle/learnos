@@ -33,10 +33,10 @@ anscheduler_save_return_state:
 ; void thread_run_state(thread_t * thread);
 global thread_run_state
 thread_run_state:
-  push rdi
+  mov rbx, rdi
   call thread_resume_kernel_stack
   mov rsp, rax
-  pop rdi
+  mov rdi, rbx
   add rdi, 0x40
 
   ; state for iretq
@@ -75,7 +75,6 @@ thread_run_state:
   mov rdi, rsp
   mov rcx, 0xe
   rep movsq
-
   mov rdi, rax
 
   ; check if we need to calculate a translated stack
