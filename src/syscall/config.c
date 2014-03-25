@@ -35,34 +35,12 @@ void syscall_initialize_thread(thread_t * thread) {
   stack += 0x1000;
 
   // debugging: try doing nothing, with `jmp $`
-  //thread->state.callCode.code2[0] = 0xeb;
-  //thread->state.callCode.code2[1] = 0xfe;
+  //thread->state.callCode.code1[0] = 0xeb;
+  //thread->state.callCode.code1[1] = 0xfe;
   uint64_t kernCode = (uint64_t)&syscall_configure_stack;
-
-  print("interrupt stack is ");
-  printHex(stack);
-  print(", code start is ");
-  printHex(((void *)&thread->state.callCode) - (void *)thread);
-  print(", kerncall is ");
-  printHex(kernCode & 0xffffff);
-  print("\n");
 
   thread->state.callCode.stack = stack;
   thread->state.callCode.kernCall = kernCode;
-  void * ptr = &thread->state.callCode;
-  int i;
-  for ( i = 0; i < 0x16; i++) {
-    unsigned char ch = *((const char *)(ptr + i));
-    printHex((uint64_t)ch);
-    print(" ");
-  }
-  print("\n");
-
-  uint16_t flags;
-  uint64_t page = anscheduler_vm_lookup(thread->task->vm, 0x100, &flags);
-  print("got value ");
-  printHex((page << 12) | (uint64_t)flags);
-  print("\n");
 }
 
 void syscall_setup_for_thread(thread_t * thread) {
