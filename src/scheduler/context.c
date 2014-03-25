@@ -25,6 +25,8 @@ void anscheduler_set_state(thread_t * thread,
   thread->state.rip = (uint64_t)ip;
   thread->state.rsp = (uint64_t)stack;
   thread->state.rdi = (uint64_t)arg1;
+  thread->state.cs = 0x8;
+  thread->state.ss = 0x10;
 }
 
 void * thread_resume_kernel_stack(thread_t * thread) {

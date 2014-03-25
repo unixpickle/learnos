@@ -30,6 +30,13 @@ anscheduler_save_return_state:
   pushfq
   pop rax
   mov [rdi + 0x20], rax
+  ; cs
+  xor rax, rax
+  mov ax, cs
+  mov [rdi + 0x98], rax
+  ; ss
+  mov ax, ss
+  mov [rdi + 0xA0], rax
 
   mov rdi, rsi
   call rdx ; should never return
@@ -46,6 +53,7 @@ thread_run_state:
   ; state for iretq
 
   xor rax, rax
+  mov ax, [rdi + 0xa0]
   push rax ; push SS
 
   mov rax, [rdi]
@@ -55,13 +63,8 @@ thread_run_state:
   push rax ; RFLAGS
 
   ; push CS with correct priviledge level
-  mov rax, 0x8
-  mov rcx, [rdi + 0x10]
-  cmp rcx, PML4_START
-  je .pushCS
-  mov rax, 0x1b ; PL = 3
-  mov word [rsp + 0x10], 0x23 ; the SS
-.pushCS:
+  xor rax, rax
+  mov rax, [rdi + 0x98]
   push rax
 
   ; push rip

@@ -1,5 +1,7 @@
 bits 64
 
+section .text
+
 global sys_print
 sys_print:
   mov rsi, rdi

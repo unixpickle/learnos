@@ -137,6 +137,8 @@ static void start_task(void * ptr, uint64_t len) {
   thread->state.rbp = (stackStart + 0x100) << 12;
   thread->state.flags = 0x200;
   thread->state.rip = ANSCHEDULER_TASK_CODE_PAGE << 12;
+  thread->state.cs = 0x1b;
+  thread->state.ss = 0x23;
   syscall_initialize_thread(thread);
 
   anscheduler_thread_add(task, thread);

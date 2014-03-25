@@ -36,6 +36,9 @@ typedef struct {
   uint64_t r14;
   uint64_t r15;
 
+  uint64_t cs;
+  uint64_t ss;
+
   syscall_code callCode;
 } __attribute__((packed)) anscheduler_state;
 

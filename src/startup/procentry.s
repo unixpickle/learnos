@@ -21,13 +21,14 @@ proc_entry:
 
   mov eax, 10100000b ; set PAE and PGE bit
   mov cr4, eax
+
   mov edx, PML4_START
   mov cr3, edx
 
   ; set the LME bit of the EFER msr
   mov ecx, 0xC0000080
   rdmsr
-  or eax, 0x100
+  or eax, 0x101
   wrmsr
 
   ; enable paging and protection simultaneously

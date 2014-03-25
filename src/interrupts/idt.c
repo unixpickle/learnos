@@ -65,9 +65,27 @@ void configure_global_idt() {
 }
 
 void int_interrupt_exception(uint64_t vec) {
+  task_t * task = anscheduler_cpu_get_task();
+
+  uint64_t retAddr;
+  __asm__("mov 0x98(%%rbp), %0" : "=r" (retAddr));
   print("Got exception vector ");
   printHex(vec);
+  print(" from 0x");
+  printHex(retAddr);
   print("\n");
+
+  uint64_t pageNumber = retAddr >> 12;
+  anscheduler_lock(&task->vmLock);
+  uint16_t flags;
+  uint64_t entry = anscheduler_vm_lookup(task->vm, pageNumber, &flags);
+  anscheduler_unlock(&task->vmLock);
+  uint8_t * ptr = (anscheduler_vm_virtual(entry) << 12) + (retAddr & 0xfff);
+  printHex(ptr[0]);
+  print(" ");
+  printHex(ptr[1]);
+  print("\n");
+
   __asm__("cli\nhlt");
   // TODO: here, save task state and terminate it
 }
