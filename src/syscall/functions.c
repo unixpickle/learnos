@@ -6,6 +6,7 @@
 static bool print_line(const char * ptr);
 
 uint64_t syscall_entry(uint64_t arg1, uint64_t arg2, uint64_t arg3) {
+  print("got syscall!\n");
   return 0;
 }
 

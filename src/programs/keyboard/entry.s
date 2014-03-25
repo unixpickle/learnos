@@ -4,6 +4,7 @@ extern main
 
 section .entrypoint
 start:
+  mov r15, main
   call main
 .hang:
   jmp .hang

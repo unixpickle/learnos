@@ -120,6 +120,14 @@ static void _initialize_idt(idt_entry_t * ptr) {
 static void _call_page_fault(uint64_t args) {
   uint64_t addr;
   __asm__("mov %%cr2, %0" : "=r" (addr));
+  uint64_t r15;
+  __asm__("mov %%r15, %%rax" : "=a" (r15));
+  print("turning over fault with addr ");
+  printHex(addr);
+  print(" r15 is ");
+  printHex(r15);
+  print("\n");
+  
   anscheduler_page_fault((void *)addr, args);
 }
 

@@ -2,8 +2,9 @@ bits 64
 
 global sys_print
 sys_print:
-  xor rax, rax
-  int 0x21
+  mov rsi, rdi
+  mov rdi, 0
+  syscall
   ret
 
 global sys_sleep

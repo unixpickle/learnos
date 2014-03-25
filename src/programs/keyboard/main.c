@@ -5,6 +5,7 @@ static uint32_t scancode_in();
 static bool byte_out(uint8_t byte);
 
 int main() {
+  sys_print("hey there\n");
   while (1) {}
   printf("loading keyboard driver.\n");
 

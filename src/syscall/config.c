@@ -7,6 +7,8 @@
 #include <anscheduler/functions.h>
 #include <string.h> // memcpy
 
+static void _handle_syscall();
+
 void syscall_initialize() {
   uint64_t star = (8L << 32) | (0x18L << 48);
   msr_write(MSR_STAR, star);
@@ -48,5 +50,10 @@ void syscall_setup_for_thread(thread_t * thread) {
     addr |= 0xffff000000000000;
   }
   msr_write(MSR_LSTAR, addr);
+  msr_write(MSR_LSTAR, (uint64_t)&_handle_syscall);
+}
+
+static void _handle_syscall() {
+  print("HEY!\n");
 }
 

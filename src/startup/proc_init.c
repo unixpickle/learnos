@@ -5,6 +5,7 @@
 #include <interrupts/lapic.h>
 #include <interrupts/basic.h>
 #include <shared/addresses.h>
+#include <syscall/config.h>
 
 static void load_tss();
 extern void load_new_gdt();
@@ -25,6 +26,7 @@ void proc_configure_basics() {
 void proc_run_scheduler() {
   load_new_gdt();
   load_tss();
+  syscall_initialize();
   anscheduler_loop_run();
 }
 
