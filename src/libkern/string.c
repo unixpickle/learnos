@@ -30,7 +30,7 @@ void memcpy(void * _dest, const void * src, uint64_t len) {
   const uint8_t * source = src;
   uint8_t * dest = _dest;
   for (; len > 0; len--) {
-    (*dest) = *source;
+    (*(dest++)) = *(source++);
   }
 }
 
