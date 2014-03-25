@@ -10,17 +10,15 @@
 void sys_print(const char * buffer);
 
 /**
- * User call.
- * Sleeps the current thread for `ticks` units.
+ * Returns the system time in microseconds
  */
-void sys_sleep(uint64_t ticks);
+uint64_t sys_get_time();
 
 /**
- * Administrator call.
- * Returns a mask with all IRQs set that have been received since the last call
- * to sys_getint() and since the thread started.
+ * User call.
+ * Sleeps the current thread for `ticks` microseconds
  */
-uint64_t sys_getint();
+void sys_sleep(uint64_t ticks);
 
 /**
  * Administrator call.
@@ -34,10 +32,6 @@ uint8_t sys_in(uint16_t pin);
  */
 void sys_out(uint16_t pin, uint8_t out);
 
-/**
- * Returns the system time in milliseconds.
- */
-uint64_t sys_get_time();
 
 /**
  * Exits the current thread's point of execution.

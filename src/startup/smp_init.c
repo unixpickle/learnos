@@ -51,7 +51,7 @@ void smp_initialize() {
 
   uint64_t taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
   uint64_t taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
-  start_task((void *)taskStart, taskEnd - taskStart);
+  //start_task((void *)taskStart, taskEnd - taskStart);
 
   taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);
   taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <anscheduler/interrupts.h>
 #include <anscheduler/functions.h>
+#include <scheduler/interrupts.h>
 
 static void _initialize_idt(idt_entry_t * ptr);
 static void _call_page_fault(uint64_t args);
@@ -97,11 +98,13 @@ void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
 }
 
 void int_interrupt_irq(uint64_t vec) {
-  if (vec == 0x20 || vec == 0x22) {
-    PIT_TICK_COUNT++;
-  }
   if (lapic_is_in_service(vec)) {
     lapic_send_eoi();
+  }
+  if (vec == 0x20 || vec == 0x22) {
+    PIT_TICK_COUNT++;
+  } else if (vec == 0x30) {
+    handle_lapic_interrupt();
   }
 }
 

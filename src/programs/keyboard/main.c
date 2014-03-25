@@ -6,6 +6,7 @@ static bool byte_out(uint8_t byte);
 
 int main() {
   printf("loading keyboard driver.\n");
+  while (1) { sys_sleep(1000000); printf("poopy.\n"); }
 
   // set scan code set 2
   if (byte_out(0xf0)) {

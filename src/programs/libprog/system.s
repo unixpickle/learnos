@@ -9,16 +9,16 @@ sys_print:
   syscall
   ret
 
-global sys_sleep
-sys_sleep:
-  mov rax, 0x1
-  int 0x21
+global sys_get_time
+  mov rdi, 1
+  syscall
   ret
 
-global sys_getint
-sys_getint:
-  mov rax, 0x2
-  int 0x21
+global sys_sleep
+sys_sleep:
+  mov rsi, rdi
+  mov rdi, 2
+  syscall
   ret
 
 global sys_in
