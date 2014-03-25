@@ -9,12 +9,12 @@ extern int_interrupt_exception
 extern int_interrupt_exception_code
 extern int_interrupt_irq
 extern int_interrupt_ipi
-extern task_switch_to_kernpage, print
+extern thread_switch_to_kernpage, print
 
 %include "../pushaq.s"
 %include "../ctxswitch.s"
 
-handle_interrupt_exception
+handle_interrupt_exception:
   beginframe
   mov rdi, [rsp + 0x80] ; vector argument
   call int_interrupt_exception

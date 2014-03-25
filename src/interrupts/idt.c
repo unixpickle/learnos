@@ -56,6 +56,9 @@ void configure_global_idt() {
     
     idt_entry_t entry = IDT_ENTRY_INIT(handler, flags);
     table[gIDTHandlers[i].argument] = entry;
+    print("setting handler for ");
+    printHex(gIDTHandlers[i].argument);
+    print("\n");
   }
 
   load_idtr((void *)idtr);
