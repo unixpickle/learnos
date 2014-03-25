@@ -5,10 +5,9 @@
 //static bool byte_out(uint8_t byte);
 
 int main() {
-  printf("loading keyboard driver.\n");
+  printf("TODO: write a keyboard driver\n");
   while (1) {
     sys_sleep(0x100000);
-    printf("system time is %x\n", sys_get_time());
   }
 
 /**

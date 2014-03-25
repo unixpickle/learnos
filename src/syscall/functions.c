@@ -58,6 +58,7 @@ void syscall_sleep(uint64_t usec) {
   thread_t * thread = anscheduler_cpu_get_thread();
   thread->nextTimestamp = destTime;
   anscheduler_loop_save_and_resign();
+  anscheduler_cpu_unlock();
 }
 
 static bool print_line(const char * ptr) {

@@ -55,7 +55,7 @@ void smp_initialize() {
 
   taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);
   taskStart = (uint64_t)(_binary_ticktock_build_ticktock_bin_start);
-  // start_task((void *)taskStart, taskEnd - taskStart);
+  start_task((void *)taskStart, taskEnd - taskStart);
 
   proc_run_scheduler();
 }
