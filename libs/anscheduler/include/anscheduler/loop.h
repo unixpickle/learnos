@@ -52,6 +52,13 @@ void anscheduler_loop_break_task();
 void anscheduler_loop_resign();
 
 /**
+ * Saves the current thread and then calls anscheduler_loop_resign(). This will
+ * return when the thread runs again.
+ * @critical
+ */
+void anscheduler_loop_save_and_resign();
+
+/**
  * Add a kernel thread to the scheduler queue. The kernel thread must not exit
  * via anscheduler_thread_exit(), but rather through 
  * anscheduler_loop_delete_cur_kernel()
