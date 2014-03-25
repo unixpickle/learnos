@@ -45,7 +45,8 @@ void anscheduler_page_fault(void * ptr, uint64_t _flags) {
       | ANSCHEDULER_PAGE_FLAG_WRITE;
     void * ptr = anscheduler_alloc(0x1000);
     anscheduler_zero(ptr, 0x1000);
-    anscheduler_vm_map(task->vm, faultPage, ((uint64_t)ptr) >> 12, flags);
+    uint64_t physAlloc = anscheduler_vm_physical(((uint64_t)ptr) >> 12);
+    anscheduler_vm_map(task->vm, faultPage, physAlloc, flags);
   } else if (shouldFault) {
     anscheduler_unlock(&task->vmLock);
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
