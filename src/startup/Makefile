@@ -1,5 +1,5 @@
 CSOURCES32=page_init.c
-CSOURCES=apic_init.c smp_init.c
+CSOURCES=apic_init.c smp_init.c proc_init.c
 PROJECT_ROOT=../..
 
 include ../directives.mk

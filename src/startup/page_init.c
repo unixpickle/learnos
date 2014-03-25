@@ -63,6 +63,7 @@ uint32_t basepage_initialize() {
   uint64_t addr = 3;
   for (i = 0; i < pageCount; i++) {
     ptEntries[i] = addr;
+    if (i < 0x400) ptEntries[i] |= 0x100;
     addr += 0x1000;
   }
 

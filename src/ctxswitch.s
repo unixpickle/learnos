@@ -4,7 +4,7 @@
   push rax
   mov rax, rsp
   push rax
-  call task_switch_to_kernpage
+  call thread_switch_to_kernpage
 %endmacro
 
 %macro endframe 0

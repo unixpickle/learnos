@@ -1,6 +1,6 @@
 SECTIONS {
 
-  . = 0x10500400000;
+  . = 0x400000;
 
   .text BLOCK(4K) : ALIGN(4K) {
     *(.entrypoint)

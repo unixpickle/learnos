@@ -69,15 +69,15 @@ start:
   call print32
   add esp, 4
 
-  ; enable PAE-paging
+  ; enable PAE-paging and PGE bit
   mov eax, cr4
-  or eax, 1 << 5
+  or eax, 0xa0
   mov cr4, eax
 
   ; set LM bit
   mov ecx, 0xC0000080 ; Extended Feature Enable Register
   rdmsr
-  or eax, 1 << 8 ; long-mode bit
+  or eax, 0x101 ; long-mode bit & System Call Extensions bit
   wrmsr
 
   ; enable paging
@@ -133,7 +133,7 @@ GDT64:                           ; Global Descriptor Table (64-bit).
     dw 0                         ; Base (low).
     db 0                         ; Base (middle)
     db 10011000b                 ; Access.
-    db 00100000b                 ; Granularity.
+    db 00100000b                 ; Granularity & 64-bit mode flag
     db 0                         ; Base (high).
     .data: equ $ - GDT64         ; The data descriptor.
     dw 0                         ; Limit (low).
