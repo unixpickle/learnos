@@ -112,8 +112,8 @@ void anscheduler_cpu_notify_dead(task_t * task) {
 
 void anscheduler_cpu_stack_run(void * arg, void (* fn)(void *)) {
   void * stack = cpu_dedicated_stack();
-  __asm__("mov %0, %%rbp\n"
-          "callq *%1" : : "a" (stack), "b" (fn), "D" (arg));
+  __asm__("mov %%rax, %%rsp\n"
+          "callq *%%rbx" : : "a" (stack), "b" (fn), "D" (arg));
 }
 
 void anscheduler_cpu_halt() {
