@@ -1,39 +1,17 @@
 /**
  * Equivalent to this:
  *********************
- * push rcx
- * ; save the page table
  * cli
- * mov r11, cr3
- * mov r10, rsp
- * mov rax, 0xAABBCCDDEEFF0011
- * mov rsp, rax
- * mov rax, 0xAAAABBBBCCCCDDDD
- * mov cr3, rax
- * sti
- * ; make the call
- * push r10
- * push r11
- * mov rax, 0x7FFFFFFFFFFFFFFF
- * call rax
- * ; restore the state
- * cli
- * pop r11
- * pop r10
- * mov rsp, r10
- * mov cr3, r11
- * sti
- * pop rcx
- * sysret
+ * push rbp
+ * mov rbp, rsp
+ * mov rsp, NEW_STACK
+ * jmp [KERN_ADDR]
  ***************************/
 typedef struct {
-  char code1[0xb]; // 51 FA 41 0F 20 DB 49 89 E2 48 B8
+  char code1[7]; // FA 55 48 89 E5 48 BC
   uint64_t stack;
-  char code2[0x5]; // 48 89 C4 48 B8
-  uint64_t newPML4;
-  char code3[0xa]; // 0F 22 D8 FB 41 52 41 53 48 B8
-  uint64_t routine;
-  char code4[0x12]; // FF D0 FA 41 5B 41 5A 4C 89 D4 41 0F 22 DB FB 59 0F 07
+  char code2[3]; // FF 24 25
+  uint32_t kernCall;
 } __attribute__((packed)) syscall_code;
 
 typedef struct {

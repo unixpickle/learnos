@@ -6,6 +6,7 @@
 #include <anscheduler/thread.h>
 #include <anscheduler/functions.h>
 #include <string.h> // memcpy
+#include "entry.h"
 
 void syscall_initialize() {
   uint64_t star = (8L << 32) | (0x18L << 48);
@@ -25,33 +26,39 @@ void syscall_initialize_thread(thread_t * thread) {
   anscheduler_unlock(&task->vmLock);
 
   // setup the code structure (someone, please, just MURDER ME)
-  memcpy(&thread->state.callCode.code1,
-         "\x51\xFA\x41\x0F\x20\xDB\x49\x89\xE2\x48\xB8", 0xb);
-  memcpy(&thread->state.callCode.code2,
-         "\x48\x89\xC4\x48\xB8", 5);
-  memcpy(&thread->state.callCode.code3,
-         "\x0F\x22\xD8\xFB\x41\x52\x41\x53\x48\xB8", 0xa);
-  memcpy(&thread->state.callCode.code4,
-         "\xFF\xD0\xFA\x41\x5B\x41\x5A\x4C\x89\xD4"
-         "\x41\x0F\x22\xDB\xFB\x59\x0F\x07",
-         0x10);
+  memcpy(&thread->state.callCode.code1, "\xFA\x55\x48\x89\xE5\x48\xBC", 7);
+  memcpy(&thread->state.callCode.code2, "\xFF\x24\x25", 3);
 
   uint64_t stack = (uint64_t)anscheduler_thread_kernel_stack(task, thread);
   stack += 0x1000;
 
-  //debugging: try doing nothing with `jmp $`
-  //thread->state.callCode.code1[0] = 0xeb;
-  //thread->state.callCode.code1[1] = 0xfe;
+  // debugging: try doing nothing, with `jmp $`
+  //thread->state.callCode.code2[0] = 0xeb;
+  //thread->state.callCode.code2[1] = 0xfe;
+  uint64_t kernCode = (uint64_t)&syscall_configure_stack;
 
   print("interrupt stack is ");
   printHex(stack);
   print(", code start is ");
   printHex(((void *)&thread->state.callCode) - (void *)thread);
+  print(", kerncall is ");
+  printHex(kernCode & 0xffffff);
   print("\n");
 
-  thread->state.callCode.newPML4 = PML4_START;
+  if (kernCode > 0x200000) {
+    anscheduler_abort("invalid kernel code address.\n");
+  }
+
   thread->state.callCode.stack = stack;
-  thread->state.callCode.routine = (uint64_t)&syscall_entry;
+  thread->state.callCode.kernCall = (uint32_t)(kernCode & 0xffffff);
+  void * ptr = &thread->state.callCode;
+  int i;
+  for ( i = 0; i < 0x16; i++) {
+    unsigned char ch = *((const char *)(ptr + i));
+    printHex((uint64_t)ch);
+    print(" ");
+  }
+  print("\n");
 }
 
 void syscall_setup_for_thread(thread_t * thread) {
