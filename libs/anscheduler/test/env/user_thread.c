@@ -30,8 +30,7 @@ void antest_configure_user_thread(thread_t * thread, void (* rip)()) {
 
 void antest_user_thread_page_fault(void * addr, bool write) {
   // trigger a page fault an send it to the scheduler
-  uint16_t flags = ANSCHEDULER_PAGE_FAULT_PRESENT
-    | ANSCHEDULER_PAGE_FAULT_USER;
+  uint16_t flags = ANSCHEDULER_PAGE_FAULT_USER;
   if (write) flags |= ANSCHEDULER_PAGE_FAULT_WRITE;
   
   thread_t * thread = anscheduler_cpu_get_thread();

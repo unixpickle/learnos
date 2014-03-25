@@ -10,7 +10,7 @@ void anscheduler_page_fault(void * ptr, uint64_t _flags) {
   task_t * task = anscheduler_cpu_get_task();
   if (!task) anscheduler_abort("kernel thread caused page fault!");
   
-  if (!(_flags & ANSCHEDULER_PAGE_FAULT_PRESENT)) {
+  if (_flags & ANSCHEDULER_PAGE_FAULT_PRESENT) {
     // it wasn't an unallocated issue, and I don't support swap yet, so they
     // need to die!
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
