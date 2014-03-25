@@ -83,8 +83,8 @@ static void _ioapic_configure_irqs() {
     entry.vector = 0x20 + i;
     if (iso) {
       // Interrupt Source Override allows us to get more info about this IRQ
-      if ((iso->flags & 0x3) == 0x3) entry.intpol = 1;
-      if (((iso->flags >> 2) & 0x3) == 3) entry.triggermode = 1;
+      if (iso->flags & 0x3) entry.intpol = 1;
+      if ((iso->flags >> 2) & 0x3) entry.triggermode = 1;
       ioapic_set_red_table(iso->interrupt, entry);
       entry.intpol = 0;
       entry.triggermode = 0;

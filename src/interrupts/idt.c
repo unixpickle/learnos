@@ -56,9 +56,6 @@ void configure_global_idt() {
     
     idt_entry_t entry = IDT_ENTRY_INIT(handler, flags);
     table[gIDTHandlers[i].argument] = entry;
-    print("setting handler for ");
-    printHex(gIDTHandlers[i].argument);
-    print("\n");
   }
 
   load_idtr((void *)idtr);
@@ -83,7 +80,7 @@ void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
 }
 
 void int_interrupt_irq(uint64_t vec) {
-  if (vec == 0) {
+  if (vec == 0x20 || vec == 0x22) {
     PIT_TICK_COUNT++;
   }
   if (lapic_is_in_service(vec)) {
