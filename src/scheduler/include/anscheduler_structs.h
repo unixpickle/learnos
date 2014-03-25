@@ -1,17 +1,18 @@
 /**
  * Equivalent to this:
  *********************
- * cli
  * push rbp
  * mov rbp, rsp
  * mov rsp, NEW_STACK
- * jmp [KERN_ADDR]
+ * mov rax, KERN_ADDR
+ * jmp rax
  ***************************/
 typedef struct {
-  char code1[7]; // FA 55 48 89 E5 48 BC
+  char code1[0xc]; // 48 31 C0 8E D0 55 48 89 E5 48 BC
   uint64_t stack;
-  char code2[3]; // FF 24 25
-  uint32_t kernCall;
+  char code2[2]; // 48 B8
+  uint64_t kernCall;
+  char code3[2]; // FF E0
 } __attribute__((packed)) syscall_code;
 
 typedef struct {

@@ -11,7 +11,7 @@
 void syscall_initialize() {
   uint64_t star = (8L << 32) | (0x18L << 48);
   msr_write(MSR_STAR, star);
-  msr_write(MSR_SFMASK, 0); // interrupts will be enabled
+  msr_write(MSR_SFMASK, 0x200); // interrupts will be disabled by syscall
 }
 
 void syscall_initialize_thread(thread_t * thread) {
@@ -26,8 +26,10 @@ void syscall_initialize_thread(thread_t * thread) {
   anscheduler_unlock(&task->vmLock);
 
   // setup the code structure (someone, please, just MURDER ME)
-  memcpy(&thread->state.callCode.code1, "\xFA\x55\x48\x89\xE5\x48\xBC", 7);
-  memcpy(&thread->state.callCode.code2, "\xFF\x24\x25", 3);
+  memcpy(&thread->state.callCode.code1,
+         "\x48\x31\xC0\x8E\xD0\xFA\x55\x48\x89\xE5\x48\xBC", 0xc);
+  memcpy(&thread->state.callCode.code2, "\x48\xb8", 2);
+  memcpy(&thread->state.callCode.code3, "\xff\xe0", 2);
 
   uint64_t stack = (uint64_t)anscheduler_thread_kernel_stack(task, thread);
   stack += 0x1000;
@@ -45,12 +47,8 @@ void syscall_initialize_thread(thread_t * thread) {
   printHex(kernCode & 0xffffff);
   print("\n");
 
-  if (kernCode > 0x200000) {
-    anscheduler_abort("invalid kernel code address.\n");
-  }
-
   thread->state.callCode.stack = stack;
-  thread->state.callCode.kernCall = (uint32_t)(kernCode & 0xffffff);
+  thread->state.callCode.kernCall = kernCode;
   void * ptr = &thread->state.callCode;
   int i;
   for ( i = 0; i < 0x16; i++) {
@@ -58,6 +56,12 @@ void syscall_initialize_thread(thread_t * thread) {
     printHex((uint64_t)ch);
     print(" ");
   }
+  print("\n");
+
+  uint16_t flags;
+  uint64_t page = anscheduler_vm_lookup(thread->task->vm, 0x100, &flags);
+  print("got value ");
+  printHex((page << 12) | (uint64_t)flags);
   print("\n");
 }
 
