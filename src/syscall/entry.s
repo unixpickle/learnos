@@ -1,39 +1,37 @@
 bits 64
 
-extern syscall_entry, stack_log
+extern syscall_entry, syscall_return
 
 section .text
 
 global syscall_configure_stack
 syscall_configure_stack:
-  cli
-  hlt
   ;we just ran:
   ; cli (done by syscall)
   ; xor rax, rax
   ; mov ss, ax
-  ; push rbp
-  ; mov rbp, rsp
+  ; mov r11, rsp
   ; mov rsp, NEW STACK
 
-  mov r11, cr3
-  mov r10, 0x300000
-  mov cr3, r10
+  mov r10, cr3
+  mov rax, 0x300000
+  mov cr3, rax
   sti
 
-  push rcx
-  push r11
+  push r10 ; cr3
+  push r11 ; rsp
+  push rcx ; rip
   call syscall_entry
-  mov rdi, 0x18
-  call stack_log
 
-  ; clear interrupts while our page table and stack are on the fritz
+  ; clear interrupts and return from the syscall
   cli
-  pop r11
-  pop rcx
-  mov cr3, r11
-  leave
-  sti
-
-  sysret
+  push r15
+  push r14
+  push r13
+  push r12
+  push rbx
+  push rbp
+  push rax
+  mov rdi, rsp
+  call syscall_return
 

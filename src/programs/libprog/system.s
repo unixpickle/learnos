@@ -5,7 +5,7 @@ section .text
 global sys_print
 sys_print:
   mov rsi, rdi
-  mov rdi, 0
+  xor rdi, rdi
   syscall
   ret
 

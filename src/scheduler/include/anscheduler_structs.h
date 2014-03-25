@@ -3,14 +3,13 @@
  *********************
  * xor ax, ax
  * mov ss, ax
- * push rbp
- * mov rbp, rsp
+ * mov r11, rsp
  * mov rsp, NEW_STACK
  * mov rax, KERN_ADDR
  * jmp rax
  ***************************/
 typedef struct {
-  char code1[0xb]; // 66 31 C0 8E D0 55 48 89 E5 48 BC
+  char code1[0xa]; // 66 31 C0 8E D0 49 89 E3 48 BC
   uint64_t stack;
   char code2[2]; // 48 B8
   uint64_t kernCall;

@@ -16,6 +16,25 @@ uint64_t syscall_entry(uint64_t arg1, uint64_t arg2, uint64_t arg3) {
   return 0;
 }
 
+void syscall_return(restore_regs * regs) {
+  thread_t * thread = anscheduler_cpu_get_thread();
+  task_t * task = thread->task;
+  thread->state.rax = regs->rax;
+  thread->state.rbp = regs->rbp;
+  thread->state.rbx = regs->rbx;
+  thread->state.rip = regs->rip;
+  thread->state.rsp = regs->rsp;
+  thread->state.cr3 = regs->cr3;
+  thread->state.r12 = regs->r12;
+  thread->state.r13 = regs->r13;
+  thread->state.r14 = regs->r14;
+  thread->state.r15 = regs->r15;
+  thread->state.flags |= 0x200; // make sure interrupts are on
+  thread->state.cs = 0x1b;
+  thread->state.ss = 0x23;
+  anscheduler_thread_run(task, thread);
+}
+
 void syscall_print(void * ptr) {
   // for each page worth of data, we need to go back and make sure it's mapped
   while (print_line(ptr)) {
