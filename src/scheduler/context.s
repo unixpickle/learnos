@@ -26,6 +26,10 @@ anscheduler_save_return_state:
   mov [rdi + 0x80], r13
   mov [rdi + 0x88], r14
   mov [rdi + 0x90], r15
+  ; rflags
+  pushfq
+  pop rax
+  mov [rdi + 0x20], rax
 
   mov rdi, rsi
   call rdx ; should never return

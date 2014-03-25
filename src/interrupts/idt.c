@@ -4,8 +4,11 @@
 #include "inttable.h"
 #include <shared/addresses.h> // for PIT
 #include <stdio.h>
+#include <anscheduler/interrupts.h>
+#include <anscheduler/functions.h>
 
 static void _initialize_idt(idt_entry_t * ptr);
+static void _call_page_fault(uint64_t args);
 
 void configure_dummy_idt() {
   idt_pointer * idtr = (idt_pointer *)IDTR_PTR;
@@ -70,6 +73,15 @@ void int_interrupt_exception(uint64_t vec) {
 }
 
 void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
+  if (vec == 0xe) {
+    thread_t * thread = anscheduler_cpu_get_thread();
+    if (thread) {
+      anscheduler_save_return_state(thread, (void *)code,
+                                    (void (*)(void *))_call_page_fault);
+      return;
+    }
+  }
+
   print("Got exception vector ");
   printHex(vec);
   print(" with code ");
@@ -103,5 +115,11 @@ static void _initialize_idt(idt_entry_t * ptr) {
   for (i = 0; i < 0x100; i++) {
     ptr[i] = entry;
   }
+}
+
+static void _call_page_fault(uint64_t args) {
+  uint64_t addr;
+  __asm__("mov %%cr2, %0" : "=r" (addr));
+  anscheduler_page_fault((void *)addr, args);
 }
 
