@@ -1,6 +1,8 @@
 /**
  * Equivalent to this:
  *********************
+ * xor ax, ax
+ * mov ss, ax
  * push rbp
  * mov rbp, rsp
  * mov rsp, NEW_STACK
@@ -8,7 +10,7 @@
  * jmp rax
  ***************************/
 typedef struct {
-  char code1[0xc]; // 48 31 C0 8E D0 55 48 89 E5 48 BC
+  char code1[0xb]; // 66 31 C0 8E D0 55 48 89 E5 48 BC
   uint64_t stack;
   char code2[2]; // 48 B8
   uint64_t kernCall;

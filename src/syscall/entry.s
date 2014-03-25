@@ -6,6 +6,8 @@ section .text
 
 global syscall_configure_stack
 syscall_configure_stack:
+  cli
+  hlt
   ;we just ran:
   ; cli (done by syscall)
   ; xor rax, rax

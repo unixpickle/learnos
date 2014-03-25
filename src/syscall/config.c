@@ -27,7 +27,7 @@ void syscall_initialize_thread(thread_t * thread) {
 
   // setup the code structure (someone, please, just MURDER ME)
   memcpy(&thread->state.callCode.code1,
-         "\x48\x31\xC0\x8E\xD0\xFA\x55\x48\x89\xE5\x48\xBC", 0xc);
+         "\x66\x31\xC0\x8E\xD0\x55\x48\x89\xE5\x48\xBC", 0xb);
   memcpy(&thread->state.callCode.code2, "\x48\xb8", 2);
   memcpy(&thread->state.callCode.code3, "\xff\xe0", 2);
 
@@ -41,6 +41,14 @@ void syscall_initialize_thread(thread_t * thread) {
 
   thread->state.callCode.stack = stack;
   thread->state.callCode.kernCall = kernCode;
+
+  int i;
+  uint8_t * ptr = (uint8_t *)&thread->state.callCode;
+  for (i = 0; i < 0x1f; i++) {
+    printHex(ptr[i]);
+    print(" ");
+  }
+  print("\n");
 }
 
 void syscall_setup_for_thread(thread_t * thread) {
