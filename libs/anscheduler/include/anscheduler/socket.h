@@ -107,4 +107,11 @@ bool anscheduler_socket_connect(socket_desc_t * socket, task_t * task);
  */
 void anscheduler_socket_close(socket_desc_t * socket, uint64_t code);
 
+/**
+ * Finds the remote task which is connected to this socket. If the task is
+ * found, it is referenced and returned. Otherwise, NULL is returned.
+ * @critical
+ */
+task_t * anscheduler_socket_remote(socket_desc_t * socket);
+
 #endif

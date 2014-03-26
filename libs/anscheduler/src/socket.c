@@ -231,6 +231,24 @@ void anscheduler_socket_close(socket_desc_t * socket, uint64_t code) {
   anscheduler_unlock(&socket->closeLock);
 }
 
+task_t * anscheduler_socket_remote(socket_desc_t * socket) {
+  socket_desc_t * otherEnd = NULL;
+  socket_t * sock = socket->socket;
+  anscheduler_lock(&sock->connRecLock);
+  if (socket->isConnector) {
+    otherEnd = sock->receiver;
+  } else {
+    otherEnd = sock->connector;
+  }
+  if (otherEnd) {
+    otherEnd = anscheduler_socket_reference(otherEnd) ? otherEnd : NULL;
+  }
+  anscheduler_unlock(&sock->connRecLock);
+  if (!otherEnd) return NULL;
+  bool res = anscheduler_task_reference(otherEnd->task);
+  return res ? otherEnd->task : NULL;
+}
+
 static socket_desc_t * _create_descriptor(socket_t * socket,
                                           task_t * task,
                                           bool isConnector) {
