@@ -1,7 +1,7 @@
 #include "vm.h"
 #include <anscheduler/functions.h>
 
-bool task_copy_in(void * kPointer, void * tPointer, uint64_t len) {
+bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len) {
   task_t * task = anscheduler_cpu_get_task();
 
   uint64_t firstPage = ((uint64_t)tPointer) >> 12;
@@ -33,7 +33,7 @@ bool task_copy_in(void * kPointer, void * tPointer, uint64_t len) {
   return true;
 }
 
-bool task_copy_out(void * tPointer, void * kPointer, uint64_t len) {
+bool task_copy_out(void * tPointer, const void * kPointer, uint64_t len) {
   task_t * task = anscheduler_cpu_get_task();
 
   uint64_t firstPage = ((uint64_t)tPointer) >> 12;
@@ -56,7 +56,7 @@ bool task_copy_out(void * tPointer, void * kPointer, uint64_t len) {
       return false;
     }
     uint8_t * dest = (uint8_t *)(anscheduler_vm_virtual(entry) << 12) + start;
-    uint8_t * source = kPointer;
+    const uint8_t * source = kPointer;
     uint64_t j;
     for (j = 0; j < end - start; j++) {
       dest[j] = source[start + j];

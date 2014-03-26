@@ -6,7 +6,7 @@
  * is invalid in some way (i.e. covers unmapped pages, swapped pages, etc.).
  * @critical
  */
-bool task_copy_in(void * kPointer, void * tPointer, uint64_t len);
+bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len);
 
 /**
  * Copies the contents of a kernel virtual address to a task's address space.
@@ -14,5 +14,5 @@ bool task_copy_in(void * kPointer, void * tPointer, uint64_t len);
  * memory.
  * @critical
  */
-bool task_copy_out(void * tPointer, void * kPointer, uint64_t len);
+bool task_copy_out(void * tPointer, const void * kPointer, uint64_t len);
 

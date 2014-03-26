@@ -1,5 +1,6 @@
 #include "functions.h"
 #include "sockets.h"
+#include "vm.h"
 #include <stdio.h>
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
@@ -117,7 +118,6 @@ uint64_t syscall_get_interrupts() {
 
 static bool print_line(const char * ptr) {
   anscheduler_cpu_lock();
-  task_t * task = anscheduler_cpu_get_task();
   bool ret = true;
 
   int i;
