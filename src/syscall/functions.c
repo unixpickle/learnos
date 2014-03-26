@@ -12,6 +12,8 @@ uint64_t syscall_entry(uint64_t arg1, uint64_t arg2, uint64_t arg3) {
     return syscall_get_time();
   } else if (arg1 == 2) {
     syscall_sleep(arg2);
+  } else if (arg1 == 3) {
+    syscall_exit();
   }
   return 0;
 }
@@ -59,6 +61,11 @@ void syscall_sleep(uint64_t usec) {
   thread->nextTimestamp = destTime;
   anscheduler_loop_save_and_resign();
   anscheduler_cpu_unlock();
+}
+
+void syscall_exit() {
+  anscheduler_cpu_lock();
+  anscheduler_task_exit();
 }
 
 static bool print_line(const char * ptr) {
