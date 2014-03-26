@@ -1,4 +1,4 @@
-PROGRAMS=keyboard ticktock
+PROGRAMS=keyboard ticktock msgd
 
 programs: libprog/build build
 	for dir in $(PROGRAMS); do \

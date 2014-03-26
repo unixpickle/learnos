@@ -11,6 +11,7 @@
 #include <anscheduler/loop.h>
 #include <anscheduler/task.h>
 #include <anscheduler/thread.h>
+#include <anscheduler/functions.h>
 #include <syscall/config.h>
 
 #include "proc_init.h"
@@ -22,6 +23,8 @@ extern void _binary_keyboard_build_keyboard_bin_start();
 extern void _binary_keyboard_build_keyboard_bin_end();
 extern void _binary_ticktock_build_ticktock_bin_start();
 extern void _binary_ticktock_build_ticktock_bin_end();
+extern void _binary_msgd_build_msgd_bin_start();
+extern void _binary_msgd_build_msgd_bin_end();
 
 static void copy_init_code();
 static void initialize_cpu(uint32_t lapicId);
@@ -49,8 +52,12 @@ void smp_initialize() {
   disable_interrupts();
   print("starting bootstrap tasks...\n");
 
-  uint64_t taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
-  uint64_t taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
+  uint64_t taskEnd = (uint64_t)(_binary_msgd_build_msgd_bin_end);
+  uint64_t taskStart = (uint64_t)(_binary_msgd_build_msgd_bin_start);
+  start_task((void *)taskStart, taskEnd - taskStart);
+
+  taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);
+  taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
   start_task((void *)taskStart, taskEnd - taskStart);
 
   taskEnd = (uint64_t)(_binary_ticktock_build_ticktock_bin_end);

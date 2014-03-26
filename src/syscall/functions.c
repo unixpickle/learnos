@@ -5,6 +5,7 @@
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
 #include <anscheduler/task.h>
+#include <anscheduler/thread.h>
 #include <anscheduler/loop.h>
 #include <anscheduler/interrupts.h>
 
@@ -96,6 +97,11 @@ void syscall_sleep(uint64_t usec) {
 void syscall_exit() {
   anscheduler_cpu_lock();
   anscheduler_task_exit(0);
+}
+
+void syscall_thread_exit() {
+  anscheduler_cpu_lock();
+  anscheduler_thread_exit();
 }
 
 void syscall_wants_interrupts() {
