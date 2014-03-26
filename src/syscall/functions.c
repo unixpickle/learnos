@@ -1,11 +1,18 @@
 #include "functions.h"
+#include "sockets.h"
 #include <stdio.h>
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
+#include <anscheduler/task.h>
+#include <anscheduler/loop.h>
+#include <anscheduler/interrupts.h>
 
 static bool print_line(const char * ptr);
 
-uint64_t syscall_entry(uint64_t arg1, uint64_t arg2, uint64_t arg3) {
+uint64_t syscall_entry(uint64_t arg1,
+                       uint64_t arg2,
+                       uint64_t arg3,
+                       uint64_t arg4) {
   if (arg1 == 0) {
     syscall_print((void *)arg2);
   } else if (arg1 == 1) {
@@ -65,7 +72,25 @@ void syscall_sleep(uint64_t usec) {
 
 void syscall_exit() {
   anscheduler_cpu_lock();
-  anscheduler_task_exit();
+  anscheduler_task_exit(0);
+}
+
+void syscall_wants_interrupts() {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  anscheduler_set_interrupt_thread(anscheduler_cpu_get_thread());
+  anscheduler_cpu_unlock();
+}
+
+uint64_t syscall_get_interrupts() {
+  anscheduler_cpu_lock();
+  thread_t * thread = anscheduler_cpu_get_thread();
+  uint64_t result = __sync_fetch_and_and(&thread->irqs, 0);
+  anscheduler_cpu_unlock();
+  return result;
 }
 
 static bool print_line(const char * ptr) {

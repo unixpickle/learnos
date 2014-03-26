@@ -1,6 +1,10 @@
+#ifndef __INTERRUPT_FUNCTIONS_H__
+#define __INTERRUPT_FUNCTIONS_H__
+
 #include <stdint.h>
 
 #define FD_INVAL 0xffffffffffffffffL
+#define ANSCHEDULER_TASK_KILL_REASON_ACCESS 3
 
 typedef struct {
   uint64_t rax;
@@ -60,3 +64,4 @@ void syscall_wants_interrupts();
  */
 uint64_t syscall_get_interrupts();
 
+#endif

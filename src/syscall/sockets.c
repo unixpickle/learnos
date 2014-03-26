@@ -1,43 +1,121 @@
 #include "sockets.h"
+#include "vm.h"
 #include <anscheduler/functions.h>
 #include <anscheduler/socket.h>
+#include <anscheduler/loop.h>
+#include <anscheduler/thread.h>
+#include <anscheduler/task.h>
 
-/**
- * Create a new socket. This returns a new FD, or FD_INVAL on error.
- */
-uint64_t syscall_open_socket();
+static void _poll_stub();
+static void _poll_stub2();
 
-/**
- * Connects a file descriptor to a task with the given process ID. Returns 0 on
- * failure, 1 on success.
- */
-uint64_t syscall_connect(uint64_t desc, uint64_t pid);
+uint64_t syscall_open_socket() {
+  anscheduler_cpu_lock();
+  socket_desc_t * desc = anscheduler_socket_new();
+  uint64_t num = desc ? desc->descriptor : FD_INVAL;
+  if (desc) anscheduler_socket_dereference(desc);
+  anscheduler_cpu_unlock();
+  return num;
+}
 
-/**
- * Close a socket given a file descriptor. After you call this, you may never
- * rely on this file descriptor again (it may become a different socket).
- */
-void syscall_close_socket(uint64_t desc);
+uint64_t syscall_connect(uint64_t descNum, uint64_t pid) {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_task_for_pid(pid);
+  if (!task) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  socket_desc_t * desc = anscheduler_socket_for_descriptor(descNum);
+  if (!desc) {
+    anscheduler_task_dereference(task);
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  bool result = anscheduler_socket_connect(desc, task);
+  if (!result) {
+    anscheduler_task_dereference(task);
+    anscheduler_socket_dereference(desc);
+  }
+  anscheduler_cpu_unlock();
+  return (uint64_t)result;
+}
 
-/**
- * Send a data message to a remote on a socket. Returns 1 if the message was
- * sent, or 0 if the buffer was full or the remote is no longer connected.
- */
-uint64_t syscall_write(uint64_t desc, uint64_t ptr, uint64_t len);
+void syscall_close_socket(uint64_t desc) {
+  anscheduler_cpu_lock();
+  socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
+  anscheduler_socket_close(sock, 0);
+  anscheduler_socket_dereference(sock);
+  anscheduler_cpu_unlock();
+}
 
-/**
- * Read the next message page into the address at ptr. The address must point
- * to a memory chunk at least one page large. I will be making sure it's mapped,
- * broseph.
- */
-uint64_t syscall_read(uint64_t desc, uint64_t ptr);
+uint64_t syscall_write(uint64_t desc, uint64_t ptr, uint64_t len) {
+  if (len > 0xfe8) return 0;
 
-/**
- * Waits until a messages comes in on *some* socket (or an interrupt, if you're
- * into that kind of thing). Returns the next waiting file descriptor, or
- * FD_INVAL if, for some reason, the thread was woken up without cause. You must
- * read all the data from this fd once you get it, because it will be popped
- * from the task's pending queue.
- */
-uint64_t syscall_poll();
+  anscheduler_cpu_lock();
+  socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
+  if (!sock) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  socket_msg_t * msg = anscheduler_alloc(0x1000);
+  msg->type = ANSCHEDULER_MSG_TYPE_DATA;
+  msg->len = len;
+  if (!task_copy_in(msg->message, (void *)ptr, len)) {
+    anscheduler_free(msg);
+    anscheduler_socket_dereference(sock);
+    anscheduler_cpu_unlock();
+    return false;
+  }
+  bool result = anscheduler_socket_msg(sock, msg);
+  if (!result) {
+    anscheduler_free(msg);
+    anscheduler_socket_dereference(sock);
+  }
+  anscheduler_cpu_unlock();
+  return (uint64_t)result;
+}
+
+uint64_t syscall_read(uint64_t desc, uint64_t ptr) {
+  anscheduler_cpu_lock();
+  socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
+  if (!sock) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  socket_msg_t * msg = anscheduler_socket_read(sock);
+  anscheduler_socket_dereference(sock);
+  if (!msg) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  return task_copy_out((void *)ptr, msg, 0x18 + msg->len);
+}
+
+uint64_t syscall_poll() {
+  anscheduler_cpu_lock();
+  thread_t * thread = anscheduler_cpu_get_thread();
+  anscheduler_save_return_state(thread, NULL, _poll_stub);
+  socket_desc_t * pending = anscheduler_socket_next_pending();
+  uint64_t desc = FD_INVAL;
+  if (pending) {
+    desc = pending->descriptor;
+    anscheduler_socket_dereference(pending);
+  }
+  anscheduler_cpu_unlock();
+  return desc;
+}
+
+static void _poll_stub() {
+  anscheduler_cpu_stack_run(NULL, _poll_stub2);
+}
+
+static void _poll_stub2() {
+  if (!anscheduler_thread_poll()) {
+    // resume the thing right away
+    anscheduler_thread_run(anscheduler_cpu_get_task(),
+                           anscheduler_cpu_get_thread());
+  } else {
+    anscheduler_loop_run();
+  }
+}
 

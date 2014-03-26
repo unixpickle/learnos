@@ -14,6 +14,8 @@ typedef struct {
   char code2[2]; // 48 B8
   uint64_t kernCall;
   char code3[2]; // FF E0
+
+  char reserved[2]; // alignment
 } __attribute__((packed)) syscall_code;
 
 typedef struct {
