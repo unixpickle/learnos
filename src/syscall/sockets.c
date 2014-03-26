@@ -63,8 +63,7 @@ uint64_t syscall_write(uint64_t desc, uint64_t ptr, uint64_t len) {
   if (!task_copy_in(msg->message, (void *)ptr, len)) {
     anscheduler_free(msg);
     anscheduler_socket_dereference(sock);
-    anscheduler_cpu_unlock();
-    return false;
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
   }
   bool result = anscheduler_socket_msg(sock, msg);
   if (!result) {
@@ -88,7 +87,11 @@ uint64_t syscall_read(uint64_t desc, uint64_t ptr) {
     anscheduler_cpu_unlock();
     return 0;
   }
-  return task_copy_out((void *)ptr, msg, 0x18 + msg->len);
+  if (!task_copy_out((void *)ptr, msg, 0x18 + msg->len)) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
+  }
+  anscheduler_cpu_unlock();
+  return 1;
 }
 
 uint64_t syscall_poll() {
@@ -110,12 +113,15 @@ uint64_t syscall_remote_pid(uint64_t desc) {
   socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
   if (!sock) {
     anscheduler_cpu_unlock();
-    return 0xFFFFFFFFFFFFFFFFL;
+    return FD_INVAL;
   }
   task_t * remote = anscheduler_socket_remote(sock);
   anscheduler_socket_dereference(sock);
-  uint64_t pid = remote->pid;
-  anscheduler_task_dereference(remote);
+  uint64_t pid = FD_INVAL;
+  if (remote) {
+    pid = remote->pid;
+    anscheduler_task_dereference(remote);
+  }
   anscheduler_cpu_unlock();
   return pid;
 }
@@ -125,12 +131,15 @@ uint64_t syscall_remote_uid(uint64_t desc) {
   socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
   if (!sock) {
     anscheduler_cpu_unlock();
-    return 0xFFFFFFFFFFFFFFFFL;
+    return FD_INVAL;
   }
   task_t * remote = anscheduler_socket_remote(sock);
   anscheduler_socket_dereference(sock);
-  uint64_t uid = remote->uid;
-  anscheduler_task_dereference(remote);
+  uint64_t uid = FD_INVAL;
+  if (remote) {
+    uid = remote->uid;
+    anscheduler_task_dereference(remote);
+  }
   anscheduler_cpu_unlock();
   return uid;
 }

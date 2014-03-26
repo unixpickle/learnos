@@ -39,6 +39,10 @@ uint64_t syscall_entry(uint64_t arg1,
     return syscall_read(arg2, arg3);
   } else if (arg1 == 12) {
     return syscall_poll();
+  } else if (arg1 == 13) {
+    return syscall_remote_pid(arg2);
+  } else if (arg1 == 14) {
+    return syscall_remote_uid(arg2);
   }
   return 0;
 }
@@ -114,25 +118,18 @@ uint64_t syscall_get_interrupts() {
 static bool print_line(const char * ptr) {
   anscheduler_cpu_lock();
   task_t * task = anscheduler_cpu_get_task();
+  bool ret = true;
 
   int i;
   for (i = 0; i < 0x50; i++) {
-    const char * addr = &ptr[i];
-    uint64_t page = ((uint64_t)addr) >> 12;
-    anscheduler_lock(&task->vmLock);
-    uint16_t flags;
-    uint64_t entry = anscheduler_vm_lookup(task->vm, page, &flags);
-    anscheduler_unlock(&task->vmLock);
-    if ((flags & 5) != 5) { // they're being sneaky, just stop printing
-      anscheduler_cpu_unlock();
-      return false;
+    char buff[2] = {0, 0};
+    bool result = task_copy_in(buff, ptr + i, 1);
+    if (!result) {
+      anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
     }
-    page_t virPage = anscheduler_vm_virtual(entry);
-    uint64_t virAddr = (((uint64_t)addr) & 0xfff) + (virPage << 12);
-    char buff[2] = {*((const char *)virAddr), 0};
     if (buff[0] == 0) {
-      anscheduler_cpu_unlock();
-      return false;
+      ret = false;
+      break;
     }
     print_lock();
     print(buff);
@@ -140,6 +137,6 @@ static bool print_line(const char * ptr) {
   }
 
   anscheduler_cpu_unlock();
-  return true;
+  return ret;
 }
 
