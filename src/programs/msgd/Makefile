@@ -1,6 +1,6 @@
 PROJECT_ROOT=../../..
-CSOURCES=stdio_funcs.c string.c
-ASMSOURCES=system.s stdio_params.s
+CSOURCES=main.c
+ASMSOURCES=entry.s
 
 all: asmsources csources
 

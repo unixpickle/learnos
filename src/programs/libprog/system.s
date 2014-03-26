@@ -88,3 +88,17 @@ sys_poll:
   syscall
   ret
 
+global sys_remote_pid
+sys_remote_pid:
+  mov rsi, rdi
+  mov rdi, 13
+  syscall
+  ret
+
+global sys_remote_uid
+sys_remote_uid:
+  mov rsi, rdi
+  mov rdi, 14
+  syscall
+  ret
+

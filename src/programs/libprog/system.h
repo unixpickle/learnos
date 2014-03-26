@@ -64,6 +64,11 @@ bool sys_connect(uint64_t fd, uint64_t pid);
 void sys_close(uint64_t fd);
 
 /**
+ * Write a packet to a file descriptor. Returns `false` if the buffer is full.
+ */
+uint64_t sys_write(uint64_t fd, void * data, uint64_t len);
+
+/**
  * Read a packet from a file descriptor. Returns `false` if no packets were in
  * the queue.
  */
@@ -75,5 +80,16 @@ bool sys_read(uint64_t fd, msg_t * destPacket);
  * also waiting for interrupts.
  */
 uint64_t sys_poll();
+
+/**
+ * Gets the remote PID for a socket. Returns (uint64_t)-1 on error or if there
+ * is no other end.
+ */
+uint64_t sys_remote_pid(uint64_t fd);
+
+/**
+ * See sys_remote_pid().
+ */
+uint64_t sys_remote_uid(uint64_t fd);
 
 #endif
