@@ -1,3 +1,5 @@
+OUTPUT_FORMAT("binary")
+
 SECTIONS {
 
   . = 0x400000;
@@ -10,11 +12,9 @@ SECTIONS {
     *(.rodata)
   }
   .data BLOCK(4K) : ALIGN(4K) {
-    data = .;
     *(.data)
   }
   .bss BLOCK(4K) : ALIGN(4K) {
-    bss = .;
     *(COMMON)
     *(.bss)
   }

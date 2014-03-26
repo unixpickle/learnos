@@ -38,8 +38,6 @@ static uint64_t clientCount = 0;
 static client_t * clients = NULL;
 
 int main() {
-  printf("addr of services is %x\n", &services);
-
   // until I actually do heap allocation
   service_t _services[0x40];
   services = _services;
