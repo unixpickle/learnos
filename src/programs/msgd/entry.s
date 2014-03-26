@@ -8,5 +8,3 @@ start:
 .hang:
   jmp .hang
 
-.msg:
-  db 'hey there', 0xa, 0

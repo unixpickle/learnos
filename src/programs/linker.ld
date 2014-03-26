@@ -10,9 +10,11 @@ SECTIONS {
     *(.rodata)
   }
   .data BLOCK(4K) : ALIGN(4K) {
+    data = .;
     *(.data)
   }
   .bss BLOCK(4K) : ALIGN(4K) {
+    bss = .;
     *(COMMON)
     *(.bss)
   }

@@ -5,10 +5,7 @@
 //static bool byte_out(uint8_t byte);
 
 int main() {
-  printf("TODO: write a keyboard driver\n");
-  while (1) {
-    sys_sleep(0x100000);
-  }
+  sys_exit();
 
 /**
 
