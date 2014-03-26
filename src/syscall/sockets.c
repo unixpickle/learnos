@@ -105,6 +105,36 @@ uint64_t syscall_poll() {
   return desc;
 }
 
+uint64_t syscall_remote_pid(uint64_t desc) {
+  anscheduler_cpu_lock();
+  socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
+  if (!sock) {
+    anscheduler_cpu_unlock();
+    return 0xFFFFFFFFFFFFFFFFL;
+  }
+  task_t * remote = anscheduler_socket_remote(sock);
+  anscheduler_socket_dereference(sock);
+  uint64_t pid = remote->pid;
+  anscheduler_task_dereference(remote);
+  anscheduler_cpu_unlock();
+  return pid;
+}
+
+uint64_t syscall_remote_uid(uint64_t desc) {
+  anscheduler_cpu_lock();
+  socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
+  if (!sock) {
+    anscheduler_cpu_unlock();
+    return 0xFFFFFFFFFFFFFFFFL;
+  }
+  task_t * remote = anscheduler_socket_remote(sock);
+  anscheduler_socket_dereference(sock);
+  uint64_t uid = remote->uid;
+  anscheduler_task_dereference(remote);
+  anscheduler_cpu_unlock();
+  return uid;
+}
+
 static void _poll_stub() {
   anscheduler_cpu_stack_run(NULL, _poll_stub2);
 }

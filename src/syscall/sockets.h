@@ -40,3 +40,14 @@ uint64_t syscall_read(uint64_t desc, uint64_t ptr);
  */
 uint64_t syscall_poll();
 
+/**
+ * Returns the PID on the remote end of a socket connection, or (uint64_t)-1 on
+ * error (i.e. if the socket has no other end).
+ */
+uint64_t syscall_remote_pid(uint64_t desc);
+
+/**
+ * Returns the UID of the remote task or (uint64_t)-1.
+ */
+uint64_t syscall_remote_uid(uint64_t desc);
+
