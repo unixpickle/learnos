@@ -8,7 +8,6 @@ bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len) {
   uint64_t startOffset = ((uint64_t)tPointer) & 0xfff;
   uint64_t finalPage = ((uint64_t)tPointer + len) >> 12;
   uint64_t finalOffset = ((uint64_t)tPointer + len) & 0xfff;
-
   uint64_t i;
   for (i = firstPage; i <= finalPage; i++) {
     uint64_t start = 0, end = 0x1000;
@@ -22,7 +21,7 @@ bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len) {
         || !(flags & ANSCHEDULER_PAGE_FLAG_USER)) {
       return false;
     }
-    uint8_t * source = (uint8_t *)(anscheduler_vm_virtual(entry) << 12) + start;
+    uint8_t * source = (uint8_t *)(anscheduler_vm_virtual(entry) << 12);
     uint8_t * dest = kPointer;
     uint64_t j;
     for (j = 0; j < end - start; j++) {
@@ -55,7 +54,7 @@ bool task_copy_out(void * tPointer, const void * kPointer, uint64_t len) {
         || !(flags & ANSCHEDULER_PAGE_FLAG_WRITE)) {
       return false;
     }
-    uint8_t * dest = (uint8_t *)(anscheduler_vm_virtual(entry) << 12) + start;
+    uint8_t * dest = (uint8_t *)(anscheduler_vm_virtual(entry) << 12);
     const uint8_t * source = kPointer;
     uint64_t j;
     for (j = 0; j < end - start; j++) {
