@@ -105,6 +105,8 @@ void msgd_connect_services(uint64_t count,
   if (!(session.msgdSock + 1)) {
     return; // we've gotten 0
   }
+  msgd_register_client(session.msgdSock);
+
   uint64_t i;
   for (i = 0; i < count; i++) {
     if (session.shutdown) break;

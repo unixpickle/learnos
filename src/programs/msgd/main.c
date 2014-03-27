@@ -44,7 +44,7 @@ int main() {
   client_t _clients[0x40];
   clients = _clients;
 
-  printf("message server running!\n");
+  printf("[msgd]: now running\n");
 
   while (1) {
     uint64_t fd = sys_poll();
@@ -162,7 +162,7 @@ bool anonymous_msg(uint64_t fd, msg_t * msg) {
       return false;
     }
     if (sys_remote_uid(fd) != 0) {
-      printf("[ERROR]: non-privileged task %x tried to register service\n",
+      printf("[msgd]: non-privileged task %x tried to register service\n",
              sys_remote_pid(fd));
       sys_close(fd);
       return false;
@@ -174,7 +174,6 @@ bool anonymous_msg(uint64_t fd, msg_t * msg) {
     // the name will be up to 0xef bytes long with a 1 byte NULL termination
     memcpy(serv->name, msg->message + 8, msg->len - 8);
     serv->name[msg->len - 8] = 0;
-    printf("Registered: %s\n", serv->name);
     return true;
   } else if (type == MSG_TYPE_CLIENT_INIT) {
     client_t * cli = client_add();

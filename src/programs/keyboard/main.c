@@ -23,6 +23,7 @@ int main() {
   if (!(intd + 1)) {
     printf("[keyboard]: error: failed to connect to intd\n");
   }
+  printf("[keyboard]: connected to interrupt daemon.\n");
   
   uint64_t sock = msgd_connect();
 
