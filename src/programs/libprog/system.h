@@ -40,7 +40,7 @@ void sys_thread_exit();
  * Admin only. Notifies the system that this thread should be the system's
  * designated interrupt daemon.
  */
-void sys_wants_interurpts();
+void sys_wants_interrupts();
 
 /**
  * Returns a flag array with IRQ's and other external interrupts masked out.
