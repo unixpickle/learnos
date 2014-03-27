@@ -12,7 +12,6 @@ static uint64_t intd = 0;
 
 void client_handle(uint64_t fd);
 void handle_intd();
-void handle_interrupt();
 
 int main() {
   uint64_t _clients[0x40];
@@ -32,6 +31,9 @@ int main() {
     return 0;
   }
   msgd_register_service(sock, "keyboard");
+
+  uint64_t mask = 2;
+  sys_write(intd, &mask, 8);
 
   while (1) {
     while (1) {
@@ -103,16 +105,9 @@ void handle_intd() {
       sys_exit();
     }
     if (msg.len != 8) continue;
-    void * msgData = msg.message;
-    uint64_t mask = *((uint64_t *)msgData);
-    if (mask | 2) {
-      handle_interrupt();
-    }
+    uint64_t mask = 2;
+    sys_write(intd, &mask, 8);
   }
-}
-
-void handle_interrupt() {
-  printf("Got keyboard interrupt.\n");
 }
 
 static uint64_t get_next_byte() {
