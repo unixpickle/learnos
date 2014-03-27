@@ -15,7 +15,7 @@ void apic_initialize() {
   pic_disable();
   configure_dummy_idt();
   // do a few nops to make sure we catch all interrupts
-  asm("sti\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\ncli");
+  __asm__ __volatile__("sti\nnop\nnop\nnop\nnop\nnop\ncli");
 
   // initialize the good hardware
   lapic_initialize();
@@ -31,6 +31,6 @@ void apic_initialize() {
   lapic_calculate_bus_speed();
   print("calculated bus speed at 0x");
   printHex(lapic_get_bus_speed());
-  print(" Hz\n");
+  print("0 Hz\n");
 }
 

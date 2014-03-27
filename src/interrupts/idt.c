@@ -136,7 +136,7 @@ void int_interrupt_ipi(uint64_t vec) {
 static void _initialize_idt(idt_entry_t * ptr) {
   idt_entry_t entry = IDT_ENTRY_INIT((uint64_t)handle_unknown_int, 0x8e);
   int i;
-  for (i = 0; i < 0x100; i++) {
+  for (i = 0x0; i < 0x100; i++) {
     ptr[i] = entry;
   }
 }
