@@ -25,7 +25,7 @@ proc_entry:
   mov edx, PML4_START
   mov cr3, edx
 
-  ; set the LME bit of the EFER msr
+  ; set the LME and SCE bits of the EFER msr
   mov ecx, 0xC0000080
   rdmsr
   or eax, 0x101

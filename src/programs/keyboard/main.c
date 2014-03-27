@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <msgd.h>
 
-static uint64_t get_next_byte();
-//static uint32_t scancode_in();
-//static bool byte_out(uint8_t byte);
-
 static uint64_t * clients = NULL;
 static uint64_t clientCount = 0;
-
 static uint64_t intd = 0;
+static bool lastWasE0 = false;
 
 void client_handle(uint64_t fd);
 void handle_intd();
+
+static uint64_t get_next_byte();
+static void handle_byte(uint8_t byte);
+static void handle_key_code(uint64_t code);
 
 int main() {
   uint64_t _clients[0x40];
@@ -39,7 +39,7 @@ int main() {
     while (1) {
       uint64_t val = get_next_byte();
       if (val > 0xff) break;
-      printf("[keyboard]: byte %x\n", val);
+      handle_byte((uint8_t)val);
     }
 
     uint64_t fd = sys_poll();
@@ -118,38 +118,26 @@ static uint64_t get_next_byte() {
   return 0x100;
 }
 
-/*
-static uint32_t scancode_in() {
-  uint8_t code = get_next_byte();
-  if (code == 0xe0) {
-    uint8_t nextCode = get_next_byte();
-    if (nextCode == 0xf0) {
-      uint8_t nextNext = get_next_byte();
-      uint8_t nextNextNext = get_next_byte();
-      return code | (nextCode << 8) | (nextNext << 16) | (nextNextNext << 24);
-    } else {
-      return code | (nextCode << 8) | (get_next_byte() << 16);
-    }
-  } else if (code == 0xf0) {
-    return code | (get_next_byte() << 8);
+static void handle_byte(uint8_t byte) {
+  if (lastWasE0) {
+    lastWasE0 = false;
+    handle_key_code(0xe0 | (byte << 8));
   } else {
-    return code;
+    if (byte == 0xe0) {
+      lastWasE0 = true;
+    } else {
+      handle_key_code(byte);
+    }
   }
 }
 
-static bool byte_out(uint8_t byte) {
-  // wait up to 100 ms to write a byte
-  uint64_t startTime = sys_get_time();
-  bool ready = false;
-  while (sys_get_time() < startTime + 100) {
-    if (sys_in(0x64) & 1) {
-      ready = true;
-      break;
-    }
-  }
-  if (!ready) return false;
-  sys_out(0x60, byte);
-  return true;
+static void handle_key_code(uint64_t code) {
+  // process the key code
+  struct {
+    char ascii;
+    uint64_t code;
+  } codes[] = {
+  };
+  printf("[keyboard]: scan code %x\n", code);
 }
-*/
 
