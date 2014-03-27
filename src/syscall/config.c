@@ -10,10 +10,8 @@
 
 void syscall_initialize() {
   uint64_t star = (8L << 0x20) | (0x1bL << 0x30);
-  print("setting STAR and SFMask\n");
   msr_write(MSR_STAR, star);
   msr_write(MSR_SFMASK, 0x200); // interrupts will be disabled by syscall
-  print("done\n");
 }
 
 void syscall_initialize_thread(thread_t * thread) {

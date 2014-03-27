@@ -74,21 +74,25 @@ void anscheduler_cpu_unlock() {
 
 task_t * anscheduler_cpu_get_task() {
   cpu_t * cpu = cpu_current();
+  if (!cpu) return NULL;
   return cpu->task;
 }
 
 thread_t * anscheduler_cpu_get_thread() {
   cpu_t * cpu = cpu_current();
+  if (!cpu) return NULL;
   return cpu->thread;
 }
 
 void anscheduler_cpu_set_task(task_t * task) {
   cpu_t * cpu = cpu_current();
+  if (!cpu) return;
   cpu->task = task;
 }
 
 void anscheduler_cpu_set_thread(thread_t * thread) {
   cpu_t * cpu = cpu_current();
+  if (!cpu) return;
   cpu->thread = thread;
 }
 

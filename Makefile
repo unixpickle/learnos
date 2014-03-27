@@ -14,12 +14,12 @@ objects:
 
 all_libs:
 	for dir in $(LIBS); do \
-		cd $$dir && $(MAKE) CFLAGS=-fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=$(LIB_INCLUDE); \
+		cd $$dir && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=$(LIB_INCLUDE); \
 		cd -; \
 	done
 
 anscheduler:
-	cd libs/anscheduler && $(MAKE) CFLAGS=-fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=-I../../src/scheduler/include\ -I../../src/\ -I../../src/libkern
+	cd libs/anscheduler && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=-I../../src/scheduler/include\ -I../../src/\ -I../../src/libkern
 
 image: learnos.bin
 	cp learnos.bin isodir/boot/learnos.bin

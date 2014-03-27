@@ -7,6 +7,7 @@
 #include "pit.h"
 
 #define LAPIC_BASE_ADDR 0xfee00000
+#define LAPIC_TIMER_DIV 0x3 // divide by 16
 
 static void * lapicPtr;
 static uint64_t lapicBusSpeed;
@@ -49,7 +50,7 @@ void lapic_set_defaults() {
   lapic_set_register(LAPIC_REG_LVT_LINT0, 0x8700);
   lapic_set_register(LAPIC_REG_LVT_LINT1, 0x400);
 
-  lapic_set_register(LAPIC_REG_TMRDIV, 0xb);
+  lapic_set_register(LAPIC_REG_TMRDIV, LAPIC_TIMER_DIV);
 }
 
 bool lapic_is_x2_available() {
@@ -89,7 +90,7 @@ uint64_t lapic_calculate_bus_speed() {
   pit_sleep(1);
   lapic_set_register(LAPIC_REG_LVT_TMR, 0xff);
   lapic_set_register(LAPIC_REG_TMRINITCNT, 0xffffffff);
-  lapic_set_register(LAPIC_REG_TMRDIV, 0xb);
+  lapic_set_register(LAPIC_REG_TMRDIV, LAPIC_TIMER_DIV);
   pit_sleep(1);
   uint64_t value = lapic_get_register(LAPIC_REG_TMRCURRCNT);
   lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);

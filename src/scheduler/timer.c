@@ -13,7 +13,9 @@ void timer_send_eoi() {
 
 void anscheduler_timer_set(uint32_t ticks) {
   save_timer_slice();
-  if (lapic_is_requested(0x30)) return;
+  if (lapic_is_requested(0x30)) {
+    return;
+  }
   lapic_timer_set(0x30, ticks);
 }
 
