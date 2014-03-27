@@ -1,3 +1,8 @@
+#ifndef __MSGD_H__
+#define __MSGD_H__
+
+#include <stdtype.h>
+
 enum {
   MSG_TYPE_DRAIN,
   MSG_TYPE_SERVICE_INIT,
@@ -16,3 +21,20 @@ typedef struct {
   uint64_t pid;
 } __attribute__((packed)) msgd_result_t;
 
+typedef struct {
+  void * userInfo;
+  void (* verifySuccess)(void * userInfo);
+  void (* verifyFailed)(void * userInfo);
+  void (* resultFound)(void * userInfo, msgd_result_t * result);
+  void (* resultNotFound)(void * userInfo);
+  void (* closed)(void * userInfo);
+} msgd_funcs_t;
+
+uint64_t msgd_connect();
+void msgd_register_service(uint64_t con, const char * name);
+void msgd_register_client(uint64_t con);
+void msgd_lookup_service(uint64_t con, const char * name);
+void msgd_verify_service(uint64_t con, uint64_t servId);
+void msgd_handle_packets(uint64_t fd, msgd_funcs_t * funcs);
+
+#endif

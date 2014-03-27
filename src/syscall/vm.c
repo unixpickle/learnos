@@ -13,6 +13,8 @@ bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len) {
     uint64_t start = 0, end = 0x1000;
     if (i == firstPage) start = startOffset;
     if (i == finalPage) end = finalOffset;
+    if (end == 0) break;
+
     anscheduler_lock(&task->vmLock);
     uint16_t flags;
     uint64_t entry = anscheduler_vm_lookup(task->vm, i, &flags);
@@ -58,7 +60,7 @@ bool task_copy_out(void * tPointer, const void * kPointer, uint64_t len) {
     const uint8_t * source = kPointer;
     uint64_t j;
     for (j = 0; j < end - start; j++) {
-      dest[j] = source[start + j];
+      dest[j + start] = source[j];
     }
     kPointer += end - start;
   }

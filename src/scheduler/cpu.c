@@ -11,6 +11,8 @@ uint64_t cpu_count() {
 }
 
 void cpu_add(cpu_t * cpu) {
+  cpu->task = NULL;
+  cpu->thread = NULL;
   count++;
   if (!firstCPU) {
     firstCPU = cpu;

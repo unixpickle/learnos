@@ -1,11 +1,31 @@
 #include <stdio.h>
+#include <msgd.h>
 
 //static uint8_t get_next_byte();
 //static uint32_t scancode_in();
 //static bool byte_out(uint8_t byte);
 
+static uint64_t * clients = NULL;
+static uint64_t clientCount = 0;
+
+void client_handle(uint64_t fd);
+
 int main() {
-  sys_exit();
+  uint64_t _clients[0x40];
+  clients = _clients;
+  
+  uint64_t sock = msgd_connect();
+  if (!(sock + 1)) {
+    printf("[ERROR]: failed to register keyboard driver.\n");
+    return 0;
+  }
+  msgd_register_service(sock, "keyboard");
+  while (1) {
+    uint64_t fd = sys_poll();
+    if (!(fd + 1)) continue;
+    client_handle(fd);
+    sys_sleep(0x100000);
+  }
 
 /**
 
@@ -23,6 +43,34 @@ int main() {
   }
 **/
   return 0;
+}
+
+void client_handle(uint64_t fd) {
+  msg_t msg;
+  while (sys_read(fd, &msg)) {
+    if (msg.type == 0) {
+      if (clientCount >= 0x40) {
+        printf("[WARNING]: keyboard driver connection max!\n");
+        sys_close(fd);
+        return;
+      }
+      clients[clientCount++] = fd;
+      continue;
+    } else if (msg.type == 2) {
+      uint64_t i, hasFound = 0;
+      for (i = 0; i < clientCount; i++) {
+        if (hasFound) {
+          clients[i - 1] = clients[i];
+        } else if (clients[i] == fd) {
+          hasFound = true;
+        }
+      }
+      if (hasFound) clientCount--;
+      sys_close(fd);
+      return;
+    }
+    // TODO: here, read whatever keyboard commands they send
+  }
 }
 
 /*

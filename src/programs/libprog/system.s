@@ -67,7 +67,7 @@ sys_close:
 
 global sys_write
 sys_write:
-  mov rcx, rdx
+  mov r8, rdx ; 3rd argument since rcx is reserved for syscall
   mov rdx, rsi
   mov rsi, rdi
   mov rdi, 10

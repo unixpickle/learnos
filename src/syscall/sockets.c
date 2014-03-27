@@ -50,8 +50,8 @@ void syscall_close_socket(uint64_t desc) {
 
 uint64_t syscall_write(uint64_t desc, uint64_t ptr, uint64_t len) {
   if (len > 0xfe8) return 0;
-
   anscheduler_cpu_lock();
+
   socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
   if (!sock) {
     anscheduler_cpu_unlock();
@@ -87,7 +87,10 @@ uint64_t syscall_read(uint64_t desc, uint64_t ptr) {
     anscheduler_cpu_unlock();
     return 0;
   }
-  if (!task_copy_out((void *)ptr, msg, 0x18 + msg->len)) {
+
+  bool res = task_copy_out((void *)ptr, msg, 0x18 + msg->len);
+  anscheduler_free(msg);
+  if (!res) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
   }
   anscheduler_cpu_unlock();
@@ -154,6 +157,8 @@ static void _poll_stub2() {
     anscheduler_thread_run(anscheduler_cpu_get_task(),
                            anscheduler_cpu_get_thread());
   } else {
+    anscheduler_cpu_set_task(NULL);
+    anscheduler_cpu_set_thread(NULL);
     anscheduler_loop_run();
   }
 }

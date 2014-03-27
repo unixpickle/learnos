@@ -21,6 +21,7 @@ syscall_configure_stack:
   push r10 ; cr3
   push r11 ; rsp
   push rcx ; rip
+  mov rcx, r8 ; 4th argument
   call syscall_entry
 
   ; clear interrupts and return from the syscall

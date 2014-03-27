@@ -57,7 +57,6 @@ int main() {
 void handle_fd(uint64_t fd) {
   msg_t msg;
 
-  // figure out what role the FD plays
   service_t * service = service_lookup(fd);
   client_t * client = service ? NULL : client_lookup(fd);
 
@@ -149,7 +148,8 @@ bool anonymous_msg(uint64_t fd, msg_t * msg) {
     sys_close(fd);
     return false;
   }
-  if (msg->type == 1 && msg->len != 8) {
+
+  if (msg->type == 1 && msg->len < 8) {
     sys_close(fd);
     return false;
   }
@@ -161,7 +161,7 @@ bool anonymous_msg(uint64_t fd, msg_t * msg) {
       sys_close(fd);
       return false;
     }
-    if (sys_remote_pid(fd) != 0) {
+    if (sys_remote_uid(fd) != 0) {
       printf("[ERROR]: non-privileged task %x tried to register service\n",
              sys_remote_pid(fd));
       sys_close(fd);
