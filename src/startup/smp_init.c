@@ -23,8 +23,8 @@ extern void _binary_keyboard_build_keyboard_bin_start();
 extern void _binary_keyboard_build_keyboard_bin_end();
 extern void _binary_msgd_build_msgd_bin_start();
 extern void _binary_msgd_build_msgd_bin_end();
-extern void _binary_msgd_build_msgd_bin_start();
-extern void _binary_msgd_build_msgd_bin_end();
+extern void _binary_intd_build_intd_bin_start();
+extern void _binary_intd_build_intd_bin_end();
 
 static void copy_init_code();
 static void initialize_cpu(uint32_t lapicId);
@@ -60,9 +60,9 @@ void smp_initialize() {
   taskStart = (uint64_t)(_binary_keyboard_build_keyboard_bin_start);
   start_task((void *)taskStart, taskEnd - taskStart);
 
-  taskEnd = (uint64_t)(_binary_msgd_build_msgd_bin_end);
-  taskStart = (uint64_t)(_binary_msgd_build_msgd_bin_start);
-  //start_task((void *)taskStart, taskEnd - taskStart);
+  taskEnd = (uint64_t)(_binary_intd_build_intd_bin_end);
+  taskStart = (uint64_t)(_binary_intd_build_intd_bin_start);
+  start_task((void *)taskStart, taskEnd - taskStart);
 
   proc_run_scheduler();
 }
