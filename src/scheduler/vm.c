@@ -15,7 +15,9 @@ uint64_t anscheduler_vm_virtual(uint64_t phys) {
 }
 
 void * anscheduler_vm_root_alloc() {
-  return anscheduler_alloc(0x1000);
+  void * root = anscheduler_alloc(0x1000);
+  anscheduler_zero(root, 0x1000);
+  return root;
 }
 
 bool anscheduler_vm_map(void * root,
