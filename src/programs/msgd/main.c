@@ -190,6 +190,11 @@ void client_req_verify(client_t * cli, uint64_t servId) {
   uint64_t pid = sys_remote_pid(cli->fd);
   if (!(pid + 1)) return;
   service_t * serv = service_lookup_id(servId);
+  if (serv) {
+    if (!(sys_remote_pid(serv->fd) + 1)) {
+      serv = NULL; // closed, but we haven't gotten the notification yet
+    }
+  }
   uint64_t type = serv ? MSG_TYPE_EXISTS : MSG_TYPE_NOT_EXISTS;
   sys_write(cli->fd, &type, 8);
 }

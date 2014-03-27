@@ -37,4 +37,14 @@ void msgd_lookup_service(uint64_t con, const char * name);
 void msgd_verify_service(uint64_t con, uint64_t servId);
 void msgd_handle_packets(uint64_t fd, msgd_funcs_t * funcs);
 
+/**
+ * Must be called at the beginnig of the application's lifecycle. This will poll
+ * a whole lot, so you shouldn't have any other important sockets open at this
+ * point.
+ */
+void msgd_connect_services(uint64_t count,
+                           const char ** names,
+                           uint64_t * sockets,
+                           uint64_t attempts);
+
 #endif

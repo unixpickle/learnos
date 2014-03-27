@@ -8,23 +8,38 @@
 static uint64_t * clients = NULL;
 static uint64_t clientCount = 0;
 
+static uint64_t intd = 0;
+
 void client_handle(uint64_t fd);
+void handle_intd();
+void handle_interrupt();
 
 int main() {
   uint64_t _clients[0x40];
   clients = _clients;
+
+  char * intdName = "intd";
+  msgd_connect_services(1, (const char **)&intdName, &intd, 3);
+  if (!(intd + 1)) {
+    printf("[keyboard]: error: failed to connect to intd\n");
+  }
   
   uint64_t sock = msgd_connect();
+
   if (!(sock + 1)) {
     printf("[ERROR]: failed to register keyboard driver.\n");
     return 0;
   }
   msgd_register_service(sock, "keyboard");
+
   while (1) {
     uint64_t fd = sys_poll();
     if (!(fd + 1)) continue;
-    client_handle(fd);
-    sys_sleep(0x100000);
+    if (fd == intd) {
+      handle_intd();
+    } else {
+      client_handle(fd);
+    }
   }
 
 /**
@@ -73,6 +88,26 @@ void client_handle(uint64_t fd) {
   }
 }
 
+void handle_intd() {
+  msg_t msg;
+  while (sys_read(intd, &msg)) {
+    if (msg.type == 2) {
+      printf("[keyboard]: error: intd disconnected us!\n");
+      sys_exit();
+    }
+    if (msg.len != 8) continue;
+    void * msgData = msg.message;
+    uint64_t mask = *((uint64_t *)msgData);
+    if (mask | 2) {
+      handle_interrupt();
+    }
+  }
+}
+
+void handle_interrupt() {
+  printf("Got keyboard interrupt.\n");
+}
+
 /*
 static uint8_t get_next_byte() {
   while (1) {
@@ -117,3 +152,4 @@ static bool byte_out(uint8_t byte) {
   return true;
 }
 */
+
