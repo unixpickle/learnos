@@ -68,15 +68,10 @@ void configure_global_idt() {
 void int_interrupt_exception(uint64_t vec) {
   uint64_t retAddr;
   __asm__("mov 0x98(%%rbp), %0" : "=r" (retAddr));
-  uint64_t pid = 0x1337;
-  //task_t * task = anscheduler_cpu_get_task();
-  //if (task) pid = task->pid;
   print("Got exception vector ");
   printHex(vec);
   print(" from 0x");
   printHex(retAddr);
- // print(" pid ");
-  //printHex(pid);
   print("\n");
 
   __asm__("cli\nhlt");
@@ -94,16 +89,10 @@ void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
       return;
     }
   }
-  uint64_t pid = 0x1337;
-  task_t * task = anscheduler_cpu_get_task();
-  if (task) pid = task->pid;
-
   print("Got exception vector ");
   printHex(vec);
   print(" with code ");
   printHex(code);
-  print(" from PID ");
-  printHex(pid);
   print(" from ");
   printHex(retAddr);
   print("\n");
