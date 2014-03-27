@@ -102,3 +102,20 @@ sys_remote_uid:
   syscall
   ret
 
+global sys_in
+sys_in:
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 15
+  syscall
+  ret
+
+global sys_out
+sys_out:
+  mov r8, rdx
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x10
+  syscall
+  ret
+

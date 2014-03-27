@@ -1,6 +1,7 @@
 #include "functions.h"
 #include "sockets.h"
 #include "vm.h"
+#include "io.h"
 #include <stdio.h>
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
@@ -45,6 +46,10 @@ uint64_t syscall_entry(uint64_t arg1,
     return syscall_remote_pid(arg2);
   } else if (arg1 == 14) {
     return syscall_remote_uid(arg2);
+  } else if (arg1 == 15) {
+    return syscall_in(arg2, arg3);
+  } else if (arg1 == 16) {
+    syscall_out(arg2, arg3, arg4);
   }
   return 0;
 }

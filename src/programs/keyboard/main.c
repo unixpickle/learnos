@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <msgd.h>
 
-//static uint8_t get_next_byte();
+static uint64_t get_next_byte();
 //static uint32_t scancode_in();
 //static bool byte_out(uint8_t byte);
 
@@ -34,12 +34,18 @@ int main() {
   msgd_register_service(sock, "keyboard");
 
   while (1) {
+    while (1) {
+      uint64_t val = get_next_byte();
+      if (val > 0xff) break;
+      printf("[keyboard]: byte %x\n", val);
+    }
+
     uint64_t fd = sys_poll();
     if (!(fd + 1)) continue;
-    if (fd == intd) {
-      handle_intd();
-    } else {
+    if (fd != intd) {
       client_handle(fd);
+    } else {
+      handle_intd();
     }
   }
 
@@ -109,17 +115,15 @@ void handle_interrupt() {
   printf("Got keyboard interrupt.\n");
 }
 
-/*
-static uint8_t get_next_byte() {
-  while (1) {
-    uint8_t byte = sys_in(0x64);
-    if (byte & 1) {
-      return sys_in(0x60);
-    }
-    while (!(sys_getint() & 2));
+static uint64_t get_next_byte() {
+  uint8_t byte = sys_in(0x64, 1);
+  if (byte & 1) {
+    return sys_in(0x60, 1);
   }
+  return 0x100;
 }
 
+/*
 static uint32_t scancode_in() {
   uint8_t code = get_next_byte();
   if (code == 0xe0) {

@@ -92,4 +92,14 @@ uint64_t sys_remote_pid(uint64_t fd);
  */
 uint64_t sys_remote_uid(uint64_t fd);
 
+/**
+ * Input from an I/O pin. The `size` must be 1 or 2.  This requires root.
+ */
+uint64_t sys_in(uint64_t pin, uint64_t size);
+
+/**
+ * Output to an I/O pin. This requires root.
+ */
+uint64_t sys_out(uint64_t pin, uint64_t val, uint64_t size);
+
 #endif
