@@ -96,7 +96,7 @@ void anscheduler_cpu_notify_invlpg(task_t * task) {
   cpu_t * cpu = firstCPU;
   while (cpu) {
     if (cpu->task == task) {
-      lapic_send_ipi(cpu->cpuId, 0x20, 0, 1, 0); // real simple IPI
+      lapic_send_ipi(cpu->cpuId, 0x31, 0, 1, 0);
     }
     cpu = cpu->next;
   }
@@ -106,7 +106,7 @@ void anscheduler_cpu_notify_dead(task_t * task) {
   cpu_t * cpu = firstCPU;
   while (cpu) {
     if (cpu->task == task) {
-      lapic_send_ipi(cpu->cpuId, 0x20, 0, 1, 0); // real simple IPI
+      lapic_send_ipi(cpu->cpuId, 0x30, 0, 1, 0);
     }
     cpu = cpu->next;
   }

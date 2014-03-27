@@ -10,6 +10,9 @@
 
 static void _initialize_idt(idt_entry_t * ptr);
 static void _call_page_fault(uint64_t args);
+static void _idt_continuation(uint64_t irq);
+
+static bool schedEnabled = false;
 
 void configure_dummy_idt() {
   idt_pointer * idtr = (idt_pointer *)IDTR_PTR;
@@ -107,7 +110,17 @@ void int_interrupt_irq(uint64_t vec) {
   if (vec == 0x20 || vec == 0x22) {
     PIT_TICK_COUNT++;
   } else if (vec == 0x30) {
+    schedEnabled = true;
     handle_lapic_interrupt();
+  } else if (vec >= 0x20 && vec < 0x30 && schedEnabled) {
+    thread_t * thread = anscheduler_cpu_get_thread();
+    uint64_t irq = vec - 0x20;
+    if (!thread) {
+      _idt_continuation(irq);
+    } else {
+      anscheduler_save_return_state(thread, (void *)irq,
+                                    (void (*)(void *))_idt_continuation);
+    }
   }
 }
 
@@ -132,5 +145,15 @@ static void _call_page_fault(uint64_t args) {
   uint64_t addr;
   __asm__("mov %%cr2, %0" : "=r" (addr));
   anscheduler_page_fault((void *)addr, args);
+}
+
+static void _idt_continuation(uint64_t irq) {
+  anscheduler_irq(irq);
+  if (anscheduler_cpu_get_thread()) {
+    anscheduler_thread_run(anscheduler_cpu_get_task(),
+                           anscheduler_cpu_get_thread());
+  } else {
+    return;
+  }
 }
 
