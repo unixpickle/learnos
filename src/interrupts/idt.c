@@ -69,6 +69,8 @@ void configure_global_idt() {
 }
 
 void int_interrupt_exception(uint64_t vec) {
+  if (vec == 9) return;
+
   uint64_t retAddr;
   __asm__("mov 0x98(%%rbp), %0" : "=r" (retAddr));
   print("Got exception vector ");
