@@ -22,6 +22,14 @@ int main() {
 
   sys_wants_interrupts();
 
+  // connect to name server
+  uint64_t fd = msgd_connect();
+  if (!(fd + 1)) {
+    printf("[intd]: error: could not connect to msgd\n");
+    return 1;
+  }
+  msgd_register_service(fd, "intd");
+
   while (1) {
     uint64_t fd = sys_poll();
     if (fd + 1) handle_fd(fd);
