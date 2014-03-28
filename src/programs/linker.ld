@@ -4,14 +4,14 @@ SECTIONS {
 
   . = 0x400000;
 
-  .text BLOCK(4K) : ALIGN(4K) {
+  .text BLOCK(16) : ALIGN(16) {
     *(.entrypoint)
     *(.text)
   }
-  .rodata BLOCK(4K) : ALIGN(4K) {
+  .rodata BLOCK(16) : ALIGN(16) {
     *(.rodata)
   }
-  .data BLOCK(4K) : ALIGN(4K) {
+  .data BLOCK(16) : ALIGN(16) {
     *(.data)
     *(COMMON)
     *(.bss)

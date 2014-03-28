@@ -1,4 +1,4 @@
-PROGRAMS=keyboard ticktock msgd intd
+PROGRAMS=keyboard ticktock msgd intd terminal
 
 programs: libprog/build build
 	for dir in $(PROGRAMS); do \

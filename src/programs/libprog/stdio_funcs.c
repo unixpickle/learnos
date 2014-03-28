@@ -26,6 +26,9 @@ void print_argument(char type, uint64_t arg) {
     print_hex(arg, true);
   } else if (type == 's') {
     sys_print((const char *)arg);
+  } else if (type == 'c') {
+    char str[2] = {(char)arg, 0};
+    sys_print(str);
   }
 }
 
