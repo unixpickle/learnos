@@ -124,7 +124,7 @@ static void _ioapic_disable_others() {
   entry.destfield = 0;
   entry.vector = 0x20; // making it something valid is probably important
   uint8_t i;
-  for (i = 0x14; i < 0x18; i++) {
+  for (i = 0x14; i < ioapic_get_pin_count(); i++) {
     ioapic_set_red_table(i, entry);
   }
 }

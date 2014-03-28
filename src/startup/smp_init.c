@@ -36,7 +36,6 @@ static void start_task(void * ptr, uint64_t len);
 
 void smp_initialize() {
   print("initializing basic scheduling structures...\n");
-  print_initialize();
   gdt_initialize();
   copy_init_code();
 

@@ -4,11 +4,12 @@ global handle_interrupt_exception
 global handle_interrupt_exception_code
 global handle_interrupt_irq
 global handle_interrupt_ipi
-global handle_unknown_int
+global handle_interrupt_unknown
 extern int_interrupt_exception
 extern int_interrupt_exception_code
 extern int_interrupt_irq
 extern int_interrupt_ipi
+extern int_interrupt_unknown
 extern thread_switch_to_kernpage, print
 
 %include "../pushaq.s"
@@ -49,14 +50,13 @@ handle_interrupt_ipi:
   add rsp, 8
   iretq
 
-handle_unknown_int:
-  mov rdi, .msg
-  call print
-  cli
-  hlt ; returns on NMI
-  jmp $
-.msg:
-  db 'Got unknwon interrupt!', 0xa, 0
+handle_interrupt_unknown:
+  beginframe
+  mov rdi, [rsp + 0x80] ; vector argument
+  call int_interrupt_unknown
+  endframe
+  add rsp, 8
+  iretq
 
 global load_idtr
 load_idtr:

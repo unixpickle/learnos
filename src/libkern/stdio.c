@@ -5,12 +5,13 @@
 
 #define buffer ((unsigned char *)SCREEN_BUFFER)
 
-static uint64_t printLock;
+static uint64_t printLock = 0;
 
 static void setPosition(unsigned short x, unsigned short y);
 static void scrollUp();
 
 void print(const char * str) {
+  anlock_lock(&printLock);
   unsigned short x = CURSOR_INFO[0], y = CURSOR_INFO[1];
   // print each character like it might be your last!
   while (str[0]) {
@@ -35,6 +36,7 @@ void print(const char * str) {
     }
   }
   setPosition(x, y);
+  anlock_unlock(&printLock);
 }
 
 void printHex(unsigned long number) {
@@ -59,18 +61,6 @@ void die(const char * msg) {
   print("[ERROR] ");
   print(msg);
   hang();
-}
-
-void print_initialize() {
-  anlock_initialize(&printLock);
-}
-
-void print_lock() {
-  anlock_lock(&printLock);
-}
-
-void print_unlock() {
-  anlock_unlock(&printLock);
 }
 
 static void setPosition(unsigned short x, unsigned short y) {

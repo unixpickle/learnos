@@ -27,6 +27,20 @@ uint32_t basepage_initialize() {
     kbCount = 1 << 22;
   }
 
+  // set the memory to all 0x1337133713371337's
+  /*
+  uint64_t * ptr = (uint64_t *)(0x300000);
+  uint32_t cnt;
+  for (cnt = 0; cnt < ((kbCount - 3) << 7); cnt++) {
+    if (!(cnt % 0x1000000)) {
+      print32("Up to count ");
+      printHex32(cnt);
+      print32("\n");
+    }
+    ptr[cnt] = 0x1337133713371337L;
+  }
+  */
+
   uint32_t i;
   uint32_t pageCount = (kbCount >> 2) + 0x100;
   uint32_t ptCount = roundUpDiv(pageCount, 0x200);

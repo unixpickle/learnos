@@ -22,6 +22,13 @@ outb:
   pop rdx
   ret
 
+global inb
+inb:
+  xor rax, rax
+  mov rdx, rdi
+  in al, dx
+  ret
+
 global cpuid
 cpuid:
   push rbx

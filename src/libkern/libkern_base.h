@@ -9,6 +9,11 @@
 void outb(uint32_t port, uint8_t byte);
 
 /**
+ * Input from a CPU pin.
+ */
+uint8_t inb(uint32_t port);
+
+/**
  * Infinite hlt loop.
  */
 void hang();

@@ -142,9 +142,7 @@ static bool print_line(const char * ptr) {
       ret = false;
       break;
     }
-    print_lock();
     print(buff);
-    print_unlock();
   }
 
   anscheduler_cpu_unlock();
