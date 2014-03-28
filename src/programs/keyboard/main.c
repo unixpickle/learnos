@@ -136,7 +136,7 @@ static void handle_key_code(uint64_t code) {
     uint64_t code;
   } codes[] = {
     // top row
-    {0x1b, 0x1}, {'1', 0x2}, {'2', 0x2}, {'3', 0x4}, {'4', 0x5}, {'5', 0x6},
+    {0x1b, 0x1}, {'1', 0x2}, {'2', 0x3}, {'3', 0x4}, {'4', 0x5}, {'5', 0x6},
     {'6', 0x7}, {'7', 0x8}, {'8', 0x9}, {'9', 0xa}, {'0', 0xb}, {'[', 0xc},
     {']', 0xd}, {'\b', 0xe},
     // second row (mainly)
@@ -158,18 +158,18 @@ static void handle_key_code(uint64_t code) {
     // extra
     {' ', 0x39}, {'\n', 0x3a}
   };
-  if (code == 0x2a || code == 0x3c) {
-    shiftCount++;
-  } else if (code == 0xaa || code == 0xb7) {
-    shiftCount--;
+  if (code == 0x2a || code == 0x36) {
+    shiftCount |= (code == 0x2a ? 1 : 2);
+  } else if (code == 0xaa || code == 0xb6) {
+    shiftCount &= ~(code == 0xaa ? 1 : 2);
   } else if (code == 0x1d || code == 0x1de0) {
-    controlCount++;
+    controlCount |= (code == 0x1d ? 1 : 2);
   } else if (code == 0x9d || code == 0x9de0) {
-    controlCount--;
+    controlCount &= ~(code == 0x9d ? 1 : 2);
   } else if (code == 0x38 || code == 0x38e0 ) {
-    altCount++;
+    altCount |= (code == 0x38 ? 1 : 2);
   } else if (code == 0xb8 || code == 0xb8e0)  {
-    altCount--;
+    altCount &= ~(code == 0xb8 ? 1 : 2);
   } else {
     char baseChar = 0;
     int i;
@@ -194,7 +194,7 @@ static char apply_modifiers(char input) {
     {'-', '_'}, {'\\', '|'}, {'[', '{'}, {']', '}'}, {'[', '{'}, {'\'', '"'},
     {',', '<'}, {'.', '>'}, {'1', '!'}, {'2', '@'}, {'3', '#'}, {'4', '$'},
     {'5', '%'}, {'6', '^'}, {'7', '&'}, {'8', '*'}, {'9', '('}, {'0', ')'},
-    {'`', '~'}
+    {'`', '~'}, {'=', '+'}, {'/', '?'}
   };
   struct {
     char orig;
