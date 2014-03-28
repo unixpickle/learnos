@@ -16,19 +16,39 @@ void print(const char * str) {
   // print each character like it might be your last!
   while (str[0]) {
     unsigned char theChar = str[0];
+    unsigned char theColor = 0xa;
     str++;
     if (theChar == '\n') {
       y++;
       x = 0;
+    } else if (theChar == '\b') {
+      if (x == 0) {
+        if (y != 0) {
+          y--;
+          // find the last character on this line
+          x = SCREEN_WIDTH - 1;
+          int i, newLoc = (SCREEN_WIDTH * y);
+          for (i = 0; i < 80; i++) {
+            if (!buffer[(newLoc + i) * 2]) {
+              x = i;
+              break;
+            }
+          }
+        }
+      } else x--;
+      theChar = (theColor = 0);
+      int loc = x + (SCREEN_WIDTH * y);
+      buffer[loc * 2] = 0;
+      buffer[loc * 2 + 1] = 0;
     } else {
       int loc = x + (SCREEN_WIDTH * y);
       buffer[loc * 2] = theChar;
-      buffer[loc * 2 + 1] = 0x0a;
+      buffer[loc * 2 + 1] = theColor;
       x++;
-      if (x >= SCREEN_WIDTH) {
-        x = 0;
-        y++;
-      }
+    }
+    if (x >= SCREEN_WIDTH) {
+      x = 0;
+      y++;
     }
     while (y >= SCREEN_HEIGHT) {
       scrollUp();
