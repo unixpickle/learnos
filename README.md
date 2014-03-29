@@ -1,6 +1,5 @@
 # TODO
 
- * Create PS/2 driver
  * Replace all appropriate `uint64_t` with `page_t`
  * Disable PIT after LAPIC timers are initialized
 
