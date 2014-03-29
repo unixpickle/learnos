@@ -112,4 +112,9 @@ void sys_color(uint8_t color);
  */
 uint64_t sys_fork(uint64_t code);
 
+/**
+ * Returns the number of pages allocated by the page allocator.
+ */
+uint64_t sys_mem_usage();
+
 #endif

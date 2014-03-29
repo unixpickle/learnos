@@ -4,6 +4,8 @@
 
 #include "echo.h"
 #include "count.h"
+#include "mem.h"
+#include "sleep.h"
 
 #define BUFF_SIZE 0xff
 
@@ -82,6 +84,10 @@ static void handle_chars(const char * chrs, uint64_t len) {
 }
 
 static void process_cmd() {
+  if (!bufferCount) {
+    prompt();
+    return;
+  }
   // command is in buffer
   buffer[bufferCount] = 0;
   uint64_t method = 0;
@@ -89,6 +95,10 @@ static void process_cmd() {
     method = (uint64_t)command_echo;
   } else if (is_command("count")) {
     method = (uint64_t)command_count;
+  } else if (is_command("memusage")) {
+    method = (uint64_t)command_memusage;
+  } else if (is_command("sleep")) {
+    method = (uint64_t)command_sleep;
   } else {
     sys_color(0x7);
     printf("[terminal]: `%s` unknown command\n", buffer);

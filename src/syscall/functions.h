@@ -69,4 +69,9 @@ uint64_t syscall_get_interrupts();
  */
 void syscall_set_color(uint8_t color);
 
+/**
+ * Returns the number of pages allocated by the page allocator.
+ */
+uint64_t syscall_mem_usage();
+
 #endif

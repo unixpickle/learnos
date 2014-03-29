@@ -4,6 +4,7 @@
 #include "io.h"
 #include "exec.h"
 #include <stdio.h>
+#include <kernpage.h>
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
 #include <anscheduler/task.h>
@@ -55,6 +56,8 @@ uint64_t syscall_entry(uint64_t arg1,
     syscall_set_color((uint8_t)arg2);
   } else if (arg1 == 18) {
     return syscall_fork(arg2);
+  } else if (arg1 == 19) {
+    return syscall_mem_usage();
   }
   return 0;
 }
@@ -134,6 +137,13 @@ uint64_t syscall_get_interrupts() {
 
 void syscall_set_color(uint8_t arg) {
   printColor(arg);
+}
+
+uint64_t syscall_mem_usage() {
+  kernpage_lock();
+  uint64_t count = kernpage_count_allocated();
+  kernpage_unlock();
+  return count;
 }
 
 static bool print_line(const char * ptr) {

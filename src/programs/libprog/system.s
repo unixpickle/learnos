@@ -133,3 +133,9 @@ sys_fork:
   syscall
   ret
 
+global sys_mem_usage
+sys_mem_usage:
+  mov rdi, 0x13
+  syscall
+  ret
+
