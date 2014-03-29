@@ -58,21 +58,35 @@ uint64_t syscall_fork(uint64_t rip) {
 
 bool syscall_kill(uint64_t pid) {
   anscheduler_cpu_lock();
+  thread_t * thisThread = anscheduler_cpu_get_thread();
+  print("performing kill; queueNext=");
+  printHex(thisThread->queueNext);
+  print(" queueLast=");
+  printHex(thisThread->queueLast);
+  print(" this=");
+  printHex(thisThread);
+  print("\n");
+
   task_t * thisTask = anscheduler_cpu_get_task();
   task_t * task = anscheduler_task_for_pid(pid);
   if (!task) {
     anscheduler_cpu_unlock();
     return false;
   }
-  print("task ref count on kill is ");
-  printHex(task->refCount);
-  print("\n");
   if (thisTask->uid && thisTask->uid != task->uid) {
     anscheduler_cpu_unlock();
     return false;
   }
   anscheduler_task_kill(task, ANSCHEDULER_TASK_KILL_REASON_EXTERNAL);
+
   anscheduler_task_dereference(task);
+
+  print("performed kill; queueNext=");
+  printHex(thisThread->queueNext);
+  print(" queueLast=");
+  printHex(thisThread->queueLast);
+  print("\n");
+
   anscheduler_cpu_unlock();
   return true;
 }
