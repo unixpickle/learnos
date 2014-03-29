@@ -172,6 +172,7 @@ static thread_t * _shift_thread() {
   thread_t * th = firstThread;
   firstThread = th->queueNext;
   if (!firstThread) lastThread = NULL;
+  else firstThread->queueLast = NULL;
   th->queueNext = (th->queueLast = NULL);
   return th;
 }
