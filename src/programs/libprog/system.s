@@ -119,3 +119,17 @@ sys_out:
   syscall
   ret
 
+global sys_color
+sys_color:
+  mov rsi, rdi
+  mov rdi, 0x11
+  syscall
+  ret
+
+global sys_fork
+sys_fork:
+  mov rsi, rdi
+  mov rdi, 0x12
+  syscall
+  ret
+

@@ -1,9 +1,25 @@
 #include <stdio.h>
 #include <msgd.h>
+#include <string.h>
+
+#include "echo.h"
+
+#define BUFF_SIZE 0xff
 
 static uint64_t keyboard = 0;
+static char * buffer = NULL;
+static uint64_t bufferCount = 0;
+static uint64_t taskFd = 0xffffffffffffffffL;
+
+static void handle_chars(const char * chrs, uint64_t len);
+static void process_cmd();
+static void prompt();
+static bool is_command(const char * cmd);
 
 int main() {
+  char _buffer[BUFF_SIZE + 1];
+  buffer = _buffer;
+
   char * keyboardName = "keyboard";
   msgd_connect_services(1, (const char **)&keyboardName, &keyboard, 3);
   if (!(keyboard + 1)) {
@@ -11,18 +27,101 @@ int main() {
   }
   printf("[terminal]: connected to keyboard.\n");
 
+  prompt();
+
   while (1) {
-    if (sys_poll() == keyboard) {
+    uint64_t res = sys_poll();
+    if (!(res + 1)) continue;
+    if (res == keyboard) {
       msg_t msg;
       while (sys_read(keyboard, &msg)) {
-        uint64_t i;
-        for (i = 0; i < msg.len; i++) {
-          printf("%c", msg.message[i]);
+        if (taskFd + 1) {
+          sys_write(taskFd, msg.message, msg.len);
+        } else {
+          handle_chars((const char *)msg.message, msg.len);
         }
+      }
+    } else if (res == taskFd) {
+      msg_t msg;
+      while (sys_read(taskFd, &msg)) {
+        if (msg.type == 2) {
+          void * buff = (void *)msg.message;
+          uint64_t reason = *((uint64_t *)buff);
+          printf("closed with status %x\n", reason);
+          sys_close(taskFd);
+          taskFd = 0xffffffffffffffffL;
+          prompt();
+          break;
+        }
+        char message[0x1000];
+        memcpy(message, msg.message, msg.len);
+        message[msg.len] = 0;
+        sys_print(message);
       }
     }
   }
   
   return 0;
+}
+
+static void handle_chars(const char * chrs, uint64_t len) {
+  uint64_t i;
+  for (i = 0; i < len; i++) {
+    char ch = chrs[i];
+    if (ch == '\n') {
+      sys_print("\n");
+      process_cmd();
+    } else if (ch == '\b') {
+      if (!bufferCount) continue;
+      bufferCount--;
+      sys_print("\b");
+    } else {
+      if (bufferCount == BUFF_SIZE) continue;
+      buffer[bufferCount++] = ch;
+      printf("%c", chrs[i]);
+    }
+  }
+}
+
+static void process_cmd() {
+  // command is in buffer
+  buffer[bufferCount] = 0;
+  if (is_command("echo")) {
+    taskFd = sys_fork((uint64_t)command_echo);
+  } else {
+    sys_color(0x7);
+    printf("[terminal]: `%s` unknown command\n", buffer);
+    prompt();
+    return;
+  }
+  if (!(taskFd + 1)) {
+    sys_color(0x7);
+    printf("[terminal]: could not launch task\n", buffer);
+    prompt();
+  }
+}
+
+static void prompt() {
+  bufferCount = 0;
+  sys_color(0x7);
+  sys_print("[terminal] $");
+  sys_color(0xf);
+  sys_print(" ");
+}
+
+static bool is_command(const char * cmd) {
+  if (bufferCount < strlen(cmd)) {
+    return false;
+  }
+  int i;
+  for (i = 0; i < strlen(cmd); i++) {
+    if (buffer[i] != cmd[i]) return false;
+  }
+  if (bufferCount == strlen(cmd)) return true;
+  return buffer[strlen(cmd)] == ' ';
+}
+
+const char * last_command() {
+  return buffer;
 }
 

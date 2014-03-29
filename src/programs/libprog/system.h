@@ -66,7 +66,7 @@ void sys_close(uint64_t fd);
 /**
  * Write a packet to a file descriptor. Returns `false` if the buffer is full.
  */
-uint64_t sys_write(uint64_t fd, void * data, uint64_t len);
+uint64_t sys_write(uint64_t fd, const void * data, uint64_t len);
 
 /**
  * Read a packet from a file descriptor. Returns `false` if no packets were in
@@ -101,5 +101,15 @@ uint64_t sys_in(uint64_t pin, uint64_t size);
  * Output to an I/O pin. This requires root.
  */
 uint64_t sys_out(uint64_t pin, uint64_t val, uint64_t size);
+
+/**
+ * Set the print color.
+ */
+void sys_color(uint8_t color);
+
+/**
+ * Launch a new task and return an opened socket to it.
+ */
+uint64_t sys_fork(uint64_t code);
 
 #endif

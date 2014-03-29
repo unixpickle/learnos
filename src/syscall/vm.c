@@ -18,6 +18,15 @@ bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len) {
     anscheduler_lock(&task->vmLock);
     uint16_t flags;
     uint64_t entry = anscheduler_vm_lookup(task->vm, i, &flags);
+    if (flags & ANSCHEDULER_PAGE_FLAG_UNALLOC) {
+      flags = ANSCHEDULER_PAGE_FLAG_USER
+        | ANSCHEDULER_PAGE_FLAG_PRESENT
+        | ANSCHEDULER_PAGE_FLAG_WRITE;
+      void * ptr = anscheduler_alloc(0x1000);
+      anscheduler_zero(ptr, 0x1000);
+      entry = anscheduler_vm_physical(((uint64_t)ptr) >> 12);
+      anscheduler_vm_map(task->vm, i, entry, flags);
+    }
     anscheduler_unlock(&task->vmLock);
     if (!(flags & ANSCHEDULER_PAGE_FLAG_PRESENT)
         || !(flags & ANSCHEDULER_PAGE_FLAG_USER)) {
@@ -50,6 +59,15 @@ bool task_copy_out(void * tPointer, const void * kPointer, uint64_t len) {
     anscheduler_lock(&task->vmLock);
     uint16_t flags;
     uint64_t entry = anscheduler_vm_lookup(task->vm, i, &flags);
+    if (flags & ANSCHEDULER_PAGE_FLAG_UNALLOC) {
+      flags = ANSCHEDULER_PAGE_FLAG_USER
+        | ANSCHEDULER_PAGE_FLAG_PRESENT
+        | ANSCHEDULER_PAGE_FLAG_WRITE;
+      void * ptr = anscheduler_alloc(0x1000);
+      anscheduler_zero(ptr, 0x1000);
+      entry = anscheduler_vm_physical(((uint64_t)ptr) >> 12);
+      anscheduler_vm_map(task->vm, i, entry, flags);
+    }
     anscheduler_unlock(&task->vmLock);
     if (!(flags & ANSCHEDULER_PAGE_FLAG_PRESENT)
         || !(flags & ANSCHEDULER_PAGE_FLAG_USER)

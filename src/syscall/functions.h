@@ -64,4 +64,9 @@ void syscall_wants_interrupts();
  */
 uint64_t syscall_get_interrupts();
 
+/**
+ * Sets the current terminal color.
+ */
+void syscall_set_color(uint8_t color);
+
 #endif

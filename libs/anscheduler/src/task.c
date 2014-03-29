@@ -107,11 +107,10 @@ task_t * anscheduler_task_fork(task_t * aTask) {
     anscheduler_lock(&aTask->vmLock);
     uint16_t flags;
     uint64_t page = anscheduler_vm_lookup(aTask->vm, i, &flags);
+    anscheduler_unlock(&aTask->vmLock);
     if (!(flags & ANSCHEDULER_PAGE_FLAG_PRESENT)) {
-      anscheduler_unlock(&aTask->vmLock);
       break;
     }
-    anscheduler_unlock(&aTask->vmLock);
     
     anscheduler_lock(&task->vmLock);
     if (!anscheduler_vm_map(task->vm, i, page, flags)) {

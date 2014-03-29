@@ -2,6 +2,7 @@
 #include "sockets.h"
 #include "vm.h"
 #include "io.h"
+#include "exec.h"
 #include <stdio.h>
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
@@ -50,6 +51,10 @@ uint64_t syscall_entry(uint64_t arg1,
     return syscall_in(arg2, arg3);
   } else if (arg1 == 16) {
     syscall_out(arg2, arg3, arg4);
+  } else if (arg1 == 17) {
+    syscall_set_color((uint8_t)arg2);
+  } else if (arg1 == 18) {
+    return syscall_fork(arg2);
   }
   return 0;
 }
@@ -125,6 +130,10 @@ uint64_t syscall_get_interrupts() {
   uint64_t result = __sync_fetch_and_and(&thread->irqs, 0);
   anscheduler_cpu_unlock();
   return result;
+}
+
+void syscall_set_color(uint8_t arg) {
+  printColor(arg);
 }
 
 static bool print_line(const char * ptr) {

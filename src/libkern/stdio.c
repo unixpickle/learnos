@@ -6,6 +6,7 @@
 #define buffer ((unsigned char *)SCREEN_BUFFER)
 
 static uint64_t printLock = 0;
+static uint8_t color = 0xa;
 
 static void setPosition(unsigned short x, unsigned short y);
 static void scrollUp();
@@ -16,7 +17,6 @@ void print(const char * str) {
   // print each character like it might be your last!
   while (str[0]) {
     unsigned char theChar = str[0];
-    unsigned char theColor = 0xa;
     str++;
     if (theChar == '\n') {
       y++;
@@ -36,14 +36,13 @@ void print(const char * str) {
           }
         }
       } else x--;
-      theChar = (theColor = 0);
       int loc = x + (SCREEN_WIDTH * y);
       buffer[loc * 2] = 0;
-      buffer[loc * 2 + 1] = 0;
+      buffer[loc * 2 + 1] = color;
     } else {
       int loc = x + (SCREEN_WIDTH * y);
       buffer[loc * 2] = theChar;
-      buffer[loc * 2 + 1] = theColor;
+      buffer[loc * 2 + 1] = color;
       x++;
     }
     if (x >= SCREEN_WIDTH) {
@@ -57,6 +56,10 @@ void print(const char * str) {
   }
   setPosition(x, y);
   anlock_unlock(&printLock);
+}
+
+void printColor(uint8_t _color) {
+  color = _color;
 }
 
 void printHex(unsigned long number) {
@@ -94,7 +97,7 @@ static void setPosition(unsigned short x, unsigned short y) {
   outb(0x3D4, 0x0e);
   outb(0x3D5, (unsigned char)((position >> 8) & 0xff));
 
-  buffer[1 + position * 2] = 0xa;
+  buffer[1 + position * 2] = color;
 }
 
 static void scrollUp() {

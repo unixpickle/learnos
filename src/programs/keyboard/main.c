@@ -28,9 +28,10 @@ int main() {
   clients = _clients;
 
   char * intdName = "intd";
-  msgd_connect_services(1, (const char **)&intdName, &intd, 3);
+  msgd_connect_services(1, (const char **)&intdName, &intd, 10);
   if (!(intd + 1)) {
     printf("[keyboard]: error: failed to connect to intd\n");
+    return 0;
   }
   printf("[keyboard]: connected to interrupt daemon.\n");
   
