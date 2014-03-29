@@ -112,7 +112,6 @@ bool service_msg(service_t * service, msg_t * msg) {
 
 bool client_msg(client_t * client, msg_t * msg) {
   if (msg->type == 2 || (msg->type == 1 && msg->len < 8)) {
-    printf("[msgd]: client close %x\n", client->fd);
     sys_close(client->fd);
     client_remove(client);
     return false;
