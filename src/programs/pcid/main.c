@@ -1,9 +1,14 @@
 #include <stdio.h>
+#include <system.h>
 #include <msgd.h>
-#include <string.h>
+#include <structures/pci.h>
 
 #define PCI_CMD_READ 0
 #define PCI_CMD_WRITE 1
+
+#define CONFIG_ADDRESS (uint16_t)0xCF8
+#define CONFIG_DATA (uint16_t)0xCFC
+#define PCI_ADDRESS(bus, slot, func, off) ((bus << 16) | (slot << 11) | (func << 8) | off | (1 << 31))
 
 typedef struct {
   uint64_t fd;
@@ -13,7 +18,10 @@ void handle_fd(uint64_t fd);
 client_t * client_lookup(uint64_t fd);
 client_t * client_add();
 void client_remove(client_t * client);
-void client_msg(client_t * client, msg_t * msg);
+bool client_msg(client_t * client, msg_t * msg);
+
+uint32_t pci_read(uint32_t addr);
+void pci_write(uint32_t addr, uint32_t val);
 
 static uint64_t clientCount = 0;
 static client_t * clients = NULL;
@@ -63,7 +71,11 @@ void handle_fd(uint64_t fd) {
       client_remove(client);
       return;
     } else if (msg.type == 0) continue;
-    client_msg(client, &msg);
+    if (!client_msg(client, &msg)) {
+      sys_close(fd);
+      client_remove(client);
+      return;
+    }
   }
 }
 
@@ -89,13 +101,41 @@ void client_remove(client_t * client) {
   }
 }
 
-void client_msg(client_t * client, msg_t * msg) {
-  if (msg->len < 8) return;
+bool client_msg(client_t * client, msg_t * msg) {
+  if (msg->len < 8) return false;
   void * buffer = (void *)msg->message;
   uint64_t type = *((uint64_t *)buffer);
   if (type == PCI_CMD_READ) {
+    if (msg->len < 8 + sizeof(pci_address)) {
+      return false;
+    }
+    pci_address * addr = buffer + 8;
+    uint64_t addrNumber = PCI_ADDRESS(addr->bus, addr->device,
+                                      addr->function, addr->reg);
+    uint32_t result = pci_read((uint32_t)addrNumber);
+    sys_write(client->fd, &result, 4);
   } else if (type == PCI_CMD_WRITE) {
+    if (msg->len < 12 + sizeof(pci_address)) {
+      return false;
+    }
+    uint32_t value = *((uint32_t *)(buffer + 8));
+    pci_address * addr = buffer + 12;
+    uint64_t addrNumber = PCI_ADDRESS(addr->bus, addr->device,
+                                      addr->function, addr->reg);
+    pci_write((uint32_t)addrNumber, value);
   } else {
+    return false;
   }
+  return true;
+}
+
+uint32_t pci_read(uint32_t addr) {
+  sys_out(CONFIG_ADDRESS, addr, 4);
+  return (uint32_t)sys_in(CONFIG_DATA, 4);
+}
+
+void pci_write(uint32_t addr, uint32_t val) {
+  sys_out(CONFIG_ADDRESS, addr, 4);
+  sys_out(CONFIG_DATA, val, 4);
 }
 
