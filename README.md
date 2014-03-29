@@ -2,6 +2,8 @@
 
  * Replace all appropriate `uint64_t` with `page_t`
  * Disable PIT after LAPIC timers are initialized
+ * Implement a `timed` timer notification service with two threads
+   * test `timed` for leaks -- multithreading hasn't been tested
 
 # Subtrees
 
