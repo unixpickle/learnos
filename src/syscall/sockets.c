@@ -43,9 +43,14 @@ uint64_t syscall_connect(uint64_t descNum, uint64_t pid) {
 void syscall_close_socket(uint64_t desc) {
   anscheduler_cpu_lock();
   socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
+  print("before close socket refCount is ");
+  printHex(sock->refCount);
+  print("\n");
   anscheduler_socket_close(sock, 0);
   print("close socket refCount is ");
   printHex(sock->refCount);
+  print(" for socket 0x");
+  printHex(sock);
   print("\n");
   anscheduler_socket_dereference(sock);
   anscheduler_cpu_unlock();
@@ -67,7 +72,13 @@ uint64_t syscall_write(uint64_t desc, uint64_t ptr, uint64_t len) {
     anscheduler_free(msg);
     anscheduler_socket_dereference(sock);
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
+    return 0;
   }
+  print("ref count before write ");
+  printHex(sock->refCount);
+  print(" to 0x");
+  printHex(sock);
+  print("\n");
   bool result = anscheduler_socket_msg(sock, msg);
   if (!result) {
     anscheduler_free(msg);
@@ -108,6 +119,11 @@ uint64_t syscall_poll() {
   uint64_t desc = FD_INVAL;
   if (pending) {
     desc = pending->descriptor;
+    print("pending retain count is ");
+    printHex(pending->refCount);
+    print(" for 0x");
+    printHex(pending);
+    print("\n");
     anscheduler_socket_dereference(pending);
   }
   anscheduler_cpu_unlock();

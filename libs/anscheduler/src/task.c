@@ -311,9 +311,6 @@ static void _dealloc_task_code(task_t * task, uint64_t pageCount) {
 }
 
 static void _generate_kill_job(task_t * task) {
-  print("in _generate_kill_job for ");
-  printHex(task->pid);
-  print("\n");
   // Note: By the time we get here, we know nothing is running our task and
   // nothing will ever run it again.  The loop may attempt to reference
   // threads that miraculously made it back into the queue, but these will
@@ -412,16 +409,6 @@ static void _close_task_sockets_async(task_t * task) {
       
       // break if there *is* no first socket
       if (!desc) break;
-      task_t * remote = anscheduler_socket_remote(desc);
-      print("closing socket with descriptor ");
-      printHex(desc->descriptor);
-      if (remote) {
-        print(" (remote PID ");
-        printHex(remote->pid);
-        print(")");
-        anscheduler_task_dereference(remote);
-      }
-      print("\n");
       
       // close the socket and wait for it to disappear from the list
       anscheduler_socket_close(desc, 1 | (task->killReason << 1));
