@@ -245,8 +245,10 @@ task_t * anscheduler_socket_remote(socket_desc_t * socket) {
   }
   anscheduler_unlock(&sock->connRecLock);
   if (!otherEnd) return NULL;
-  bool res = anscheduler_task_reference(otherEnd->task);
-  return res ? otherEnd->task : NULL;
+  task_t * task = otherEnd->task;
+  bool res = anscheduler_task_reference(task);
+  anscheduler_socket_dereference(otherEnd);
+  return res ? task : NULL;
 }
 
 static socket_desc_t * _create_descriptor(socket_t * socket,
