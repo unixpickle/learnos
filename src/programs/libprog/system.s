@@ -139,3 +139,9 @@ sys_mem_usage:
   syscall
   ret
 
+global sys_kill
+sys_kill:
+  mov rdi, 0x14
+  syscall
+  ret
+

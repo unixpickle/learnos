@@ -44,6 +44,9 @@ void syscall_close_socket(uint64_t desc) {
   anscheduler_cpu_lock();
   socket_desc_t * sock = anscheduler_socket_for_descriptor(desc);
   anscheduler_socket_close(sock, 0);
+  print("close socket refCount is ");
+  printHex(sock->refCount);
+  print("\n");
   anscheduler_socket_dereference(sock);
   anscheduler_cpu_unlock();
 }
@@ -157,8 +160,10 @@ static void _poll_stub2() {
     anscheduler_thread_run(anscheduler_cpu_get_task(),
                            anscheduler_cpu_get_thread());
   } else {
+    task_t * task = anscheduler_cpu_get_task();
     anscheduler_cpu_set_task(NULL);
     anscheduler_cpu_set_thread(NULL);
+    if (task) anscheduler_task_dereference(task);
     anscheduler_loop_run();
   }
 }

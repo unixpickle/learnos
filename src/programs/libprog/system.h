@@ -117,4 +117,11 @@ uint64_t sys_fork(uint64_t code);
  */
 uint64_t sys_mem_usage();
 
+/**
+ * Kill a task with a given PID. Returns true if the task was found and the
+ * permissions allowed it to be killed. A return value of true does not mean the
+ * task shutdown has finished; it simply means it has begun.
+ */
+bool sys_kill(uint64_t pid);
+
 #endif

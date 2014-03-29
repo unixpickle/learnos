@@ -58,6 +58,8 @@ uint64_t syscall_entry(uint64_t arg1,
     return syscall_fork(arg2);
   } else if (arg1 == 19) {
     return syscall_mem_usage();
+  } else if (arg1 == 20) {
+    return (uint64_t)syscall_kill(arg2);
   }
   return 0;
 }

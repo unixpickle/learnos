@@ -40,13 +40,24 @@ int main() {
       while (sys_read(keyboard, &msg)) {
         if (taskFd + 1) {
           sys_write(taskFd, msg.message, msg.len);
+          // see if any chars were Control+C = 0x3
+          uint64_t i;
+          for (i = 0; i < msg.len; i++) {
+            if (msg.message[i] == 3) {
+              printf("killing PID %x\n", sys_remote_pid(taskFd));
+              sys_kill(sys_remote_pid(taskFd));
+              printf("killed the thing.\n");
+            }
+          }
         } else {
           handle_chars((const char *)msg.message, msg.len);
         }
       }
     } else if (res == taskFd) {
       msg_t msg;
+      printf("got taskfd poll() response\n");
       while (sys_read(taskFd, &msg)) {
+        printf("taskfd message\n");
         if (msg.type == 2) {
           sys_close(taskFd);
           taskFd = 0xffffffffffffffffL;
