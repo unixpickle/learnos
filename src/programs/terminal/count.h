@@ -1,0 +1,1 @@
+void command_count();

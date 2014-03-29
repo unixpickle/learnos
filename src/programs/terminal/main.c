@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "echo.h"
+#include "count.h"
 
 #define BUFF_SIZE 0xff
 
@@ -45,9 +46,6 @@ int main() {
       msg_t msg;
       while (sys_read(taskFd, &msg)) {
         if (msg.type == 2) {
-          void * buff = (void *)msg.message;
-          uint64_t reason = *((uint64_t *)buff);
-          printf("closed with status %x\n", reason);
           sys_close(taskFd);
           taskFd = 0xffffffffffffffffL;
           prompt();
@@ -86,18 +84,24 @@ static void handle_chars(const char * chrs, uint64_t len) {
 static void process_cmd() {
   // command is in buffer
   buffer[bufferCount] = 0;
+  uint64_t method = 0;
   if (is_command("echo")) {
-    taskFd = sys_fork((uint64_t)command_echo);
+    method = (uint64_t)command_echo;
+  } else if (is_command("count")) {
+    method = (uint64_t)command_count;
   } else {
     sys_color(0x7);
     printf("[terminal]: `%s` unknown command\n", buffer);
     prompt();
     return;
   }
+  taskFd = sys_fork((uint64_t)method);
   if (!(taskFd + 1)) {
     sys_color(0x7);
     printf("[terminal]: could not launch task\n", buffer);
     prompt();
+  } else {
+    sys_write(taskFd, buffer, bufferCount);
   }
 }
 
@@ -119,9 +123,5 @@ static bool is_command(const char * cmd) {
   }
   if (bufferCount == strlen(cmd)) return true;
   return buffer[strlen(cmd)] == ' ';
-}
-
-const char * last_command() {
-  return buffer;
 }
 

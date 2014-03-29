@@ -1,5 +1,5 @@
 PROJECT_ROOT=../../..
-CSOURCES=main.c echo.c
+CSOURCES=$(wildcard *.c)
 ASMSOURCES=entry.s
 
 all: asmsources csources
