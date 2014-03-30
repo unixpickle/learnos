@@ -1,6 +1,6 @@
 #include "cpu.h"
 #include <interrupts/lapic.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <libkern_base.h>
 
 static cpu_t * firstCPU = NULL;
@@ -26,9 +26,7 @@ void cpu_add(cpu_t * cpu) {
 }
 
 void cpu_add_current(page_t stack) {
-  kernpage_lock();
   uint64_t page = kernpage_alloc_virtual();
-  kernpage_unlock();
 
   if (!page) return;
   zero_page(page);

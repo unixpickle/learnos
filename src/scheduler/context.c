@@ -3,7 +3,7 @@
 #include <shared/addresses.h>
 #include <anscheduler/task.h>
 #include <anscheduler/functions.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <syscall/config.h>
 
 void anscheduler_thread_run(task_t * task, thread_t * thread) {

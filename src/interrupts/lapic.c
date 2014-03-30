@@ -1,7 +1,7 @@
 #include "lapic.h"
 #include <stdio.h>
 #include <libkern_base.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <shared/addresses.h>
 #include "acpi.h"
 #include "pit.h"

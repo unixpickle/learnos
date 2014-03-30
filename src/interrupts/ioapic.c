@@ -1,6 +1,6 @@
 #include "ioapic.h"
 #include "acpi.h"
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <stdio.h>
 #include <libkern_base.h>
 #include <shared/addresses.h>

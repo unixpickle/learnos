@@ -142,9 +142,7 @@ void syscall_set_color(uint8_t arg) {
 }
 
 uint64_t syscall_mem_usage() {
-  kernpage_lock();
   uint64_t count = kernpage_count_allocated();
-  kernpage_unlock();
   return count;
 }
 

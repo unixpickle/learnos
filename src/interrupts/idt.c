@@ -8,7 +8,7 @@
 #include <anscheduler/interrupts.h>
 #include <anscheduler/functions.h>
 #include <scheduler/interrupts.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <scheduler/cpu.h>
 #include <anlock.h>
 

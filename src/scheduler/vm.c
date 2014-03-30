@@ -1,5 +1,5 @@
 #include "vm.h"
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <anscheduler/functions.h>
 
 static void _table_free(uint64_t * table, int depth);

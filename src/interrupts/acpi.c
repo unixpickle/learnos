@@ -1,6 +1,6 @@
 #include "acpi.h"
 #include <string.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <stdio.h>
 
 static void * _acpi_find_rsdp();

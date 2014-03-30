@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <libkern_base.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 
 #include <interrupts/lapic.h>
 #include <interrupts/acpi.h>

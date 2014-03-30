@@ -1,20 +1,16 @@
 #include "general.h"
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <anlock.h>
 #include <stdio.h>
 
 void * anscheduler_alloc(uint64_t size) {
   if (size > 0x1000) return NULL;
-  kernpage_lock();
   void * ptr = (void *)(kernpage_alloc_virtual() << 12);
-  kernpage_unlock();
   return ptr;
 }
 
 void anscheduler_free(void * buffer) {
-  kernpage_lock();
   kernpage_free_virtual(((uint64_t)buffer) >> 12);
-  kernpage_unlock();
 }
 
 void anscheduler_lock(uint64_t * ptr) {

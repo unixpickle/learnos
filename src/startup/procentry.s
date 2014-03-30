@@ -5,8 +5,6 @@ GDT64_data equ 0x10
 START_STACK equ 0x4000
 
 extern kernpage_alloc_virtual
-extern kernpage_lock
-extern kernpage_unlock
 extern proc_initialize
 extern print
 
@@ -65,11 +63,7 @@ global proc_entry_end
 proc_entry_end:
 
 initiate_routine:
-  call kernpage_lock
   call kernpage_alloc_virtual
-  push rax
-  call kernpage_unlock
-  pop rax
 
   ; use rax as our stack
   mov rbx, rax

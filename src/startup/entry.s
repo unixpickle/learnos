@@ -5,7 +5,6 @@ extern basepage_initialize
 extern print
 extern hang
 extern kernpage_initialize
-extern kernpage_lockdown
 extern apic_initialize
 extern smp_initialize
 
