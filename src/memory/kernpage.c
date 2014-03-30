@@ -349,7 +349,12 @@ static void _kernpage_configure_anmem() {
   config.structCount = phyMapCount;
 
   // 2^15 * 0x1000 = 128MiB
-  anmem_configure(&config, &anmemRoot, 15, firstVpage);
+  bool result = anmem_configure(&config, &anmemRoot, 15, firstVpage);
+  if (!result) die("anmem_configure() failed");
+
+  result = anmem_init_structures(&anmemRoot);
+  if (!result) die("anmem_init_structures() failed");
+
   print("anmem configured, skip=0x");
   printHex(firstVpage);
   print(", sections=0x");
