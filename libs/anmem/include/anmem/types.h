@@ -53,6 +53,4 @@ typedef struct {
   uint64_t structCount;
 } __attribute__((packed)) anmem_config_t;
 
-typedef void (* anmem_free_t)(void * userInfo, void * ptr);
-
 #endif

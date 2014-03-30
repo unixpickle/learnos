@@ -1,4 +1,4 @@
-all: test
+lib: build/analloc.o
 
 test: build/analloc.o
 	cd test && $(MAKE)
