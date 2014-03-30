@@ -118,6 +118,13 @@
 #define TSS_ENTRIES 0x220000
 
 /**
+ * A list of anmem_section_t structures. They are currently 0x350 bytes, so
+ * this list can hold 0x4D of them for a total of about 0x1000 bytes
+ * (really 0xff1 bytes).
+ */
+#define ANMEM_SECTIONS 0x290000
+
+/**
  * Set CR3=PML4_START to enable kernel paging.
  */
 #define PML4_START 0x300000

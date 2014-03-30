@@ -1,5 +1,5 @@
 PROJECT_ROOT=../..
-CSOURCES=stdio.c kernpage.c string.c ref.c debug.c
+CSOURCES=stdio.c string.c ref.c debug.c
 
 all: build/libkern_base.o csources
 
