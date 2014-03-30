@@ -4,7 +4,7 @@
 #include "io.h"
 #include "exec.h"
 #include <stdio.h>
-#include <kernpage.h>
+#include <memory/kernpage.h>
 #include <shared/addresses.h>
 #include <anscheduler/functions.h>
 #include <anscheduler/task.h>

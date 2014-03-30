@@ -42,5 +42,6 @@ clean:
 		cd -; \
 	done
 	cd libs/anscheduler && $(MAKE) clean && cd -
-	cd libs/anmem && $(MAKE) clean
+	cd libs/anmem && $(MAKE) clean && cd -
+	cd libs/anmem/libs/analloc && $(MAKE) clean
 
