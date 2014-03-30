@@ -3,7 +3,7 @@ BUILD_FILES=src/startup/build/*.o src/startup/libkern32/build/*.o src/libkern/bu
 LIBS=libs/anpages libs/anlock libs/anidxset
 LIB_BUILD=libs/anpages/build/*.o libs/anlock/build/*.o libs/anidxset/build/*.o libs/anscheduler/build/*.o
 
-learnos.bin: objects all_libs anscheduler
+learnos.bin: objects all_libs anscheduler anmem
 	ld $(BUILD_FILES) $(LIB_BUILD) -T linker.ld -e multiboot_header --oformat binary -s -o learnos.bin
 
 objects:
@@ -21,6 +21,9 @@ all_libs:
 anscheduler:
 	cd libs/anscheduler && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=-I../../src/scheduler/include\ -I../../src/\ -I../../src/libkern
 
+anmem:
+	cd libs/anmem && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=-I../../src/memory/include\ -I../../src/\ -I../../src/libkern
+
 image: learnos.bin
 	cp learnos.bin isodir/boot/learnos.bin
 	grub-mkrescue -o learnos.iso isodir/
@@ -37,5 +40,6 @@ clean:
 		cd $$dir && $(MAKE) clean; \
 		cd -; \
 	done
-	cd libs/anscheduler && $(MAKE) clean
+	cd libs/anscheduler && $(MAKE) clean && cd -
+	cd libs/anmemory && $(MAKE) clean
 
