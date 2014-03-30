@@ -185,6 +185,7 @@ static bool _add_allocator(anmem_t * mem,
   mem->allocators[mem->count].type = type;
   mem->allocators[mem->count].start = start;
   mem->allocators[mem->count].len = len;
+  mem->allocators[mem->count].lock = 0;
   mem->count++;
   return true;
 }
