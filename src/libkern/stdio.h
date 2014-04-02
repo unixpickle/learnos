@@ -3,6 +3,7 @@
 
 #include <shared/screen.h>
 #include <stdint.h>
+#include <stddef.h>
 
 void print(const char * buffer);
 void printColor(uint8_t color);

@@ -2,6 +2,7 @@
 #define __LIBKERN_REF_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct {
   uint64_t count;

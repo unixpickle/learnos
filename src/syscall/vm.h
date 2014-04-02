@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 /**
  * Copies the contents at a virtual memory address in the current task's address

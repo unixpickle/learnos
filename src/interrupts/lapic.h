@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 #define LAPIC_REG_APICID 0x2
 #define LAPIC_REG_APICVER 0x3
