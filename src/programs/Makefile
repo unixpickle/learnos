@@ -1,6 +1,7 @@
 PROGRAMS=keyboard ticktock msgd intd terminal pcid
+LIBS=libs/CKeyedBits
 
-programs: libprog/build build
+programs: libprog/build build libsbuild
 	for dir in $(PROGRAMS); do \
 		cd $$dir && $(MAKE); \
 		cd ..; \
@@ -11,6 +12,12 @@ programs: libprog/build build
 libprog/build:
 	cd libprog && $(MAKE)
 
+libsbuild:
+	for dir in $(LIBS); do \
+		cd $$dir && $(MAKE) CFLAGS=-Wall\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss; \
+		cd -; \
+	done
+
 build:
 	mkdir build
 
@@ -19,5 +26,8 @@ clean:
 	cd libprog && make clean
 	for dir in $(PROGRAMS); do \
 		cd $$dir && make clean && cd ..; \
+	done
+	for dir in $(LIBS); do \
+		cd $$dir && make clean && cd -; \
 	done
 
