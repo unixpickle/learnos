@@ -1,36 +1,37 @@
 #include "string.h"
 
-uint64_t strlen(const char * str) {
-  uint64_t len = 0;
+size_t strlen(const char * str) {
+  size_t len = 0;
   while (str[len]) len++;
   return len;
 }
 
-bool strequal(const char * str1, const char * str2) {
-  uint64_t i, l1 = strlen(str1);
-  if (strlen(str2) != strlen(str1)) return false;
-  for (i = 0; i < l1; i++) {
-    if (str1[i] != str2[i]) return false;
+int strcmp(const char * str1, const char * str2) {
+  while ((*str1) != (*str2) && (*str1) && (*str2)) {
+    str1++;
+    str2++;
   }
-  return true;
+  if ((*str1) == (*str2)) return 0;
+  if ((*str1) > (*str2)) return 1;
+  return -1;
 }
 
-bool memequal(const void * b1, const void * b2, uint64_t len) {
-  const uint8_t * a = (const uint8_t *)b1;
-  const uint8_t * b = (const uint8_t *)b2;
-  while (len--) {
-    if (a[0] != b[0]) return false;
-    a++;
-    b++;
+int memcmp(const void * ptr1, const void * ptr2, size_t len) {
+  size_t i;
+  for (i = 0; i < len; i++) {
+    uint8_t b1 = *((uint8_t *)(ptr1 + i));
+    uint8_t b2 = *((uint8_t *)(ptr2 + i));
+    if (b1 > b2) return 1;
+    else if (b1 < b2) return -1;
   }
-  return true;
+  return 0;
 }
 
-void memcpy(void * _dest, const void * src, uint64_t len) {
+void * memcpy(void * dest, const void * src, size_t len) {
   const uint8_t * source = src;
   uint8_t * dest = _dest;
   for (; len > 0; len--) {
     (*(dest++)) = *(source++);
   }
+  return dest;
 }
-

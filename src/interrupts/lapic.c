@@ -1,9 +1,9 @@
 #include "lapic.h"
+#include <acpi/madt.h>
 #include <stdio.h>
 #include <libkern_base.h>
 #include <memory/kernpage.h>
 #include <shared/addresses.h>
-#include "acpi.h"
 #include "pit.h"
 
 #define LAPIC_BASE_ADDR 0xfee00000
@@ -13,7 +13,7 @@ static void * lapicPtr;
 static uint64_t lapicBusSpeed;
 
 void lapic_initialize() {
-  if (!acpi_count_lapics()) {
+  if (!acpi_madt_count_lapics()) {
     die("No LAPICs exist");
   }
 

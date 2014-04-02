@@ -1,3 +1,6 @@
+#ifndef __KERNPAGE_H__
+#define __KERNPAGE_H__
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -82,3 +85,4 @@ uint64_t kernpage_count_allocated();
  */
 void kernpage_copy_physical(void * dest, const void * physical, uint64_t len);
 
+#endif

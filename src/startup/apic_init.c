@@ -4,12 +4,12 @@
 #include <interrupts/idt.h>
 #include <interrupts/ioapic.h>
 #include <interrupts/lapic.h>
-#include <interrupts/acpi.h>
 #include <interrupts/pit.h>
 #include <interrupts/basic.h>
+#include <acpi/madt.h>
 
 void apic_initialize() {
-  if (!acpi_find_madt()) die("Failed to find MADT");
+  if (!acpi_madt_find()) die("failed to find MADT");
 
   // suck away all the dummy interrupts
   pic_disable();

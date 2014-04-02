@@ -1,5 +1,5 @@
 #include "ioapic.h"
-#include "acpi.h"
+#include <acpi/madt.h>
 #include <memory/kernpage.h>
 #include <stdio.h>
 #include <libkern_base.h>
@@ -15,7 +15,7 @@ static void _ioapic_disable_others();
 static void _ioapic_start_receiving();
 
 void ioapic_initialize() {
-  if (!acpi_count_ioapics()) {
+  if (!acpi_madt_count_ioapics()) {
     die("No I/O APICs exist");
   }
 
@@ -79,13 +79,16 @@ static void _ioapic_configure_irqs() {
   uint8_t i;
 
   for (i = 0; i < 0x10; i++) {
-    acpi_entry_iso * iso = acpi_iso_lookup(i);
+    madt_iso_t iso;
+    bool hasISO = acpi_madt_iso_lookup(i, &iso);
     entry.vector = 0x20 + i;
-    if (iso) {
+    if (hasISO) {
       // Interrupt Source Override allows us to get more info about this IRQ
-      if (iso->flags & 0x3) entry.intpol = 1;
-      if ((iso->flags >> 2) & 0x3) entry.triggermode = 1;
-      ioapic_set_red_table(iso->interrupt, entry);
+      if (iso.flags & 0x3) entry.intpol = 1;
+      if ((iso.flags >> 2) & 0x3) entry.triggermode = 1;
+      ioapic_set_red_table(iso.interrupt, entry);
+
+      // reset the extra info for future interrupts
       entry.intpol = 0;
       entry.triggermode = 0;
     } else {

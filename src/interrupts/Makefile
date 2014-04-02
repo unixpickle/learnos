@@ -1,6 +1,6 @@
 PROJECT_ROOT=../..
 
-CSOURCES=idt.c ioapic.c lapic.c acpi.c pic.c pit.c
+CSOURCES=idt.c ioapic.c lapic.c pic.c pit.c
 
 all: csources build/basic.o
 

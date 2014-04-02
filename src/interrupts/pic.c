@@ -1,5 +1,5 @@
 #include "pic.h"
-#include "acpi.h"
+#include <acpi/madt.h>
 #include <stdio.h>
 #include <libkern_base.h>
 
@@ -25,7 +25,7 @@ void io_wait() {
 }
 
 void pic_disable() {
-  if (!acpi_has_pic()) return;
+  if (!acpi_madt_has_8259_pic()) return;
   print("disabling PIC...\n");
 
   /* from: http://wiki.osdev.org/8259_PIC */

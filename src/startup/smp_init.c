@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <libkern_base.h>
 #include <memory/kernpage.h>
+#include <acpi/madt.h>
+#include <shared/addresses.h>
 
 #include <interrupts/lapic.h>
-#include <interrupts/acpi.h>
 #include <interrupts/pit.h>
 #include <interrupts/basic.h>
 
@@ -31,10 +32,7 @@ extern void _binary_pcid_build_pcid_bin_start();
 extern void _binary_pcid_build_pcid_bin_end();
 
 static void copy_init_code();
-static void initialize_cpu(uint32_t lapicId);
-
-static bool lapic_startup(void * unused, acpi_entry_lapic * entry);
-static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry);
+static void initialize_cpu(void * unused, uint64_t lapicId);
 
 static void start_task(void * ptr, uint64_t len);
 
@@ -47,10 +45,8 @@ void smp_initialize() {
   if (!page) die("failed to allocate kernel stack");
   cpu_add_current(page);
 
-  print("initializing xAPIC's...\n");
-  acpi_madt_iterate_type(0, NULL, (madt_iterator_t)lapic_startup);
-  print("initializing x2APIC's...\n");
-  acpi_madt_iterate_type(9, NULL, (madt_iterator_t)x2apic_startup);
+  print("initializing Local APIC's...\n");
+  acpi_madt_get_lapics(NULL, (madt_lapic_iterator_t)initialize_cpu);;
 
   disable_interrupts();
   print("starting bootstrap tasks...\n");
@@ -83,38 +79,25 @@ static void copy_init_code() {
   uint64_t i;
   uint8_t * source = (uint8_t *)proc_entry;
   uint8_t * dest = (uint8_t *)PROC_INIT_PTR;
+  
   print("startup code is ");
   printHex(len);
   print(" bytes.\n");
+  
   for (i = 0; i < len; i++) {
     dest[i] = source[i];
   }
 }
 
-static bool lapic_startup(void * unused, acpi_entry_lapic * entry) {
-  if (!(entry->flags & 1)) {
-    print("There was a disabled CPU with ID ");
-    printHex(entry->apicId);
-    print("\n");
-  }
-  if (!(entry->flags & 1)) return 1;
-  initialize_cpu(entry->apicId);
-  return 1;
-}
-
-static bool x2apic_startup(void * unused, acpi_entry_x2apic * entry) {
-  if (!(entry->flags & 1)) return 1;
-  initialize_cpu(entry->x2apicId);
-  return 1;
-}
-
-static void initialize_cpu(uint32_t cpuId) {
+static void initialize_cpu(void * unused, uint64_t cpuId) {
   if (cpuId == lapic_get_id()) return;
+  
   print("initializing APIC with ID 0x");
   printHex(cpuId);
   print("... ");
 
   lapic_clear_errors();
+  
   // send the INIT IPI with trigger=level and mode=0b101
   lapic_send_ipi(cpuId, 0, 5, 1, 1); // assert the IPI
   pit_sleep(1);
