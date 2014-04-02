@@ -3,7 +3,9 @@
 
 #include <anpages.h>
 #include <analloc.h>
-#include <anmem_consts.h> // int types, etc.
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 /**
  * Represents a section of memory which is controlled by a particular
