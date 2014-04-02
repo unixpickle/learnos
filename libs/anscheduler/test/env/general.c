@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <anlock.h>
+#include <stdlib.h>
 
 void anscheduler_lock(uint64_t * ptr) {
   anlock_lock(ptr);

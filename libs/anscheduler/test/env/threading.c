@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <anlock.h>
+#include <stdlib.h>
 
 typedef struct {
   void (* method)(void *);

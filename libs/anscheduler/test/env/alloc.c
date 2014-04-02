@@ -1,6 +1,7 @@
 #include "alloc.h"
 #include "threading.h"
 #include <assert.h>
+#include <stdlib.h>
 
 static uint64_t allocedPieces __attribute__((aligned(8))) = 0;
 

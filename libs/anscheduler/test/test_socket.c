@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef struct {
   // closer stage:

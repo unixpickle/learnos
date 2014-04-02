@@ -1,7 +1,9 @@
 #ifndef __ANSCHEDULER_TYPES_H__
 #define __ANSCHEDULER_TYPES_H__
 
-#include <anscheduler_consts.h> // should declare int types, etc.
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <anscheduler_structs.h> // you must create this
 #include <anidxset.h>
 
