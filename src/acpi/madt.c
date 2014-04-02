@@ -70,7 +70,7 @@ bool acpi_madt_find() {
   for (i = 0; i < count; i++) {
     void * phys = acpi_sdt_get_table(i);
     kernpage_copy_physical(&madtHeader, phys, 4);
-    if (madtHeader.signature == 'MADT') {
+    if (!memcmp(&madtHeader.signature, "APIC", 4)) {
       madt = phys;
       kernpage_copy_physical(&madtHeader, phys, sizeof(madtHeader));
       return true;
@@ -82,7 +82,7 @@ bool acpi_madt_find() {
 
 void acpi_madt_iterate(void * ui, madt_iterator_t iter) {
   uint64_t i = (uint64_t)madt + sizeof(madtHeader);
-  while (i < (uint64_t)madt + madtHeader.length + 2) {
+  while (i + 2 < (uint64_t)madt + madtHeader.length) {
     uint16_t typeAndLen;
     kernpage_copy_physical(&typeAndLen, (void *)i, 2);
     iter(ui, (void *)i, typeAndLen & 0xff, typeAndLen >> 8);
