@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-#define NULL ((void *)0)
+#include <stddef.h>
 
 #endif
 
