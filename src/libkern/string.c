@@ -27,7 +27,7 @@ int memcmp(const void * ptr1, const void * ptr2, size_t len) {
   return 0;
 }
 
-void * memcpy(void * dest, const void * src, size_t len) {
+void * memcpy(void * _dest, const void * src, size_t len) {
   const uint8_t * source = src;
   uint8_t * dest = _dest;
   for (; len > 0; len--) {
