@@ -124,4 +124,45 @@ uint64_t sys_mem_usage();
  */
 bool sys_kill(uint64_t pid);
 
+/**
+ * Returns an address in the kernel address space to a new virtual page of
+ * memory.
+ */
+uint64_t sys_alloc_page();
+
+/**
+ * Returns an address in the physical address space to a buffer of at least
+ * `pages` 4KB pages. The pointer will be aligned to 2^n bytes, where n is the
+ * first integer such that 2^n >= pages. Thus, if you want an aligned buffer,
+ * you better pass in a power of 2.
+ */
+uint64_t sys_alloc_pci(uint64_t pages);
+
+/**
+ * Free a page of virtual memory allocated with sys_alloc_page().
+ */
+void sys_free_page(uint64_t addr);
+
+/**
+ * Free a chunk of physical memory allocated with sys_alloc_pci().
+ */
+void sys_free_pci(uint64_t addr, uint64_t pages);
+
+/**
+ * Map a virtual page to a physical page in a task's page table.
+ * @return false if the task dies or the map fails because of an internal error.
+ */
+bool sys_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry);
+
+/**
+ * Unmap a virtual page in a task's page table.
+ * @return false if the task dies.
+ */
+bool sys_vmunmap(uint64_t pid, uint64_t vpage);
+
+/**
+ * Notify every CPU running a task that it should flush its TLB cache.
+ */
+bool sys_invlpg(uint64_t pid);
+
 #endif

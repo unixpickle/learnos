@@ -146,3 +146,55 @@ sys_kill:
   syscall
   ret
 
+global sys_alloc_page
+sys_alloc_page:
+  mov rdi, 0x15
+  syscall
+  ret
+
+global sys_alloc_aligned
+sys_alloc_aligned:
+  mov rsi, rdi
+  mov rdi, 0x16
+  syscall
+  ret
+
+global sys_free_page
+sys_free_page:
+  mov rsi, rdi
+  mov rdi, 0x17
+  syscall
+  ret
+
+global sys_free_aligned
+sys_free_aligned:
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x18
+  syscall
+  ret
+
+global sys_vmmap
+sys_vmmap:
+  mov rcx, rdx
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x19
+  syscall
+  ret
+
+global sys_vmunmap
+sys_vmunmap:
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x1a
+  syscall
+  ret
+
+global sys_invlpg
+sys_invlpg:
+  mov rsi, rdi
+  mov rdi, 0x1b
+  syscall
+  ret
+
