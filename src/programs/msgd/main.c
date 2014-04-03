@@ -3,6 +3,7 @@
 #include <string.h>
 #include <keyedbits/buff_decoder.h>
 #include <keyedbits/buff_encoder.h>
+#include <keyedbits/validation.h>
 
 typedef struct {
   uint64_t fd;
@@ -21,6 +22,8 @@ client_t * client_lookup(uint64_t fd);
 
 bool service_msg(service_t * service, msg_t * msg);
 bool client_msg(client_t * client, msg_t * msg);
+bool process_client_msg(client_t * client, msg_t * msg);
+
 bool anonymous_msg(uint64_t fd, msg_t * msg);
 bool process_connect_msg(uint64_t fd, msg_t * msg);
 
@@ -119,30 +122,43 @@ bool client_msg(client_t * client, msg_t * msg) {
     client_remove(client);
     return false;
   }
-  void * msgData = (void *)msg->message;
-  uint64_t type = *((uint64_t *)msgData);
-  if (type == MSG_TYPE_VERIFY) {
-    if (msg->len != 0x10) {
-      sys_close(client->fd);
-      client_remove(client);
-      return false;
-    }
-    uint64_t serviceId = ((uint64_t *)msgData)[1];
-    client_req_verify(client, serviceId);
-  } else if (type == MSG_TYPE_LOOKUP) {
-    if (msg->len >= 0xf8) {
-      sys_close(client->fd);
-      client_remove(client);
-      return false;
-    }
-
-    // get the name
-    char name[0xf0];
-    memcpy(name, msg->message + 8, msg->len - 8);
-    name[msg->len - 8] = 0;
-    client_req_search(client, name);
+  if (!process_client_msg(client, msg)) {
+    sys_close(client->fd);
+    client_remove(client);
+    return false;
   }
   return true;
+}
+
+bool process_client_msg(client_t * client, msg_t * msg) {
+  // two types of objects we could get:
+  // {"type": "verify", "id": aServiceIdInt}
+  // {"type": "lookup", "name": "some name..."}
+
+  kb_buff_t buff;
+  kb_header_t header;
+  kb_buff_initialize_decode(&buff, msg->message, msg->len);
+  if (!kb_buff_read_header(&buff, &header)) return false;
+  if (header.typeField != KeyedBitsTypeDictionary) return false;
+
+  char key[0x10];
+  char type[0x10];
+  char name[0xf0];
+  uint64_t ident = 0;
+  bool gotName = false, gotIdentifier = false;
+  while (1) {
+    if (!kb_buff_read_key(&buff, key, 0x10)) return false;
+    if (!key[0]) break;
+    if (!strcmp(key, "id")) {
+      if (!kb_buff_read_header(&buff, &header)) return false;
+      if (!kb_validate_header(&header)) return false;
+      if (header.typeField != KeyedBitsTypeInteger) return false;
+      int64_t number = 0;
+      if (!kb_buff_read_int(&buff, header.lenLen, &number)) return false;
+      ident = (uint64_t)number;
+      break;
+    }
+  }
 }
 
 bool anonymous_msg(uint64_t fd, msg_t * msg) {
@@ -166,20 +182,29 @@ bool anonymous_msg(uint64_t fd, msg_t * msg) {
 }
 
 bool process_connect_msg(uint64_t fd, msg_t * msg) {
+  // decode an object which could be one of these two:
+  // {"role": "client"}, {"role": "service", "name": "some name..."}
   kb_buff_t buff;
   kb_header_t header;
   kb_buff_initialize_decode(&buff, msg->message, msg->len);
   if (!kb_buff_read_header(&buff, &header)) return false;
   if (header.typeField != KeyedBitsTypeDictionary) return false;
+
   char key[16];
   char name[0xf0];
   int role = 0; // 0 for invalid, 1 for service, 2 for client
   bool gotName = false;
+
   while (1) {
     if (!kb_buff_read_key(&buff, key, 64)) return false;
+    if (!key[0]) break;
+
+    // read the next header
+    if (!kb_buff_read_header(&buff, &header)) return false;
+    if (!kb_validate_header(&header)) return false;
+    if (header.typeField != KeyedBitsTypeString) return false;
+
     if (!strcmp(key, "role") && !role) {
-      if (!kb_buff_read_header(&buff, &header)) return false;
-      if (header.typeField != KeyedBitsTypeString) return false;
       const char * str;
       uint64_t len;
       if (!kb_buff_read_string(&buff, &str, &len)) return false;
@@ -189,8 +214,6 @@ bool process_connect_msg(uint64_t fd, msg_t * msg) {
         role = 1;
       } else return false;
     } else if (!strcmp(key, "name") && !gotName) {
-      if (!kb_buff_read_header(&buff, &header)) return false;
-      if (header.typeField != KeyedBitsTypeString) return false;
       const char * str;
       uint64_t len;
       if (!kb_buff_read_string(&buff, &str, &len)) return false;
@@ -201,10 +224,20 @@ bool process_connect_msg(uint64_t fd, msg_t * msg) {
       break;
     } else return false;
   }
+
   if (role == 1 && !gotName) return false;
   else if (role == 2 && gotName) return false;
 
-  // TODO: generate the appropriate client or service object
+  if (role == 1) {
+    if (sys_remote_uid(fd) != 0) return false;
+    service_t * serv = service_add();
+    serv->fd = fd;
+    serv->serviceId = ++serviceId;
+    strcpy(serv->name, name);
+  } else {
+    client_t * cli = client_add();
+    cli->fd = fd;
+  }
   return true;
 }
 

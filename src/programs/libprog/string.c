@@ -54,3 +54,11 @@ void * memcpy(void * _dest, const void * src, size_t len) {
   return dest;
 }
 
+char * strcpy(char * dest, const char * src) {
+  uint64_t i;
+  for (i = 0; src[i]; i++) {
+    dest[i] = src[i];
+  }
+  return dest;
+}
+
