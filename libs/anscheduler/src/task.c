@@ -3,28 +3,14 @@
 #include <anscheduler/loop.h> // for kernel threads
 #include <anscheduler/thread.h> // for deallocation
 #include <anscheduler/socket.h> // for socket closing
+#include <anscheduler/paging.h>
 #include "util.h" // for idxset
 #include "pidmap.h"
 
 /**
  * @critical
  */
-static task_t * _create_bare_task();
-
-/**
- * @critical
- */
 static bool _map_first_4mb(task_t * task);
-
-/**
- * @critical
- */
-static bool _copy_task_code(task_t * task, void * ptr, uint64_t len);
-
-/**
- * @critical
- */
-static void _dealloc_task_code(task_t * task, uint64_t pageCount);
 
 /**
  * @critical
@@ -35,13 +21,6 @@ static void _generate_kill_job(task_t * task);
  * @noncritical
  */
 static void _free_task_method(task_t * task);
-
-/**
- * Like _dealloc_task_code(), but noncritical; dynamically calculates the
- * size of the code, unlike _dealloc_task_code().
- * @noncritical
- */
-static void _dealloc_task_code_async(task_t * task);
 
 /**
  * @noncritical
@@ -62,15 +41,33 @@ static void _resign_continuation(void * unused);
  * Implementation *
  ******************/
 
-task_t * anscheduler_task_create(void * code, uint64_t len) {
-  task_t * task;
-  if (!(task = _create_bare_task())) {
+task_t * anscheduler_task_create() {
+  // allocate memory for task structure
+  task_t * task = anscheduler_alloc(sizeof(task_t));
+  if (!task) return NULL;
+  anscheduler_zero(task, sizeof(task_t));
+  
+  task->refCount = 1;
+  
+  if (!(task->vm = anscheduler_vm_root_alloc())) {
+    anscheduler_free(task);
     return NULL;
   }
   
-  task->codeRetainCount = anscheduler_alloc(sizeof(uint64_t));
-  if (!task->codeRetainCount) {
-    anscheduler_pidmap_free_pid(task->pid);
+  if (!anscheduler_idxset_init(&task->descriptors)) {
+    anscheduler_vm_root_free(task->vm);
+    anscheduler_free(task);
+    return NULL;
+  }
+  
+  if (!anscheduler_idxset_init(&task->stacks)) {
+    anidxset_free(&task->descriptors);
+    anscheduler_vm_root_free(task->vm);
+    anscheduler_free(task);
+    return NULL;
+  }
+  
+  if (!_map_first_4mb(task)) {
     anidxset_free(&task->descriptors);
     anidxset_free(&task->stacks);
     anscheduler_vm_root_free(task->vm);
@@ -78,57 +75,7 @@ task_t * anscheduler_task_create(void * code, uint64_t len) {
     return NULL;
   }
   
-  if (!_copy_task_code(task, code, len)) {
-    anscheduler_free(task->codeRetainCount);
-    anscheduler_pidmap_free_pid(task->pid);
-    anidxset_free(&task->descriptors);
-    anidxset_free(&task->stacks);
-    anscheduler_vm_root_free(task->vm);
-    anscheduler_free(task);
-    return NULL;
-  }
-  
-  (*task->codeRetainCount) = 1;
-  
-  return task;
-}
-
-task_t * anscheduler_task_fork(task_t * aTask) {
-  task_t * task;
-  if (!(task = _create_bare_task())) {
-    return NULL;
-  }
-  
-  task->codeRetainCount = aTask->codeRetainCount;
-  
-  // map each page until we reach a blank page
-  uint64_t i = ANSCHEDULER_TASK_CODE_PAGE;
-  for (; i < ANSCHEDULER_TASK_KERN_STACKS_PAGE; i++) {
-    anscheduler_lock(&aTask->vmLock);
-    uint16_t flags;
-    uint64_t page = anscheduler_vm_lookup(aTask->vm, i, &flags);
-    if (!(flags & ANSCHEDULER_PAGE_FLAG_PRESENT)) {
-      anscheduler_unlock(&aTask->vmLock);
-      break;
-    }
-    anscheduler_unlock(&aTask->vmLock);
-    
-    anscheduler_lock(&task->vmLock);
-    if (!anscheduler_vm_map(task->vm, i, page, flags)) {
-      anscheduler_unlock(&task->vmLock);
-      
-      // it failed
-      anscheduler_pidmap_free_pid(task->pid);
-      anidxset_free(&task->descriptors);
-      anidxset_free(&task->stacks);
-      anscheduler_vm_root_free(task->vm);
-      anscheduler_free(task);
-      return NULL;
-    }
-    anscheduler_unlock(&task->vmLock);
-  }
-  
-  anscheduler_inc(aTask->codeRetainCount);
+  task->pid = anscheduler_pidmap_alloc_pid();
   return task;
 }
 
@@ -149,6 +96,13 @@ void anscheduler_task_launch(task_t * task) {
 }
 
 void anscheduler_task_kill(task_t * task, uint64_t reason) {
+  // you cannot kill the system pager
+  if (anscheduler_pager_get()) {
+    if (task == anscheduler_pager_get()->task) {
+      return;
+    }
+  }
+  
   // emulate a test-and-or operation
   anscheduler_lock(&task->killLock);
   if (task->isKilled) {
@@ -201,44 +155,6 @@ void anscheduler_task_exit(uint8_t code) {
  * Helper Methods *
  ******************/
 
-static task_t * _create_bare_task() {
-  // allocate memory for task structure
-  task_t * task = anscheduler_alloc(sizeof(task_t));
-  if (!task) return NULL;
-  anscheduler_zero(task, sizeof(task_t));
-  
-  task->refCount = 1;
-  
-  if (!(task->vm = anscheduler_vm_root_alloc())) {
-    anscheduler_free(task);
-    return NULL;
-  }
-  
-  if (!anscheduler_idxset_init(&task->descriptors)) {
-    anscheduler_vm_root_free(task->vm);
-    anscheduler_free(task);
-    return NULL;
-  }
-  
-  if (!anscheduler_idxset_init(&task->stacks)) {
-    anidxset_free(&task->descriptors);
-    anscheduler_vm_root_free(task->vm);
-    anscheduler_free(task);
-    return NULL;
-  }
-  
-  if (!_map_first_4mb(task)) {
-    anidxset_free(&task->descriptors);
-    anidxset_free(&task->stacks);
-    anscheduler_vm_root_free(task->vm);
-    anscheduler_free(task);
-    return NULL;
-  }
-  
-  task->pid = anscheduler_pidmap_alloc_pid();
-  return task;
-}
-
 static bool _map_first_4mb(task_t * task) {
   uint64_t i;
   for (i = 0; i < 0x400; i++) {
@@ -248,67 +164,6 @@ static bool _map_first_4mb(task_t * task) {
     if (!anscheduler_vm_map(task->vm, i, i, flags)) return false;
   }
   return true;
-}
-
-static bool _copy_task_code(task_t * task, void * ptr, uint64_t len) {
-  uint64_t pageCount = (len >> 12) + (uint64_t)((len & 0xfff) != 0);
-  uint64_t i, flags = ANSCHEDULER_PAGE_FLAG_PRESENT
-    | ANSCHEDULER_PAGE_FLAG_WRITE
-    | ANSCHEDULER_PAGE_FLAG_USER;
-  
-  // allocate each page for the task, and then copy the code into each page
-  // one by one
-  for (i = 0; i < pageCount; i++) {    
-    void * buff = anscheduler_alloc(0x1000);
-    if (!buff) {
-      // free pages up to here
-      _dealloc_task_code(task, i);
-      return false;
-    }
-    
-    // map the page
-    uint64_t phys = anscheduler_vm_physical(((uint64_t)buff) >> 12);
-    if (!anscheduler_vm_map(task->vm, i + ANSCHEDULER_TASK_CODE_PAGE,
-                            phys, flags)) {
-      anscheduler_free(buff);
-      _dealloc_task_code(task, i);
-      return false;
-    }
-    
-    // copy the data
-    uint16_t j;
-    if (i != pageCount - 1 || (len & 0xfff) == 0) {
-      uint64_t * bytes = (uint64_t *)buff;
-      uint64_t * source = (uint64_t *)(ptr + (i << 12));
-      for (j = 0; j < 0x200; j++) {
-        bytes[j] = source[j];
-      }
-    } else {
-      uint8_t * bytes = (uint8_t *)buff;
-      uint8_t * source = (uint8_t *)(ptr + (i << 12));
-      for (j = 0; j < (len & 0xfff); j++) {
-        bytes[j] = source[j];
-      }
-    }
-  }
-  
-  return true;
-}
-
-static void _dealloc_task_code(task_t * task, uint64_t pageCount) {
-  uint64_t i;
-  for (i = 0; i < pageCount; i++) {
-    uint16_t flag = 0;
-    uint64_t page = anscheduler_vm_lookup(task->vm,
-                                          i + ANSCHEDULER_TASK_CODE_PAGE,
-                                          &flag);
-    if (!(flag & ANSCHEDULER_PAGE_FLAG_PRESENT)) {
-      continue;
-    }
-    uint64_t vir = anscheduler_vm_virtual(page);
-    anscheduler_free((void *)(vir << 12));
-    anscheduler_vm_unmap(task->vm, i + ANSCHEDULER_TASK_CODE_PAGE);
-  }
 }
 
 static void _generate_kill_job(task_t * task) {
@@ -337,14 +192,6 @@ static void _free_task_method(task_t * task) {
   
   // wait for each socket to die so that we know nothing references the task
   _close_task_sockets_async(task);
-
-  // release the task's code
-  if (!__sync_sub_and_fetch(task->codeRetainCount, 1)) {
-    _dealloc_task_code_async(task);
-    anscheduler_cpu_lock();
-    anscheduler_free(task->codeRetainCount);
-    anscheduler_cpu_unlock();
-  }
   
   // free each thread and all its resources
   while (task->firstThread) {
@@ -358,9 +205,11 @@ static void _free_task_method(task_t * task) {
     anscheduler_cpu_unlock();
   }
   
+  anscheduler_task_cleanup(task);
   anscheduler_vm_root_free_async(task->vm);
+  
   anscheduler_cpu_lock();
-
+  
   // free the general structures of the task
   anidxset_free(&task->stacks);
   anidxset_free(&task->descriptors);
@@ -369,27 +218,6 @@ static void _free_task_method(task_t * task) {
   anscheduler_free(task);
   
   anscheduler_loop_delete_cur_kernel();
-}
-
-static void _dealloc_task_code_async(task_t * task) {
-  uint64_t i = ANSCHEDULER_TASK_CODE_PAGE;
-  for (; i < ANSCHEDULER_TASK_KERN_STACKS_PAGE; i++) {
-    anscheduler_cpu_lock();
-    
-    // no need to lock the vm structure anymore
-    uint16_t flag = 0;
-    uint64_t page = anscheduler_vm_lookup(task->vm, i, &flag);
-    if (!(flag & ANSCHEDULER_PAGE_FLAG_PRESENT)) {
-      anscheduler_cpu_unlock();
-      break;
-    }
-    
-    uint64_t vir = anscheduler_vm_virtual(page);
-    anscheduler_free((void *)(vir << 12));
-    anscheduler_vm_unmap(task->vm, i);
-    
-    anscheduler_cpu_unlock();
-  }
 }
 
 static void _close_task_sockets_async(task_t * task) {

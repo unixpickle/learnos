@@ -3,21 +3,6 @@
 
 #include "types.h"
 
-#define ANSCHEDULER_PAGE_FAULT_PRESENT 1
-#define ANSCHEDULER_PAGE_FAULT_WRITE 2
-#define ANSCHEDULER_PAGE_FAULT_USER 4
-#define ANSCHEDULER_PAGE_FAULT_INSTRUCTION 0x10
-
-/**
- * Call this whenever a page fault or platform-equivalent interrupt occurs.
- *
- * This function should never return. Instead, it should switch directly
- * back into the current task if it wishes to proceed running. Otherwise, it
- * should call back to the run loop.
- * @critical
- */
-void anscheduler_page_fault(void * ptr, uint64_t flags);
-
 /**
  * Call this whenever an external IRQ comes in. When the IRQ arrives, save
  * the state of the current task. Then, if this function returns, restore the
@@ -30,18 +15,27 @@ void anscheduler_irq(uint8_t irqNumber);
 
 /**
  * @return The current thread which is registered to receive interrupts.
+ * @critical
  */
-thread_t * anscheduler_interrupt_thread();
+thread_t * anscheduler_intd_get();
 
 /**
  * Set the current thread which will receive interrupts.
+ * @critical
  */
-void anscheduler_set_interrupt_thread(thread_t * thread);
+void anscheduler_intd_set(thread_t * thread);
 
 /**
  * If the passed thread is the current interrupt thread, set the interrupt
  * thread to NULL. This should be called whenever a thread dies.
+ * @critical
  */
-void anscheduler_interrupt_thread_cmpnull(thread_t * thread);
+void anscheduler_intd_cmpnull(thread_t * thread);
+
+/**
+ * Reads the current interrupt mask and sets it back to zero.
+ * @critical
+ */
+uint32_t anscheduler_intd_read();
 
 #endif

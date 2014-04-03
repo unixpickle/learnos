@@ -18,17 +18,13 @@ typedef struct thread_t thread_t;
 typedef struct socket_t socket_t;
 typedef struct socket_desc_t socket_desc_t;
 typedef struct socket_msg_t socket_msg_t;
+typedef struct page_fault_t page_fault_t;
 
 struct task_t {
   task_t * next, * last;
   
   uint64_t pid;
   uint64_t uid;
-  
-  // when this task exits, *codeRetainCount-- is performed. If the new
-  // value is 0, then the code data of this task is deallocated and so is
-  // the pointer to codeRetainCount.
-  uint64_t * codeRetainCount;
   
   // virtual memory structure
   uint64_t vmLock;
@@ -72,9 +68,8 @@ struct thread_t {
   uint64_t stack;
   
   bool isPolling; // 1 if waiting for a message (or an interrupt)
-  char reserved[3]; // for alignment
-  uint32_t irqs; // if this is the interrupt thread, these will be masked
-  
+  char reserved[7]; // for alignment
+    
   anscheduler_state state;
 } __attribute__((packed));
 
@@ -122,6 +117,17 @@ struct socket_msg_t {
   uint64_t type;
   uint64_t len;
   uint8_t message[0xfe8]; // 0x1000 - 0x18
+} __attribute__((packed));
+
+struct page_fault_t {
+  page_fault_t * next;
+  
+  task_t * task; // referenced
+  thread_t * thread; // cannot die because it's idle
+  
+  // page fault information itself
+  void * ptr;
+  uint64_t flags;
 } __attribute__((packed));
 
 #endif

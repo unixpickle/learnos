@@ -13,27 +13,7 @@
 #define ANSCHEDULER_TASK_USER_STACKS_PAGE    0x200000
 #define ANSCHEDULER_TASK_DATA_PAGE         0x10200000
 
-/**
- * Creates a task by allocating a new page table and mapping+copying new pages
- * in from `code` of length `len`.
- * @return a new task, or NULL if allocation failed. The ref count will start
- * at 1.
- * @critical The copy operation is all done from a critical section, so this
- * really should only be done once at boot with the bootstrap task. After that
- * every new execution should be done with task_fork_code().
- */
-task_t * anscheduler_task_create(void * code, uint64_t len);
-
-/**
- * "Forks" a task. All this really means is that the task's code section is
- * copied. Pretty much no other data is retained.
- * @return a new task (without a reference), or NULL if allocation failed.
- * @param task The task whose code to reference. A reference must be held for
- * this task.
- * @critical Referencing the old code section is much less slow since the only
- * thing to do is create page table entries.
- */
-task_t * anscheduler_task_fork(task_t * task);
+task_t * anscheduler_task_create();
 
 /**
  * Adds a task's to the scheduling queue.

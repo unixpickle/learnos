@@ -265,4 +265,18 @@ void anscheduler_vm_root_free(void * root);
  */
 void anscheduler_vm_root_free_async(void * root);
 
+/*********
+ * Hooks *
+ *********/
+
+/**
+ * Called from a kernel thread when a task is about to be freed. At this point,
+ * the task's virtual memory mapping will still be in tact, but it will have no
+ * sockets open and no external references to it. If you have no task-specific
+ * data to free here, you need not do anything in this implementation.
+ * @noncritical
+ */
+void anscheduler_task_cleanup(task_t * task);
+
 #endif
+

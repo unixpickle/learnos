@@ -1,7 +1,7 @@
 CFILES=$(wildcard env/*.c)
 ASMFILES=$(wildcard env/*.s)
 CFLAGS=-Wall -pthread -lpthread -I../include -I./include -I../lib/anidxset/src -I../lib/anlock/src
-TEST_PROGS=test_single.c test_multi.c test_socket.c
+TEST_PROGS=test_single.c test_multi.c test_socket.c test_pager.c
 BUILD_FILES=../lib/anlock/build/*.o ../lib/anidxset/build/*.o ../build/*.o env/build/*.o
 
 tests: testLib build env/build

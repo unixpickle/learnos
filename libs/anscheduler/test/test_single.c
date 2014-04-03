@@ -27,8 +27,7 @@ int main() {
 
 void proc_enter(void * unused) {
   printf("launching task...\n");
-  char useless[2];
-  task_t * task = anscheduler_task_create(useless, 2);
+  task_t * task = anscheduler_task_create();
   anscheduler_task_launch(task);
   
   printf("creating thread...\n");

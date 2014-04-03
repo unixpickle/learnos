@@ -109,7 +109,7 @@ void anscheduler_thread_exit() {
 
 void anscheduler_thread_deallocate(task_t * task, thread_t * thread) {
   anscheduler_cpu_lock();
-  anscheduler_interrupt_thread_cmpnull(thread);
+  anscheduler_intd_cmpnull(thread);
   anscheduler_cpu_unlock();
   
   uint64_t i;

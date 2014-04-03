@@ -5,6 +5,7 @@
 #include "context.h"
 #include "alloc.h"
 #include <anscheduler/interrupts.h>
+#include <anscheduler/paging.h>
 #include <anscheduler/thread.h>
 #include <assert.h>
 

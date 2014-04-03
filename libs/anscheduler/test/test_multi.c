@@ -48,8 +48,7 @@ void proc_enter(void * unused) {
 }
 
 void create_a_thread() {
-  char useless[2];
-  task_t * task = anscheduler_task_create(useless, 2);
+  task_t * task = anscheduler_task_create();
   anscheduler_task_launch(task);
   
   thread_t * thread = anscheduler_thread_create(task);
