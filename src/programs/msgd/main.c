@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <msgd.h>
 #include <string.h>
+#include <keyedbits/buff_decoder.h>
+#include <keyedbits/buff_encoder.h>
 
 typedef struct {
   uint64_t fd;
@@ -20,6 +22,7 @@ client_t * client_lookup(uint64_t fd);
 bool service_msg(service_t * service, msg_t * msg);
 bool client_msg(client_t * client, msg_t * msg);
 bool anonymous_msg(uint64_t fd, msg_t * msg);
+bool process_connect_msg(uint64_t fd, msg_t * msg);
 
 void client_req_verify(client_t * cli, uint64_t servId);
 void client_req_search(client_t * cli, const char * name);
@@ -154,35 +157,55 @@ bool anonymous_msg(uint64_t fd, msg_t * msg) {
     return false;
   }
 
-  void * msgData = (void *)msg->message;
-  uint64_t type = *((uint64_t *)msgData);
-  if (type == MSG_TYPE_SERVICE_INIT) {
-    if (msg->len >= 0xf8 || msg->len == 8) {
-      sys_close(fd);
-      return false;
-    }
-    if (sys_remote_uid(fd) != 0) {
-      printf("[msgd]: non-privileged task %x tried to register service\n",
-             sys_remote_pid(fd));
-      sys_close(fd);
-      return false;
-    }
-
-    service_t * serv = service_add();
-    serv->fd = fd;
-    serv->serviceId = ++serviceId;
-    // the name will be up to 0xef bytes long with a 1 byte NULL termination
-    memcpy(serv->name, msg->message + 8, msg->len - 8);
-    serv->name[msg->len - 8] = 0;
-    return true;
-  } else if (type == MSG_TYPE_CLIENT_INIT) {
-    client_t * cli = client_add();
-    cli->fd = fd;
-    return true;
+  if (!process_connect_msg(fd, msg)) {
+    sys_close(fd);
+    return false;
   }
 
-  sys_close(fd);
-  return false;
+  return true;
+}
+
+bool process_connect_msg(uint64_t fd, msg_t * msg) {
+  kb_buff_t buff;
+  kb_header_t header;
+  kb_buff_initialize_decode(&buff, msg->message, msg->len);
+  if (!kb_buff_read_header(&buff, &header)) return false;
+  if (header.typeField != KeyedBitsTypeDictionary) return false;
+  char key[16];
+  char name[0xf0];
+  int role = 0; // 0 for invalid, 1 for service, 2 for client
+  bool gotName = false;
+  while (1) {
+    if (!kb_buff_read_key(&buff, key, 64)) return false;
+    if (!strcmp(key, "role") && !role) {
+      if (!kb_buff_read_header(&buff, &header)) return false;
+      if (header.typeField != KeyedBitsTypeString) return false;
+      const char * str;
+      uint64_t len;
+      if (!kb_buff_read_string(&buff, &str, &len)) return false;
+      if (!strcmp(str, "client")) {
+        role = 2;
+      } else if (!strcmp(str, "service")) {
+        role = 1;
+      } else return false;
+    } else if (!strcmp(key, "name") && !gotName) {
+      if (!kb_buff_read_header(&buff, &header)) return false;
+      if (header.typeField != KeyedBitsTypeString) return false;
+      const char * str;
+      uint64_t len;
+      if (!kb_buff_read_string(&buff, &str, &len)) return false;
+      if (len > 0xef) return false;
+      memcpy(name, str, len + 1);
+      gotName = true;
+    } else if (key[0] == 0) {
+      break;
+    } else return false;
+  }
+  if (role == 1 && !gotName) return false;
+  else if (role == 2 && gotName) return false;
+
+  // TODO: generate the appropriate client or service object
+  return true;
 }
 
 void client_req_verify(client_t * cli, uint64_t servId) {
@@ -203,7 +226,7 @@ void client_req_search(client_t * cli, const char * name) {
 
   uint64_t i;
   for (i = 0; i < serviceCount; i++) {
-    if (strequal(services[i].name, name)) {
+    if (!strcmp(services[i].name, name)) {
       serv = &services[i];
       break;
     }
