@@ -3,6 +3,7 @@
 #include "vm.h"
 #include "io.h"
 #include "exec.h"
+#include "memory.h"
 #include <stdio.h>
 #include <memory/kernpage.h>
 #include <shared/addresses.h>
@@ -18,50 +19,47 @@ uint64_t syscall_entry(uint64_t arg1,
                        uint64_t arg2,
                        uint64_t arg3,
                        uint64_t arg4) {
-  if (arg1 == 0) {
-    syscall_print((void *)arg2);
-  } else if (arg1 == 1) {
-    return syscall_get_time();
-  } else if (arg1 == 2) {
-    syscall_sleep(arg2);
-  } else if (arg1 == 3) {
-    syscall_exit();
-  } else if (arg1 == 4) {
-    syscall_thread_exit();
-  } else if (arg1 == 5) {
-    syscall_wants_interrupts();
-  } else if (arg1 == 6) {
-    return syscall_get_interrupts();
-  } else if (arg1 == 7) {
-    return syscall_open_socket();
-  } else if (arg1 == 8) {
-    return syscall_connect(arg2, arg3);
-  } else if (arg1 == 9) {
-    syscall_close_socket(arg2);
-  } else if (arg1 == 10) {
-    return syscall_write(arg2, arg3, arg4);
-  } else if (arg1 == 11) {
-    return syscall_read(arg2, arg3);
-  } else if (arg1 == 12) {
-    return syscall_poll();
-  } else if (arg1 == 13) {
-    return syscall_remote_pid(arg2);
-  } else if (arg1 == 14) {
-    return syscall_remote_uid(arg2);
-  } else if (arg1 == 15) {
-    return syscall_in(arg2, arg3);
-  } else if (arg1 == 16) {
-    syscall_out(arg2, arg3, arg4);
-  } else if (arg1 == 17) {
-    syscall_set_color((uint8_t)arg2);
-  } else if (arg1 == 18) {
-    return syscall_fork(arg2);
-  } else if (arg1 == 19) {
-    return syscall_mem_usage();
-  } else if (arg1 == 20) {
-    return (uint64_t)syscall_kill(arg2);
+  void * functions[] = {
+    (void *)syscall_print,
+    (void *)syscall_get_time,
+    (void *)syscall_sleep,
+    (void *)syscall_exit,
+    (void *)syscall_thread_exit,
+    (void *)syscall_wants_interrupts,
+    (void *)syscall_get_interrupts,
+    (void *)syscall_open_socket,
+    (void *)syscall_connect,
+    (void *)syscall_close_socket,
+    (void *)syscall_write,
+    (void *)syscall_read,
+    (void *)syscall_poll,
+    (void *)syscall_remote_pid,
+    (void *)syscall_remote_uid,
+    (void *)syscall_in,
+    (void *)syscall_out,
+    (void *)syscall_set_color,
+    (void *)syscall_fork,
+    (void *)syscall_mem_usage,
+    (void *)syscall_kill,
+    (void *)syscall_allocate_page,
+    (void *)syscall_allocate_aligned,
+    (void *)syscall_free_page,
+    (void *)syscall_free_aligned,
+    (void *)syscall_vmmap,
+    (void *)syscall_vmunmap,
+    (void *)syscall_invlpg
+  };
+  if (arg1 >= sizeof(functions) / sizeof(void *)) {
+    return 0;
   }
-  return 0;
+  uint64_t ret;
+  void * func = functions[arg1];
+  __asm__("xor %%rax, %%rax\n"
+          "call *%%rcx"
+          : "=a" (ret)
+          : "D" (arg2), "S" (arg3), "d" (arg4), "c" (func)
+          : "r8", "r9", "r10", "r11", "memory");
+  return ret;
 }
 
 void syscall_return(restore_regs * regs) {
