@@ -9,6 +9,7 @@
 #include <interrupts/basic.h>
 
 #include <scheduler/cpu.h>
+#include <scheduler/code.h>
 #include <anscheduler/loop.h>
 #include <anscheduler/task.h>
 #include <anscheduler/thread.h>
@@ -125,9 +126,10 @@ static void initialize_cpu(void * unused, uint64_t cpuId) {
 }
 
 static void start_task(void * ptr, uint64_t len) {
-  task_t * task = anscheduler_task_create(ptr, len);
+  code_t * code = code_allocate(ptr, len);
+  task_t * task = anscheduler_task_create();
+  task->ui.code = code;
   anscheduler_task_launch(task);
-
 
   thread_t * thread = anscheduler_thread_create(task);
   uint64_t stackStart = ANSCHEDULER_TASK_USER_STACKS_PAGE
