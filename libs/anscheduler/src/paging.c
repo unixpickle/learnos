@@ -13,7 +13,7 @@ typedef struct {
 } fault_info_t;
 
 static void _push_page_fault(fault_info_t * _info);
-static void _push_page_fault_cont(fault_info_t info);
+static bool _push_page_fault_cont(fault_info_t info);
 
 void anscheduler_page_fault(void * ptr, uint64_t _flags) {
   task_t * task = anscheduler_cpu_get_task();
@@ -102,7 +102,11 @@ page_fault_t * anscheduler_pager_read() {
 }
 
 static void _push_page_fault(fault_info_t * _info) {
-  _push_page_fault_cont(*_info);
+  bool result = _push_page_fault_cont(*_info);
+
+  if (!result) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
+  }
   
   // no other thread got woken up, so we should run the loop
   task_t * curTask = anscheduler_cpu_get_task();
@@ -112,8 +116,8 @@ static void _push_page_fault(fault_info_t * _info) {
   anscheduler_loop_run();
 }
 
-static void _push_page_fault_cont(fault_info_t info) {
-  if (!pagerThread) return;
+static bool _push_page_fault_cont(fault_info_t info) {
+  if (!pagerThread) return false;
   
   // get the current task and then make sure it doesn't get pushed again
   task_t * curTask = anscheduler_cpu_get_task();
@@ -147,4 +151,5 @@ static void _push_page_fault_cont(fault_info_t info) {
     }
     anscheduler_loop_switch(task, pagerThread);
   }
+  return true;
 }
