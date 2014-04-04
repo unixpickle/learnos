@@ -44,8 +44,8 @@ bool code_handle_page_fault(code_t * code,
   uint16_t _flags;
   anscheduler_vm_lookup(thread->task->vm, taskPage, &_flags);
   anscheduler_unlock(&thread->task->vmLock);
-  if (_flags & 7) return true;
-  if (_flags & 5 && !(flags & 2)) return true;
+  if ((_flags & 7) == 7) return true;
+  if ((_flags & 5) && !(flags & 2)) return true;
 
   page_t phyPage = 0;
   uint16_t phyFlags = 0;

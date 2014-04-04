@@ -207,7 +207,7 @@ static void _page_fault_handler(uint64_t code) {
       anscheduler_abort("kernel triggered page fault");
     }
     code_t * codeT = thread->task->ui.code;
-    if (!code_handle_page_fault(codeT, thread, faultAddr, (uint16_t)code)) {
+    if (!code_handle_page_fault(codeT, thread, faultAddr, code)) {
       anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
     }
     return;
