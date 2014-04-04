@@ -56,6 +56,6 @@ void anscheduler_intd_cmpnull(thread_t * thread) {
   anscheduler_unlock(&threadLock);
 }
 
-uint32_t anscheduler_intd_mask() {
+uint32_t anscheduler_intd_read() {
   return __sync_fetch_and_and(&irqMask, 0);
 }
