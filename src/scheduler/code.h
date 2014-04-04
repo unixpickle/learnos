@@ -49,6 +49,7 @@ bool code_handle_page_fault(code_t * code,
  * Called to cleanup the code section of a task. This will go through the VM map
  * and free the code pages which are marked as writable. Additionally, this will
  * automatically call code_release(code).
+ * @noncritical
  */
 void code_task_cleanup(code_t * code, task_t * task);
 

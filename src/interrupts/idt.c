@@ -212,7 +212,6 @@ static void _page_fault_handler(uint64_t code) {
     }
     return;
   }
-
   thread_t * thread = anscheduler_cpu_get_thread();
   if (thread) {
     anscheduler_save_return_state(thread, (void *)code,

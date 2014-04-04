@@ -27,6 +27,7 @@ int main() {
   msgd_connect_services(1, (const char **)&keyboardName, &keyboard, 3);
   if (!(keyboard + 1)) {
     printf("[terminal]: error: failed to connect to keyboard\n");
+    return 0;
   }
   printf("[terminal]: connected to keyboard.\n");
 
