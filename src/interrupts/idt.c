@@ -13,6 +13,7 @@
 #include <anlock.h>
 
 static void _initialize_idt(idt_entry_t * ptr);
+static void _page_fault_handler(uint64_t vec, uint64_t code);
 static void _call_page_fault(uint64_t args);
 static void _idt_continuation(uint64_t irq);
 
@@ -95,12 +96,7 @@ void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
   uint64_t retAddr;
   __asm__("mov 0xa0(%%rbp), %0" : "=r" (retAddr));
   if (vec == 0xe) {
-    thread_t * thread = anscheduler_cpu_get_thread();
-    if (thread) {
-      anscheduler_save_return_state(thread, (void *)code,
-                                    (void (*)(void *))_call_page_fault);
-      return;
-    }
+    // here, check if it's a code page
   }
   print("Got exception vector ");
   printHex(vec);
@@ -194,6 +190,31 @@ static void _initialize_idt(idt_entry_t * ptr) {
                               : unknownUpperHalf + ((i - 0x80) << 5);
     idt_entry_t entry = IDT_ENTRY_INIT((uint64_t)codePtr, 0x8e);
     ptr[i] = entry;
+  }
+}
+
+static void _page_fault_handler(uint64_t vec, uint64_t code) {
+  void * faultAddr;
+  __asm__("mov %%cr2, %0" : "=r" (faultAddr));
+  uint64_t page = ((uint64_t)faultAddr) >> 12;
+  if (page >= ANSCHEDULER_TASK_CODE_PAGE
+      && page < ANSCHEDULER_TASK_KERN_STACKS_PAGE) {
+    thread_t * thread = anscheduler_cpu_get_thread();
+    if (!thread->task) {
+      anscheduler_abort("kernel triggered page fault");
+    }
+    code_t * codeT = thread->task->ui.code;
+    if (!code_handle_page_fault(codeT, thread, faultAddr, (uint16_t)code)) {
+      anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
+    }
+    return;
+  }
+
+  thread_t * thread = anscheduler_cpu_get_thread();
+  if (thread) {
+    anscheduler_save_return_state(thread, (void *)code,
+                                  (void (*)(void *))_call_page_fault);
+    return;
   }
 }
 

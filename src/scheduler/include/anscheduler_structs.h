@@ -1,3 +1,5 @@
+#include "../code.h"
+
 /**
  * Equivalent to this:
  *********************
@@ -47,7 +49,6 @@ typedef struct {
 } __attribute__((packed)) anscheduler_state;
 
 typedef struct {
-  uint64_t reserved;
-  // TODO: see if i can declare an empty struct
+  code_t * code;
 } __attribute__((packed)) anscheduler_task_ui_t;
 
