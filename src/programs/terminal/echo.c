@@ -12,7 +12,8 @@ void command_echo() {
         if (msg.len > 5) {
           sys_write(0, msg.message + 5, msg.len - 5);
         }
-        sys_write(0, "\n", 1);
+        char terminator[2] = "\n";
+        sys_write(0, terminator, 1);
         sys_exit();
       }
     }
