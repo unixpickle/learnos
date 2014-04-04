@@ -7,7 +7,8 @@
 uint64_t syscall_fork(uint64_t rip) {
   anscheduler_cpu_lock();
   task_t * task = anscheduler_cpu_get_task();
-  task_t * fork = anscheduler_task_fork(task);
+  task_t * fork = anscheduler_task_create();
+  fork->ui.code = code_retain(task->ui.code);
   anscheduler_task_launch(fork);
 
   if (!fork) {

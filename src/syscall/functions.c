@@ -123,14 +123,16 @@ void syscall_wants_interrupts() {
   if (task->uid) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
-  anscheduler_set_interrupt_thread(anscheduler_cpu_get_thread());
+  anscheduler_intd_set(anscheduler_cpu_get_thread());
   anscheduler_cpu_unlock();
 }
 
 uint64_t syscall_get_interrupts() {
   anscheduler_cpu_lock();
-  thread_t * thread = anscheduler_cpu_get_thread();
-  uint64_t result = __sync_fetch_and_and(&thread->irqs, 0);
+  if (anscheduler_cpu_get_task()->uid) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  uint64_t result = anscheduler_intd_read();
   anscheduler_cpu_unlock();
   return result;
 }
