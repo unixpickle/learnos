@@ -1,6 +1,13 @@
 #ifndef __ANSCHEDULER_TYPES_H__
 #define __ANSCHEDULER_TYPES_H__
 
+typedef struct task_t task_t;
+typedef struct thread_t thread_t;
+typedef struct socket_t socket_t;
+typedef struct socket_desc_t socket_desc_t;
+typedef struct socket_msg_t socket_msg_t;
+typedef struct page_fault_t page_fault_t;
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -12,13 +19,6 @@
 #define ANSCHEDULER_MSG_TYPE_CLOSE 2
 
 #define ANSCHEDULER_MAX_MSG_BUFFER 0x8
-
-typedef struct task_t task_t;
-typedef struct thread_t thread_t;
-typedef struct socket_t socket_t;
-typedef struct socket_desc_t socket_desc_t;
-typedef struct socket_msg_t socket_msg_t;
-typedef struct page_fault_t page_fault_t;
 
 struct task_t {
   task_t * next, * last;
