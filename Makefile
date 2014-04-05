@@ -26,6 +26,9 @@ clean:
 
 deps:
 	cd libs && $(MAKE)
+	cd src/programs/libs && $(MAKE)
 
 deps-clean:
 	cd libs && $(MAKE) clean
+	cd src/programs/libs && $(MAKE) clean
+
