@@ -1,9 +1,8 @@
 SOURCE_DIRS=src/startup src/startup/libkern32 src/libkern src/interrupts src/scheduler src/syscall src/programs src/memory src/acpi
 BUILD_FILES=src/startup/build/*.o src/startup/libkern32/build/*.o src/libkern/build/*.o src/interrupts/build/*.o src/scheduler/build/*.o src/syscall/build/*.o src/programs/build/*.o src/memory/build/*.o src/acpi/build/*.o
-LIBS=libs/anpages libs/anlock libs/anidxset
 LIB_BUILD=libs/anpages/build/*.o libs/anlock/build/*.o libs/anidxset/build/*.o libs/anscheduler/build/*.o libs/anmem/build/*.o libs/anmem/libs/analloc/build/*.o
 
-learnos.bin: objects all_libs anscheduler anmem
+learnos.bin: objects
 	ld $(BUILD_FILES) $(LIB_BUILD) -T linker.ld -e multiboot_header --oformat binary -s -o learnos.bin
 
 objects:
@@ -11,19 +10,6 @@ objects:
 		cd $$dir && $(MAKE); \
 		cd -; \
 	done
-
-all_libs:
-	for dir in $(LIBS); do \
-		cd $$dir && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=$(LIB_INCLUDE); \
-		cd -; \
-	done
-
-anscheduler:
-	cd libs/anscheduler && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=-I../../src/scheduler/include\ -I../../src/\ -I../../src/libkern
-
-anmem:
-	cd libs/anmem && $(MAKE) CFLAGS=-fno-zero-initialized-in-bss\ -fno-stack-protector\ -mno-red-zone\ -ffreestanding INCLUDES=-I../../src/memory/include\ -I../../src/\ -I../../src/libkern && cd -
-	cd libs/anmem/libs/analloc && make
 
 image: learnos.bin
 	cp learnos.bin isodir/boot/learnos.bin
@@ -37,11 +23,9 @@ clean:
 		cd $$dir && $(MAKE) clean; \
 		cd -; \
 	done
-	for dir in $(LIBS); do \
-		cd $$dir && $(MAKE) clean; \
-		cd -; \
-	done
-	cd libs/anscheduler && $(MAKE) clean && cd -
-	cd libs/anmem && $(MAKE) clean && cd -
-	cd libs/anmem/libs/analloc && $(MAKE) clean
 
+deps:
+	cd libs && $(MAKE)
+
+deps-clean:
+	cd libs && $(MAKE) clean
