@@ -1,8 +1,8 @@
 LIBS=CKeyedBits
 
-all: v8_build
+all:
 	for dir in $(LIBS); do \
-		cd $$dir && $(MAKE) CFLAGS=-Wall\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss -nostdinc; \
+		cd $$dir && $(MAKE) CFLAGS=-Wall\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss\ -nostdinc\ -I../../libprog; \
 		cd -; \
 	done
 
@@ -14,7 +14,7 @@ v8_deps:
 v8_build:
 	# here, we'll set -DOS=learnos
 	export GYP_DEFINES=-DOS=mac\ -Ddebuggersupport=off\ ; \
-	export CXX=g++\ -nostdinc\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss; \
+	export CXX=g++\ -nostdc\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss; \
 	cd v8 && make x64.release
 
 clean:
