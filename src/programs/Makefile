@@ -4,7 +4,7 @@ programs: libprog/build build
 	for dir in $(PROGRAMS); do \
 		cd $$dir && $(MAKE); \
 		cd ..; \
-		ld libs/CKeyedBits/build/*.o $$dir/build/*.o libprog/build/*.o -T linker.ld --oformat binary -s -o $$dir/build/$${dir}.bin; \
+		ld libs/CKeyedBits/build/*.o ../../libs/anlock/build/*.o $$dir/build/*.o libprog/build/*.o -T linker.ld --oformat binary -s -o $$dir/build/$${dir}.bin; \
 		objcopy --input binary --binary-architecture i386 --output elf64-x86-64 $$dir/build/$${dir}.bin build/$${dir}.o; \
 	done
 
