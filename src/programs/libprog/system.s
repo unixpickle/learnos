@@ -198,3 +198,30 @@ sys_invlpg:
   syscall
   ret
 
+global sys_launch_thread
+sys_launch_thread:
+  mov rcx, rsi
+  mov rdx, rdi
+  mov rsi, .launchStub
+  mov rdi, 0x1c
+  syscall
+  ret
+.launchStub:
+  mov rax, rdx
+  mov rdx, rsi
+  call rax
+  jmp sys_thread_exit
+
+global sys_thread_id
+sys_thread_id:
+  mov rdi, 0x1d
+  syscall
+  ret
+
+global sys_unsleep
+sys_unsleep:
+  mov rsi, rdi
+  mov rdi, 0x1e
+  syscall
+  ret
+

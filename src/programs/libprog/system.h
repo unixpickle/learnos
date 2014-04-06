@@ -165,4 +165,20 @@ bool sys_vmunmap(uint64_t pid, uint64_t vpage);
  */
 bool sys_invlpg(uint64_t pid);
 
+/**
+ * Launch a thread which will automatically exit when you return. The stack on
+ * this function call will be 16-byte aligned like the Mac ABI says.
+ */
+void sys_launch_thread(void (*)(void *), void * arg);
+
+/**
+ * Return the current thread ID.
+ */
+uint64_t sys_thread_id();
+
+/**
+ * Stop a thread from sleeping.
+ */
+void sys_unsleep(uint64_t threadId);
+
 #endif
