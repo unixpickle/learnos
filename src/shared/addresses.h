@@ -13,7 +13,7 @@
 /**
  * The base address of all the global variables.
  */
-#define VARBASE 0x200000
+#define VARBASE 0x100000
 
 /**
  * Lower word = x, upper word = y of cursor.

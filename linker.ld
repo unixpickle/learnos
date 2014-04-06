@@ -1,6 +1,6 @@
 SECTIONS {
 
-  . = 1M;
+  . = 2M;
 
   .text BLOCK(16) : ALIGN(16) {
     *(.multiboot)

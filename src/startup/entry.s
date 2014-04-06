@@ -19,9 +19,7 @@ FLAGS equ LINKINFO | MEMINFO
 MAGIC equ 0x1BADB002
 CHECKSUM equ -(MAGIC + FLAGS)
 
-LOADBASE equ 0x100000
-CUROFFSET equ 0x200000
-MBOOT_PTR equ 0x200004
+LOADBASE equ 0x200000
 
 %include "../shared/addresses.s"
 
@@ -48,8 +46,8 @@ start:
   mov ebp, esp
 
   ; set the Multiboot Information Structure pointer
-  mov [MBOOT_PTR], ebx
-  mov dword [MBOOT_PTR + 4], 0
+  mov [MBOOT_INFO], ebx
+  mov dword [MBOOT_INFO + 4], 0
 
   ; zero our flags
   mov esi, 0
@@ -57,7 +55,7 @@ start:
   popf
 
   ; reset the cursor position in memory
-  mov dword [CUROFFSET], 0
+  mov dword [CURSOR_INFO], 0
 
   ; print our initialization message
   push startedMessage
