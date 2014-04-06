@@ -10,9 +10,9 @@ uint64_t syscall_allocate_page() {
   if (task->uid) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
-  uint64_t res = kernpage_alloc_virtual() << 12;
+  uint64_t res = kernpage_alloc_virtual();
   anscheduler_cpu_unlock();
-  return res;
+  return kernpage_calculate_physical(res) << 12;
 }
 
 uint64_t syscall_allocate_aligned(uint64_t pages) {
@@ -32,7 +32,7 @@ void syscall_free_page(uint64_t addr) {
   if (task->uid) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
-  kernpage_free_virtual(addr >> 12);
+  kernpage_free_virtual(kernpage_calculate_virtual(addr >> 12));
   anscheduler_cpu_unlock();
 }
 

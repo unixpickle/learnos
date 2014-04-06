@@ -1,6 +1,6 @@
 PROJECT_ROOT=../../..
-CSOURCES=stdio_funcs.c string.c msgd.c unistd.c
-ASMSOURCES=system.s stdio_params.s
+CSOURCES=$(wildcard *.c) $(wildcard libc/*.c) $(wildcard base/*.c)
+ASMSOURCES=$(wildcard *.s) $(wildcard libc/*.s) $(wildcard base/*.s)
 
 all: asmsources csources
 

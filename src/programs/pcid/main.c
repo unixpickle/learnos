@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <system.h>
-#include <msgd.h>
+#include <base/system.h>
+#include <base/msgd.h>
 #include <structures/pci.h>
 
 #define PCI_CMD_READ 0

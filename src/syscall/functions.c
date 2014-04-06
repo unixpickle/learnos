@@ -50,7 +50,9 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_invlpg,
     (void *)syscall_thread_launch,
     (void *)syscall_thread_id,
-    (void *)syscall_unsleep
+    (void *)syscall_unsleep,
+    (void *)syscall_self_uid,
+    (void *)syscall_self_pid
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;
@@ -146,6 +148,22 @@ void syscall_set_color(uint8_t arg) {
 uint64_t syscall_mem_usage() {
   uint64_t count = kernpage_count_allocated();
   return count;
+}
+
+uint64_t syscall_self_uid() {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  uint64_t res = task->uid;
+  anscheduler_cpu_unlock();
+  return res;
+}
+
+uint64_t syscall_self_pid() {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  uint64_t res = task->pid;
+  anscheduler_cpu_unlock();
+  return res;
 }
 
 static bool print_line(const char * ptr) {

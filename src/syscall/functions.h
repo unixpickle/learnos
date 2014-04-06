@@ -74,4 +74,14 @@ void syscall_set_color(uint8_t color);
  */
 uint64_t syscall_mem_usage();
 
+/**
+ * Returns the user identifier of this task.
+ */
+uint64_t syscall_self_uid();
+
+/**
+ * Returns the process identifier of this task.
+ */
+uint64_t syscall_self_pid();
+
 #endif

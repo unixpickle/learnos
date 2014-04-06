@@ -1,21 +1,18 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <anlock.h>
-#include <system.h>
+#include <base/alloc.h>
+#include <base/system.h>
 
-#define DATA_PTR 0x10200000000
-
-static uint64_t brkLock = 0;
-static uint64_t brkServer __attribute__((aligned(8))) = UINT64_MAX;
-static bool brkServerAttempted __attribute__((aligned(8))) = false;
 static intptr_t brkSize __attribute__((aligned(8))) = 0;
+static uint64_t brkLock __attribute__((aligned(8))) = 0;
 
 static int _gain_memory(uintptr_t amount);
 static int _lose_memory(uintptr_t amount);
 
 int brk(void * addr) {
   anlock_lock(&brkLock);
-  intptr_t len = DATA_PTR - ((uint64_t)addr);
+  intptr_t len = (intptr_t)(ALLOC_DATA_BASE - addr);
   intptr_t getAmount = len - brkSize;
   if (getAmount < -brkSize) {
     anlock_unlock(&brkLock);
@@ -47,7 +44,7 @@ void * sbrk(intptr_t increment) {
       return (void *)(-1);
     }
   }
-  void * result = (void *)(brkSize + DATA_PTR);
+  void * result = ALLOC_DATA_BASE + brkSize;
   anlock_unlock(&brkLock);
   return result;
 }

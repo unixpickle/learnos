@@ -1,3 +1,6 @@
+#ifndef __UNISTD_H__
+#define __UNISTD_H__
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -10,3 +13,4 @@ void exit(int unused);
 unsigned int sleep(unsigned int secs);
 int usleep(useconds_t time);
 
+#endif

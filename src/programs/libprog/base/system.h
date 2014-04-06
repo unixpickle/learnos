@@ -125,7 +125,7 @@ uint64_t sys_mem_usage();
 bool sys_kill(uint64_t pid);
 
 /**
- * Returns an address in the kernel address space to a new virtual page of
+ * Returns an address in the physical address space to a new physical page of
  * memory.
  */
 uint64_t sys_alloc_page();
@@ -139,7 +139,7 @@ uint64_t sys_alloc_page();
 uint64_t sys_alloc_pci(uint64_t pages);
 
 /**
- * Free a page of virtual memory allocated with sys_alloc_page().
+ * Free a page of physical memory allocated with sys_alloc_page().
  */
 void sys_free_page(uint64_t addr);
 
@@ -180,5 +180,15 @@ uint64_t sys_thread_id();
  * Stop a thread from sleeping.
  */
 void sys_unsleep(uint64_t threadId);
+
+/**
+ * Returns the current UID.
+ */
+uint64_t sys_self_uid();
+
+/**
+ * Returns the current PID.
+ */
+uint64_t sys_self_pid();
 
 #endif

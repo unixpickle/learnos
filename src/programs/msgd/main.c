@@ -1,5 +1,5 @@
+#include <base/msgd.h>
 #include <stdio.h>
-#include <msgd.h>
 #include <string.h>
 
 typedef struct {

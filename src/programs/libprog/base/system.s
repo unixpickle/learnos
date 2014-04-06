@@ -225,3 +225,15 @@ sys_unsleep:
   syscall
   ret
 
+global sys_uid
+sys_uid:
+  mov rdi, 0x1f
+  syscall
+  ret
+
+global sys_pid
+sys_pid:
+  mov rdi, 0x20
+  syscall
+  ret
+
