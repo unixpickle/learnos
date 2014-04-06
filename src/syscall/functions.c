@@ -49,7 +49,8 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_vmunmap,
     (void *)syscall_invlpg,
     (void *)syscall_thread_launch,
-    (void *)syscall_thread_exit
+    (void *)syscall_thread_exit,
+    (void *)syscall_thread_id
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;

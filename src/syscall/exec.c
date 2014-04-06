@@ -102,3 +102,11 @@ void syscall_thread_exit() {
   anscheduler_thread_exit();
 }
 
+uint64_t syscall_thread_id() {
+  anscheduler_cpu_lock();
+  thread_t * thread = anscheduler_cpu_get_thread();
+  uint64_t ident = thread->stack;
+  anscheduler_cpu_unlock();
+  return ident;
+}
+
