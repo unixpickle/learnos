@@ -108,3 +108,27 @@ bool syscall_invlpg(uint64_t pid) {
   return true;
 }
 
+uint64_t syscall_vm_read(uint64_t pid, uint64_t vpage) {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+
+  task = anscheduler_task_for_pid(pid);
+  if (!task) {
+    anscheduler_cpu_unlock();
+    return false;
+  }
+
+  uint16_t flags;
+  anscheduler_lock(&task->vmLock);
+  uint64_t page = anscheduler_vm_lookup(task->vm, vpage, &flags);
+  anscheduler_vm_unmap(task->vm, vpage);
+  anscheduler_unlock(&task->vmLock);
+  anscheduler_task_dereference(task);
+  anscheduler_cpu_unlock();
+
+  return (page << 12) | flags;
+}
+

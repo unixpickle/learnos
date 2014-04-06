@@ -225,15 +225,23 @@ sys_unsleep:
   syscall
   ret
 
-global sys_uid
-sys_uid:
+global sys_self_uid
+sys_self_uid:
   mov rdi, 0x1f
   syscall
   ret
 
-global sys_pid
-sys_pid:
+global sys_self_pid
+sys_self_pid:
   mov rdi, 0x20
+  syscall
+  ret
+
+global sys_vmread
+sys_vmread:
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x21
   syscall
   ret
 

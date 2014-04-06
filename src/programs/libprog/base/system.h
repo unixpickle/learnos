@@ -191,4 +191,9 @@ uint64_t sys_self_uid();
  */
 uint64_t sys_self_pid();
 
+/**
+ * Returns the physical mapping for a virtual page in a task.
+ */
+uint64_t sys_vmread(uint64_t pid, uint64_t page);
+
 #endif

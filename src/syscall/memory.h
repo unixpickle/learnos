@@ -47,3 +47,9 @@ bool syscall_vmunmap(uint64_t pid, uint64_t vpage);
  */
 bool syscall_invlpg(uint64_t pid);
 
+/**
+ * Really, this is only useful for reading your *own* virtual memory if you
+ * are the system pager.
+ */
+uint64_t syscall_vm_read(uint64_t pid, uint64_t vpage);
+
