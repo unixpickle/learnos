@@ -1,8 +1,9 @@
-PML4_START equ 0x300000
 GDT64_PTR equ 0x5ff6
 GDT64_code equ 0x8
 GDT64_data equ 0x10
 START_STACK equ 0x4000
+
+%include "../shared/addresses.s"
 
 extern kernpage_alloc_virtual
 extern proc_initialize

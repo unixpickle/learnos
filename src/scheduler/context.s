@@ -2,7 +2,7 @@ extern thread_resume_kernel_stack, thread_vm_kernel_stack
 extern anscheduler_cpu_get_thread
 extern kernpage_calculate_virtual
 
-PML4_START equ 0x300000
+%include "../shared/addresses.s"
 
 global anscheduler_save_return_state
 anscheduler_save_return_state:

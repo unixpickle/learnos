@@ -22,7 +22,8 @@ CHECKSUM equ -(MAGIC + FLAGS)
 LOADBASE equ 0x100000
 CUROFFSET equ 0x200000
 MBOOT_PTR equ 0x200004
-PML4_START equ 0x300000
+
+%include "../shared/addresses.s"
 
 section .multiboot
 

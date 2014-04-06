@@ -1,5 +1,6 @@
 bits 64
 
+%include "../shared/addresses.s"
 extern syscall_entry, syscall_return
 
 section .text
@@ -14,7 +15,7 @@ syscall_configure_stack:
   ; mov rsp, NEW STACK
 
   mov r10, cr3
-  mov rax, 0x300000
+  mov rax, PML4_START
   mov cr3, rax
   sti
 
