@@ -13,3 +13,13 @@ uint64_t syscall_fork(uint64_t rip);
  */
 bool syscall_kill(uint64_t pid);
 
+/**
+ * Call a function, passing in two arguments.
+ */
+void syscall_thread_launch(uint64_t rip, uint64_t arg1, uint64_t arg2);
+
+/**
+ * Exit the current thread.
+ */
+void syscall_thread_exit();
+

@@ -75,3 +75,30 @@ bool syscall_kill(uint64_t pid) {
   return true;
 }
 
+void syscall_thread_launch(uint64_t rip, uint64_t arg1, uint64_t arg2) {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  thread_t * thread = anscheduler_thread_create(task);
+  uint64_t stackStart = ANSCHEDULER_TASK_USER_STACKS_PAGE
+    + (thread->stack << 8);
+
+  uint64_t cr3 = anscheduler_vm_physical(((uint64_t)task->vm) >> 12) << 12;
+  thread->state.cr3 = cr3;
+  thread->state.rsp = (stackStart + 0x100) << 12;
+  thread->state.rbp = (stackStart + 0x100) << 12;
+  thread->state.flags = 0x200;
+  thread->state.rip = rip;
+  thread->state.rdi = arg1;
+  thread->state.rsi = arg2;
+  thread->state.cs = 0x1b;
+  thread->state.ss = 0x23;
+  syscall_initialize_thread(thread);
+  anscheduler_thread_add(task, thread);
+  anscheduler_cpu_unlock();
+}
+
+void syscall_thread_exit() {
+  // will never return, bye bye cruel (thread) world!
+  anscheduler_thread_exit();
+}
+
