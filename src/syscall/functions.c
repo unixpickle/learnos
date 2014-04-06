@@ -49,8 +49,8 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_vmunmap,
     (void *)syscall_invlpg,
     (void *)syscall_thread_launch,
-    (void *)syscall_thread_exit,
-    (void *)syscall_thread_id
+    (void *)syscall_thread_id,
+    (void *)syscall_unsleep
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;
@@ -116,7 +116,6 @@ void syscall_exit() {
 }
 
 void syscall_thread_exit() {
-  anscheduler_cpu_lock();
   anscheduler_thread_exit();
 }
 

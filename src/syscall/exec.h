@@ -19,14 +19,15 @@ bool syscall_kill(uint64_t pid);
 void syscall_thread_launch(uint64_t rip, uint64_t arg1, uint64_t arg2);
 
 /**
- * Exit the current thread.
- */
-void syscall_thread_exit();
-
-/**
  * Get the identifier of the current thread. This is an integer starting at 0,
  * and it will always be different for different threads in a task. It will
  * increment, and values will be re-used as threads die.
  */
 uint64_t syscall_thread_id();
+
+/**
+ * Find the thread with a given thread ID, and remove any sleep timeout it may
+ * have set.
+ */
+void syscall_unsleep(uint64_t thread);
 

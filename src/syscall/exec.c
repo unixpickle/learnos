@@ -97,16 +97,27 @@ void syscall_thread_launch(uint64_t rip, uint64_t arg1, uint64_t arg2) {
   anscheduler_cpu_unlock();
 }
 
-void syscall_thread_exit() {
-  // will never return, bye bye cruel (thread) world!
-  anscheduler_thread_exit();
-}
-
 uint64_t syscall_thread_id() {
   anscheduler_cpu_lock();
   thread_t * thread = anscheduler_cpu_get_thread();
   uint64_t ident = thread->stack;
   anscheduler_cpu_unlock();
   return ident;
+}
+
+void syscall_unsleep(uint64_t thread) {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  anscheduler_lock(&task->threadsLock);
+  thread_t * target = task->firstThread;
+  while (target) {
+    if (target->stack == thread) break;
+    target = target->next;
+  }
+  anscheduler_unlock(&task->threadsLock);
+  if (target) {
+    target->nextTimestamp = 0;
+  }
+  anscheduler_cpu_unlock();
 }
 
