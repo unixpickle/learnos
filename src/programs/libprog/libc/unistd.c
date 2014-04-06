@@ -53,10 +53,6 @@ void _exit(int unused) {
   sys_exit();
 }
 
-void exit(int unused) {
-  sys_exit();
-}
-
 unsigned int sleep(unsigned int secs) {
   uint64_t start = sys_get_time();
   // sleep and then return the amount of time we missed
