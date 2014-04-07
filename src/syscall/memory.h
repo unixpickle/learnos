@@ -75,5 +75,23 @@ uint64_t syscall_get_fault(syscall_pg_t * pg);
 /**
  * Reschedule a thread which was removed from the queue because of a page fault.
  */
-void syscall_wake_thread(uint64_t pid, uint64_t tid);
+void syscall_wake_thread(uint64_t fd, uint64_t tid);
+
+/**
+ * Map a page in our address space to a physical entry. This can only be called
+ * by a task running as root.
+ */
+bool syscall_self_vmmap(uint64_t vpage, uint64_t entry);
+
+/**
+ * Completely unmap an entry from a task's virtual page table.
+ * @return false if the task died.
+ */
+bool syscall_self_vmunmap(uint64_t vpage);
+
+/**
+ * Notify all CPUs running a certain task that its address space has been
+ * altered.
+ */
+bool syscall_self_invlpg();
 
