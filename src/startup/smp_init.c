@@ -31,6 +31,8 @@ extern void _binary_terminal_build_terminal_bin_start();
 extern void _binary_terminal_build_terminal_bin_end();
 extern void _binary_pcid_build_pcid_bin_start();
 extern void _binary_pcid_build_pcid_bin_end();
+extern void _binary_memd_build_memd_bin_start();
+extern void _binary_memd_build_memd_bin_end();
 
 static void copy_init_code();
 static void initialize_cpu(void * unused, uint64_t lapicId);
@@ -52,8 +54,12 @@ void smp_initialize() {
   disable_interrupts();
   print("starting bootstrap tasks...\n");
 
-  uint64_t taskEnd = (uint64_t)(_binary_msgd_build_msgd_bin_end);
-  uint64_t taskStart = (uint64_t)(_binary_msgd_build_msgd_bin_start);
+  uint64_t taskEnd = (uint64_t)(_binary_memd_build_memd_bin_end);
+  uint64_t taskStart = (uint64_t)(_binary_memd_build_memd_bin_start);
+  start_task((void *)taskStart, taskEnd - taskStart);
+
+  taskEnd = (uint64_t)(_binary_msgd_build_msgd_bin_end);
+  taskStart = (uint64_t)(_binary_msgd_build_msgd_bin_start);
   start_task((void *)taskStart, taskEnd - taskStart);
 
   taskEnd = (uint64_t)(_binary_keyboard_build_keyboard_bin_end);

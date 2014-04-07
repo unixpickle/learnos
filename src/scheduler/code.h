@@ -4,6 +4,7 @@
 typedef struct code_t code_t;
 
 #include <anscheduler/types.h>
+#define CODE_PAGE_TABLE_COUNT 0x1fd
 
 struct code_t {
   uint64_t retainCount; // atomic
@@ -12,7 +13,7 @@ struct code_t {
   void * kernpageBase;
   uint64_t kernpageLen;
 
-  void ** pageTables[0xffd]; // NULL = no table
+  void ** pageTables[CODE_PAGE_TABLE_COUNT]; // NULL = no table
 } __attribute__((packed));
 
 /**

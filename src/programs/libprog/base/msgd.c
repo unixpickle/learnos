@@ -23,7 +23,7 @@ static void _conn_closed(conn_session_t * info);
 uint64_t msgd_connect() {
   uint64_t sock = sys_open();
   if (!(sock + 1)) return sock;
-  if (!sys_connect(sock, 0)) {
+  if (!sys_connect(sock, 1)) {
     sys_close(sock);
     return 0xFFFFFFFFFFFFFFFFL;
   }

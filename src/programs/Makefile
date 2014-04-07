@@ -1,4 +1,4 @@
-PROGRAMS=keyboard ticktock msgd intd terminal pcid
+PROGRAMS=keyboard ticktock msgd intd terminal pcid memd
 PROJECT_ROOT=../..
 
 programs: libprog/build build

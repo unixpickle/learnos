@@ -95,7 +95,7 @@ void code_task_cleanup(code_t * code, task_t * task) {
 
 static void _free_code(code_t * code) {
   uint64_t i, j;
-  for (i = 0; i < 0xffd; i++) {
+  for (i = 0; i < CODE_PAGE_TABLE_COUNT; i++) {
     if (!code->pageTables[i]) continue;
     for (j = 0; j < 0x200; j++) {
       void * buffer = code->pageTables[i][j];
@@ -130,7 +130,7 @@ static page_t _alloc_code_page(code_t * code, page_t page) {
 static page_t _lookup_page(code_t * code, page_t codePage) {
   uint64_t rootIndex = codePage >> 9;
   uint64_t subIndex = codePage & 0x1ff;
-  if (rootIndex >= 0xffd) return 0;
+  if (rootIndex >= CODE_PAGE_TABLE_COUNT) return 0;
 
   if (!code->pageTables[rootIndex]) return 0;
   return ((uint64_t)code->pageTables[rootIndex][subIndex]) >> 12;
@@ -139,7 +139,7 @@ static page_t _lookup_page(code_t * code, page_t codePage) {
 static bool _map_page(code_t * code, page_t codePage, page_t mapping) {
   uint64_t rootIndex = codePage >> 9;
   uint64_t subIndex = codePage & 0x1ff;
-  if (rootIndex >= 0xffd) return 0;
+  if (rootIndex >= CODE_PAGE_TABLE_COUNT) return 0;
 
   if (!code->pageTables[rootIndex]) {
     void ** newTable = anscheduler_alloc(0x1000);
