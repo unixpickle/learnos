@@ -3,6 +3,8 @@
 #include <anscheduler/task.h>
 #include <anscheduler/functions.h>
 #include <anscheduler/paging.h>
+#include <anscheduler/socket.h>
+#include <anscheduler/loop.h>
 #include <memory/kernpage.h>
 
 static task_t * _get_remote_task(uint64_t fd);
@@ -193,7 +195,6 @@ void syscall_self_vmunmap(uint64_t vpage) {
   anscheduler_unlock(&task->vmLock);
   
   anscheduler_cpu_unlock();
-  return res;
 }
 
 void syscall_self_invlpg() {

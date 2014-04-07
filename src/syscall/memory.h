@@ -84,7 +84,7 @@ uint64_t syscall_get_fault(syscall_pg_t * pg);
  * @param tid The thread identifier (stack index) to wake
  * @return false if the task has died; true otherwise
  */
-uint64_t syscall_wake_thread(uint64_t fd, uint64_t tid);
+bool syscall_wake_thread(uint64_t fd, uint64_t tid);
 
 /**
  * Map a page in our address space to a physical entry. This can only be called
