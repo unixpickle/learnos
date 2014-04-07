@@ -66,12 +66,12 @@ int test_mem_size_offset() {
 int test_mem_start() {
   uint64_t inOut = 1;
   void * buff = analloc_alloc(alloc, &inOut, 1);
-  if (analloc_mem_start(alloc, buff) != buff) return 1;
+  if (analloc_mem_start(alloc, buff, NULL) != buff) return 1;
   analloc_free(alloc, buff, inOut);
   
   inOut = 0x80000;
   buff = analloc_alloc(alloc, &inOut, 0);
-  if (analloc_mem_start(alloc, buff) != buff) return 2;
+  if (analloc_mem_start(alloc, buff, NULL) != buff) return 2;
   analloc_free(alloc, buff, inOut);
   
   return 0;
@@ -80,21 +80,21 @@ int test_mem_start() {
 int test_mem_start_offset() {
   uint64_t inOut = 1;
   void * buff = analloc_alloc(alloc, &inOut, 1);
-  if (analloc_mem_start(alloc, buff) != buff) return 1;
-  if (analloc_mem_start(alloc, buff + 7) != buff) return 3;
-  if (analloc_mem_start(alloc, buff + 0xf) != buff) return 3;
-  if (analloc_mem_start(alloc, buff + 0x10) == buff) return 4;
+  if (analloc_mem_start(alloc, buff, NULL) != buff) return 1;
+  if (analloc_mem_start(alloc, buff + 7, NULL) != buff) return 3;
+  if (analloc_mem_start(alloc, buff + 0xf, NULL) != buff) return 3;
+  if (analloc_mem_start(alloc, buff + 0x10, NULL) == buff) return 4;
   analloc_free(alloc, buff, inOut);
   
   inOut = 0x80000;
   buff = analloc_alloc(alloc, &inOut, 0);
-  if (analloc_mem_start(alloc, buff) != buff) return 5;
-  if (analloc_mem_start(alloc, buff + 0x10) != buff) return 6;
-  if (analloc_mem_start(alloc, buff + 0x11) != buff) return 7;
-  if (analloc_mem_start(alloc, buff + 0x10000) != buff) return 8;
-  if (analloc_mem_start(alloc, buff + 0x50000) != buff) return 9;
-  if (analloc_mem_start(alloc, buff + 0x7ffff) != buff) return 10;
-  if (analloc_mem_start(alloc, buff - 1) == buff) return 11;
+  if (analloc_mem_start(alloc, buff, NULL) != buff) return 5;
+  if (analloc_mem_start(alloc, buff + 0x10, NULL) != buff) return 6;
+  if (analloc_mem_start(alloc, buff + 0x11, NULL) != buff) return 7;
+  if (analloc_mem_start(alloc, buff + 0x10000, NULL) != buff) return 8;
+  if (analloc_mem_start(alloc, buff + 0x50000, NULL) != buff) return 9;
+  if (analloc_mem_start(alloc, buff + 0x7ffff, NULL) != buff) return 10;
+  if (analloc_mem_start(alloc, buff - 1, NULL) == buff) return 11;
   analloc_free(alloc, buff, inOut);
   
   return 0;

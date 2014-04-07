@@ -164,7 +164,7 @@ uint64_t analloc_mem_size(analloc_t alloc, void * buffer) {
   return 0;
 }
 
-void * analloc_mem_start(analloc_t alloc, void * buffer) {
+void * analloc_mem_start(analloc_t alloc, void * buffer, uint64_t * _size) {
   anbtree_path path = _analloc_ptr_path(alloc, buffer, alloc->page);
   
   // go up the tree until we find the parent data node
@@ -172,6 +172,7 @@ void * analloc_mem_start(analloc_t alloc, void * buffer) {
   while (path != anbtree_path_none) {
     if (anbtree_is_allocated(alloc->tree, path)) {
       uint64_t index = anbtree_path_local_index(path);
+      if (_size) *_size = size;
       return (void *)((index * size) + (uint64_t)alloc->mem);
     }
     size <<= 1;
