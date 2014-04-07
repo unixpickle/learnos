@@ -38,7 +38,7 @@ void anscheduler_pager_set(thread_t * thread);
  * returned in a noncritical section. This is because it is presumed that the
  * system pager will NEVER die, and thus that the reference will not be
  * leaked.
- * @critical
+ * @noncritical
  */
 page_fault_t * anscheduler_pager_read();
 

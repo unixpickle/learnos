@@ -29,7 +29,10 @@ void anscheduler_loop_push(thread_t * newThread);
 
 /**
  * Enters the scheduling loop.  This function should never return.  By this
- * point, you should be on the CPU dedicated stack.
+ * point, you should be on the CPU dedicated stack.  Calling this function
+ * clears the CPU's current thread and task, dereferencing the task if needed,
+ * so incase you don't call anscheduler_loop_push() before this you will not
+ * end up with an invalid task/thread running.
  * @critical
  */
 void anscheduler_loop_run();
