@@ -79,6 +79,8 @@ int posix_memalign(void ** ptr, size_t align, size_t size) {
 }
 
 void * realloc(void * buf, size_t size) {
+  if (!buf) return malloc(size);
+
   anlock_lock(&allocLock);
   uint64_t allocator = _allocator_for_buffer(buf);
   assert(allocator < allocatorCount);

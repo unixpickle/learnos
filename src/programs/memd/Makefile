@@ -1,5 +1,5 @@
 PROJECT_ROOT=../../..
-CSOURCES=main.c
+CSOURCES=main.c client.c
 ASMSOURCES=entry.s
 
 all: asmsources csources
