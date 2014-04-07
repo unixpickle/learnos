@@ -1,13 +1,22 @@
 #include "malloc.h"
 #include <analloc.h>
+#include <stdbool.h>
+#include "unistd.h"
+#include <base/alloc.h>
 
 static uint64_t allocatorCount = 0;
 #define ALLOCATOR_OFF(x) (x == 0 ? 0 : (0x100000 << (x - 1)))
-#define ALLOCATOR_BASE(x) (ALLOC_DATA_BASE + ALLOCATOR_OFF(X))
+#define ALLOCATOR_BASE(x) (ALLOC_DATA_BASE + ALLOCATOR_OFF(x))
+#define ALLOCATOR_PREFIX(x) ((alloc_prefix_t *)ALLOCATOR_BASE(x))
 
 typedef struct {
-  uint64_t totalBytes;
-} __attribute__((packed)) usage_info_t;
+  uint64_t bytesUsed;
+  analloc_struct_t alloc;
+} __attribute__((packed)) alloc_prefix_t;
+
+static void * _raw_alloc(size_t size);
+static bool _create_allocator();
+static bool _release_allocator();
 
 void free(void * buf) {
   uint64_t byteOffset = ((uint64_t)(buf - ALLOC_DATA_BASE));
@@ -21,23 +30,21 @@ void free(void * buf) {
   // this should NEVER be the case
   if (allocator >= allocatorCount) return;
 
-  void * base = ALLOCATOR_BASE(allocator);
-  usage_info_t * usage = (usage_info_t *)base;
-  analloc_t agent = (analloc_t)(base + sizeof(usage_info_t));
-
+  alloc_prefix_t * prefix = ALLOCATOR_PREFIX(allocator);
   uint64_t size;
-  void * ptr = analloc_mem_start(agent, buf, &size);
+  void * ptr = analloc_mem_start(&prefix->alloc, buf, &size);
   if (!ptr) return;
-  usage->totalBytes -= size;
-  analloc_free(agent, ptr, size);
+  prefix->bytesUsed -= size;
+  analloc_free(&prefix->alloc, ptr, size);
 
-  // TODO: here, potentially call brk or sbrk to reduce the size of memory
+  while (_release_allocator());
 }
 
 void * malloc(size_t size) {
   void * buf;
   while (!(buf = _raw_alloc(size))) {
     // brk here and generate the next allocator
+    if (!_create_allocator()) return NULL;
   }
   return buf;
 }
@@ -48,18 +55,44 @@ int posix_memalign(void ** ptr, size_t align, size_t size) {
   if (size > 0xffffffff) {
     return -1;
   }
-
+  return -1;
 }
 
 static void * _raw_alloc(size_t size) {
   uint64_t i;
-  uint64_t allocBase = ALLOC_DATA_BUFF + 0x1000;
   for (i = 0; i < allocatorCount; i++) {
-    uint64_t offset = i == 0 ? 0 : (0x100000 << (i - 1));
-    analloc_t allocator = (analloc_t)(allocBase + offset);
-    void * buff = analloc_alloc(allocator, &size, 0);
-    if (buff) return buff;
+    alloc_prefix_t * prefix = ALLOCATOR_PREFIX(i);
+    void * buff = analloc_alloc(&prefix->alloc, &size, 0);
+    if (buff) {
+      prefix->bytesUsed += size;
+      return buff;
+    }
   }
   return NULL;
+}
+
+static bool _create_allocator() {
+  void * startPtr = ALLOCATOR_BASE(allocatorCount);
+  void * endPtr = ALLOCATOR_BASE(allocatorCount + 1);
+  if (brk(endPtr)) return false;
+
+  alloc_prefix_t * prefix = (alloc_prefix_t *)startPtr;
+  prefix->bytesUsed = 0;
+  uint64_t total = (uint64_t)(endPtr - ((uint64_t)startPtr));
+  uint64_t used = sizeof(alloc_prefix_t);
+  uint8_t res = analloc_with_chunk(&prefix->alloc, startPtr, total, used, 0x20);
+  if (!res) return false;
+  allocatorCount++;
+
+  return true;
+}
+
+static bool _release_allocator() {
+  if (!allocatorCount) return false;
+  alloc_prefix_t * prefix = ALLOCATOR_PREFIX(allocatorCount - 1);
+  if (prefix->bytesUsed) return false;
+  if (brk((void *)prefix)) return false;
+  allocatorCount--;
+  return true;
 }
 
