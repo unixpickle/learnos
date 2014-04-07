@@ -132,3 +132,43 @@ uint64_t syscall_vm_read(uint64_t pid, uint64_t vpage) {
   return (page << 12) | flags;
 }
 
+void syscall_become_pager() {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid != 0) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  thread_t * thread = anscheduler_cpu_get_thread();
+  anscheduler_pager_set(thread);
+  anscheduler_cpu_unlock();
+}
+
+uint64_t syscall_get_fault(syscall_pg_t * pg) {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid != 0) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  thread_t * thread = anscheduler_cpu_get_thread();
+  if (thread != anscheduler_pager_get) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  anscheduler_cpu_unlock();
+  page_fault_t * fault = anscheduler_pager_read();
+  if (!fault) return 0;
+
+  // copy out the information
+  anscheduler_cpu_lock();
+  pg->taskId = fault->task->pid;
+  pg->threadId = fault->thread->stack;
+  pg->address = fault->ptr;
+  pg->flags = fault->flags;
+  anscheduler_task_deference(fault->task);
+  anscheduler_free(fault);
+  anscheduler_cpu_unlock();
+  return 1;
+}
+
+void syscall_wake_thread(uint64_t pid, uint64_t tid) {
+}
+

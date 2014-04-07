@@ -158,10 +158,6 @@ static void _poll_stub2() {
     anscheduler_thread_run(anscheduler_cpu_get_task(),
                            anscheduler_cpu_get_thread());
   } else {
-    task_t * task = anscheduler_cpu_get_task();
-    anscheduler_cpu_set_task(NULL);
-    anscheduler_cpu_set_thread(NULL);
-    if (task) anscheduler_task_dereference(task);
     anscheduler_loop_run();
   }
 }

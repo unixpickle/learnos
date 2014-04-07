@@ -1,6 +1,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef struct {
+  uint64_t taskId;
+  uint64_t threadId;
+  uint64_t address;
+  uint64_t flags;
+} syscall_pg_t;
+
 /**
  * Returns an allocated page in the kernel address space. The return value is a
  * normal pointer, not a page index or anything like that.
@@ -33,23 +40,40 @@ void syscall_free_aligned(uint64_t addr, uint64_t pages);
  * @return true if the mapping was successfully set; false if the task died or
  * if the mapping could not be made for any other reason.
  */
-bool syscall_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry);
+bool syscall_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry);
 
 /**
  * Completely unmap an entry from a task's virtual page table.
  * @return false if the task died.
  */
-bool syscall_vmunmap(uint64_t pid, uint64_t vpage);
+bool syscall_vmunmap(uint64_t fd, uint64_t vpage);
 
 /**
  * Notify all CPUs running a certain task that its address space has been
  * altered.
  */
-bool syscall_invlpg(uint64_t pid);
+bool syscall_invlpg(uint64_t fd);
 
 /**
  * Really, this is only useful for reading your *own* virtual memory if you
  * are the system pager.
  */
-uint64_t syscall_vm_read(uint64_t pid, uint64_t vpage);
+uint64_t syscall_self_vm_read(uint64_t vpage);
+
+/**
+ * Tells the operating system that this process would like to assume the role of
+ * the system memory manager.
+ */
+void syscall_become_pager();
+
+/**
+ * Get information on the next page fault that occurs. Returns 1 if a page fault
+ * was read from the queue, or 0 if no faults were available.
+ */
+uint64_t syscall_get_fault(syscall_pg_t * pg);
+
+/**
+ * Reschedule a thread which was removed from the queue because of a page fault.
+ */
+void syscall_wake_thread(uint64_t pid, uint64_t tid);
 
