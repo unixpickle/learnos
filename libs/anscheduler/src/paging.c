@@ -4,7 +4,7 @@
 #include <anscheduler/functions.h>
 
 static thread_t * pagerThread __attribute__((aligned(8))) = 0;
-static uint64_t faultsLock __attribute__((aligned(8))) = 0;
+static uint64_t lock __attribute__((aligned(8))) = 0;
 static page_fault_t * firstFault = 0;
 
 typedef struct {
@@ -79,10 +79,10 @@ void anscheduler_pager_set(thread_t * thread) {
 page_fault_t * anscheduler_pager_read() {
   while (1) {
     anscheduler_cpu_lock();
-    anscheduler_lock(&faultsLock);
+    anscheduler_pager_lock();
     page_fault_t * fault = firstFault;
     if (fault) firstFault = fault->next;
-    anscheduler_unlock(&faultsLock);
+    anscheduler_pager_unlock();
     if (!fault) {
       anscheduler_cpu_unlock();
       return NULL;
@@ -101,6 +101,18 @@ page_fault_t * anscheduler_pager_read() {
   }
 }
 
+void anscheduler_pager_lock() {
+  anscheduler_lock(&lock);
+}
+
+void anscheduler_pager_unlock() {
+  anscheduler_unlock(&lock);
+}
+
+bool anscheduler_pager_waiting() {
+  return firstFault != NULL;
+}
+
 static void _push_page_fault(fault_info_t * _info) {
   bool result = _push_page_fault_cont(*_info);
 
@@ -109,10 +121,6 @@ static void _push_page_fault(fault_info_t * _info) {
   }
   
   // no other thread got woken up, so we should run the loop
-  task_t * curTask = anscheduler_cpu_get_task();
-  anscheduler_cpu_set_task(NULL);
-  anscheduler_cpu_set_thread(NULL);
-  if (curTask) anscheduler_task_dereference(curTask);
   anscheduler_loop_run();
 }
 
@@ -128,6 +136,7 @@ static bool _push_page_fault_cont(fault_info_t info) {
   
   anscheduler_cpu_set_task(NULL);
   anscheduler_cpu_set_thread(NULL);
+  
   page_fault_t * fault = anscheduler_alloc(sizeof(page_fault_t));
   if (!fault) {
     anscheduler_abort("failed to allocate fault object");
@@ -137,10 +146,10 @@ static bool _push_page_fault_cont(fault_info_t info) {
   fault->ptr = info.ptr;
   fault->flags = info.flags;
   
-  anscheduler_lock(&faultsLock);
+  anscheduler_pager_lock();
   fault->next = firstFault;
   firstFault = fault;
-  anscheduler_unlock(&faultsLock);
+  anscheduler_pager_unlock();
   
   // wakeup the system pager if possible
   bool result = __sync_fetch_and_and(&pagerThread->isPolling, 0);

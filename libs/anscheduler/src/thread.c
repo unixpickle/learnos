@@ -3,6 +3,7 @@
 #include <anscheduler/functions.h>
 #include <anscheduler/loop.h>
 #include <anscheduler/interrupts.h>
+#include <anscheduler/paging.h>
 
 /**
  * @critical
@@ -86,11 +87,40 @@ bool anscheduler_thread_poll() {
   task_t * task = anscheduler_cpu_get_task();
   
   anscheduler_lock(&task->pendingLock);
-  bool hadJobs = task->firstPending != NULL;
-  if (!hadJobs) thread->isPolling = 1;
-  anscheduler_unlock(&task->pendingLock);
+  if (task->firstPending != NULL) { 
+    anscheduler_unlock(&task->pendingLock);
+    return false;
+  }
   
-  return !hadJobs;
+  // If there are no message packets, we check if there are interrupts or fault
+  // signals; these are special cases in which we need to start polling while
+  // a respective lock is held so that 
+  if (thread == anscheduler_intd_get()) {
+    anscheduler_intd_lock();
+    if (!anscheduler_intd_waiting()) {
+      thread->isPolling = 1;
+      anscheduler_intd_unlock();
+      anscheduler_unlock(&task->pendingLock);
+      return true;
+    }
+    anscheduler_intd_unlock();
+  } else if (thread == anscheduler_pager_get()) {
+    anscheduler_pager_lock();
+    if (!anscheduler_pager_waiting()) {
+      thread->isPolling = 1;
+      anscheduler_pager_unlock();
+      anscheduler_unlock(&task->pendingLock);
+      return true;
+    }
+    anscheduler_pager_unlock();
+  } else {
+    thread->isPolling = 1;
+    anscheduler_unlock(&task->pendingLock);
+    return true;
+  }
+  
+  anscheduler_unlock(&task->pendingLock);
+  return false;
 }
 
 void anscheduler_thread_exit() {

@@ -42,4 +42,21 @@ void anscheduler_pager_set(thread_t * thread);
  */
 page_fault_t * anscheduler_pager_read();
 
+/**
+ * Global lock for the pager functions. You usually do not have to call this
+ * yourself.
+ */
+void anscheduler_pager_lock();
+
+/**
+ * See anscheduler_pager_lock().
+ */
+void anscheduler_pager_unlock();
+
+/**
+ * Call this after anscheduler_pager_lock().
+ * @return true if page faults are waiting in the queue; otherwise, false.
+ */
+bool anscheduler_pager_waiting();
+
 #endif

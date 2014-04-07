@@ -38,4 +38,20 @@ void anscheduler_intd_cmpnull(thread_t * thread);
  */
 uint32_t anscheduler_intd_read();
 
+/**
+ * Locks a specific intd lock.
+ */
+void anscheduler_intd_lock();
+
+/**
+ * Unlocks a specific intd lock.
+ */
+void anscheduler_intd_unlock();
+
+/**
+ * Call this after calling anscheduler_intd_lock().
+ * @return true if some IRQs are waiting, false otherwise
+ */
+bool anscheduler_intd_waiting();
+
 #endif
