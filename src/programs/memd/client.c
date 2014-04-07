@@ -16,9 +16,20 @@ client_t * client_get(uint64_t fd) {
   clients = realloc(clients, sizeof(client_t) * clientCount);
   client_t * cli = &clients[clientCount - 1];
   cli->fd = fd;
+  cli->pid = sys_get_pid(fd);
   cli->pageCount = 0;
   cli->pages = NULL;
   return cli;
+}
+
+client_t * client_find(uint64_t pid) {
+  uint64_t i;
+  for (i = 0; i < clientCount; i++) {
+    if (clients[i].pid == pid) {
+      return &clients[i];
+    }
+  }
+  return false;
 }
 
 void client_delete(client_t * client) {

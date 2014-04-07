@@ -6,6 +6,7 @@
  */
 typedef struct {
   uint64_t fd;
+  uint64_t pid;
 
   uint64_t pageCount;
   uint64_t * pages;
@@ -16,6 +17,11 @@ typedef struct {
  * be created.
  */
 client_t * client_get(uint64_t fd);
+
+/**
+ * Lookup an existing client via PID.
+ */
+client_t * client_find(uint64_t pid);
 
 /**
  * Delete a client for a given file descriptor.
