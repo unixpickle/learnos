@@ -10,6 +10,13 @@ typedef struct {
   char message[0xfe8];
 } __attribute__((packed)) msg_t;
 
+typedef struct {
+  uint64_t taskId;
+  uint64_t threadId;
+  uint64_t address;
+  uint64_t flags;
+} pgf_t;
+
 /**
  * Prints the NULL-terminated string `buffer`.
  */
@@ -196,5 +203,31 @@ uint64_t sys_self_pid();
  * Returns the physical mapping for a virtual page in this task.
  */
 uint64_t sys_vmread(uint64_t page);
+
+/**
+ * Request that THIS task become the system pager. This should really only be
+ * called from UID 0.
+ */
+void sys_become_pager();
+
+/**
+ * Get the next page fault from the queue, or return `false` on an empty queue.
+ */
+bool sys_get_fault(pgf_t * fault);
+
+/**
+ * Map a page of physical memory into our task's virtual address space.
+ */
+bool sys_self_vmmap(uint64_t vpage, uint64_t entry);
+
+/**
+ * Undo something done with sys_self_vmmap().
+ */
+void sys_self_vmunmap(uint64_t vpage);
+
+/**
+ * Call this whenever we finish updating our page tables.
+ */
+void sys_self_invlpg();
 
 #endif

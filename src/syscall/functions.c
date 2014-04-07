@@ -53,7 +53,11 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_unsleep,
     (void *)syscall_self_uid,
     (void *)syscall_self_pid,
-    (void *)syscall_self_vm_read
+    (void *)syscall_become_pager,
+    (void *)syscall_get_fault,
+    (void *)syscall_self_vmmap,
+    (void *)syscall_self_vmunmap,
+    (void *)syscall_self_invlpg
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;

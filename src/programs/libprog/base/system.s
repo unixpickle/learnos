@@ -244,3 +244,36 @@ sys_vmread:
   syscall
   ret
 
+global sys_become_pager
+sys_become_pager:
+  mov rdi, 0x22
+  syscall
+  ret
+
+global sys_get_fault
+sys_get_fault:
+  mov rsi, rdi
+  mov rdi, 0x23
+  syscall
+  ret
+
+global sys_self_vmmap
+sys_self_vmmap:
+  mov rdx, rsi
+  mov rsi, rdx
+  mov rdi, 0x24
+  syscall
+  ret
+
+global sys_self_vmunmap
+sys_self_vmunmap:
+  mov rsi, rdi
+  mov rdi, 0x25
+  syscall
+  ret
+
+global sys_self_invlpg
+sys_self_invlpg:
+  mov rdi, 0x26
+  syscall
+  ret

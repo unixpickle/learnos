@@ -33,7 +33,7 @@ static bool _manual_alloc_pages(uint64_t idx, uint64_t count) {
       if (i > 0) _manual_free_pages(start, i);
       return false;
     }
-    sys_vmmap(sys_self_pid(), i + start, (pg << 12) | vmFlags);
+    sys_self_vmmap(i + start, (pg << 12) | vmFlags);
   }
   return true;
 }
@@ -41,9 +41,10 @@ static bool _manual_alloc_pages(uint64_t idx, uint64_t count) {
 static bool _manual_free_pages(uint64_t idx, uint64_t count) {
   uint64_t i, start = idx + (((uint64_t)ALLOC_DATA_BASE) >> 12);
   for (i = 0; i < count; i++) {
-    uint64_t entry = sys_vmread(sys_self_pid(), start + i);
+    uint64_t entry = sys_vmread(start + i);
     if ((entry & 7) != 7) return false;
     sys_free_page(entry & 0xFFFFFFFFFFFFF000);
+    sys_self_vmunmap(start + i);
   }
   return true;
 }
