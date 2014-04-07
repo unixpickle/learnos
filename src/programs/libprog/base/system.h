@@ -150,20 +150,21 @@ void sys_free_pci(uint64_t addr, uint64_t pages);
 
 /**
  * Map a virtual page to a physical page in a task's page table.
- * @return false if the task dies or the map fails because of an internal error.
+ * @return false if the socket is closed or the map fails because of an
+ * internal error.
  */
-bool sys_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry);
+bool sys_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry);
 
 /**
  * Unmap a virtual page in a task's page table.
- * @return false if the task dies.
+ * @return false if the socket is closed.
  */
-bool sys_vmunmap(uint64_t pid, uint64_t vpage);
+bool sys_vmunmap(uint64_t fd, uint64_t vpage);
 
 /**
  * Notify every CPU running a task that it should flush its TLB cache.
  */
-bool sys_invlpg(uint64_t pid);
+bool sys_invlpg(uint64_t fd);
 
 /**
  * Launch a thread which will automatically exit when you return. The stack on
@@ -192,8 +193,8 @@ uint64_t sys_self_uid();
 uint64_t sys_self_pid();
 
 /**
- * Returns the physical mapping for a virtual page in a task.
+ * Returns the physical mapping for a virtual page in this task.
  */
-uint64_t sys_vmread(uint64_t pid, uint64_t page);
+uint64_t sys_vmread(uint64_t page);
 
 #endif

@@ -239,7 +239,6 @@ sys_self_pid:
 
 global sys_vmread
 sys_vmread:
-  mov rdx, rsi
   mov rsi, rdi
   mov rdi, 0x21
   syscall

@@ -37,26 +37,32 @@ void syscall_free_aligned(uint64_t addr, uint64_t pages);
 
 /**
  * Set an entry in a task's virtual memory table.
- * @return true if the mapping was successfully set; false if the task died or
- * if the mapping could not be made for any other reason.
+ * @param fd A socket descriptor which is connected to the remote task.
+ * @param vpage The virtual page index to map
+ * @param entry The entry to set in the page table
+ * @return true if the mapping was successfully set; false if the socket was
+ * closed or if the mapping could not be made for any other reason.
  */
 bool syscall_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry);
 
 /**
  * Completely unmap an entry from a task's virtual page table.
- * @return false if the task died.
+ * @param fd A socket descriptor which is connected to the remote task.
+ * @param vpage The virtual page index to unmap
+ * @return false if the socket was closed; otherwise, true
  */
 bool syscall_vmunmap(uint64_t fd, uint64_t vpage);
 
 /**
  * Notify all CPUs running a certain task that its address space has been
  * altered.
+ * @param fd A socket descriptor which is connected to the remote task.
  */
 bool syscall_invlpg(uint64_t fd);
 
 /**
- * Really, this is only useful for reading your *own* virtual memory if you
- * are the system pager.
+ * Useful only to the system pager. This call returns the physical mapping for
+ * a virtual page.
  */
 uint64_t syscall_self_vm_read(uint64_t vpage);
 
@@ -74,8 +80,11 @@ uint64_t syscall_get_fault(syscall_pg_t * pg);
 
 /**
  * Reschedule a thread which was removed from the queue because of a page fault.
+ * @param fd A socket descriptor which is connected to the remote task.
+ * @param tid The thread identifier (stack index) to wake
+ * @return false if the task has died; true otherwise
  */
-void syscall_wake_thread(uint64_t fd, uint64_t tid);
+uint64_t syscall_wake_thread(uint64_t fd, uint64_t tid);
 
 /**
  * Map a page in our address space to a physical entry. This can only be called
@@ -87,11 +96,10 @@ bool syscall_self_vmmap(uint64_t vpage, uint64_t entry);
  * Completely unmap an entry from a task's virtual page table.
  * @return false if the task died.
  */
-bool syscall_self_vmunmap(uint64_t vpage);
+void syscall_self_vmunmap(uint64_t vpage);
 
 /**
  * Notify all CPUs running a certain task that its address space has been
  * altered.
  */
-bool syscall_self_invlpg();
-
+void syscall_self_invlpg();
