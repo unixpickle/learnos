@@ -79,4 +79,10 @@ void * analloc_realloc(analloc_t alloc,
  */
 uint64_t analloc_mem_size(analloc_t alloc, void * buffer);
 
+/**
+ * Pass in a pointer to any part of a buffer allocated with analloc, and get
+ * back the pointer to the *beginning* of the buffer.
+ */
+void * analloc_mem_start(analloc_t alloc, void * buffer);
+
 #endif

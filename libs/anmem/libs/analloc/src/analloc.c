@@ -164,6 +164,22 @@ uint64_t analloc_mem_size(analloc_t alloc, void * buffer) {
   return 0;
 }
 
+void * analloc_mem_start(analloc_t alloc, void * buffer) {
+  anbtree_path path = _analloc_ptr_path(alloc, buffer, alloc->page);
+  
+  // go up the tree until we find the parent data node
+  uint64_t size = alloc->page;
+  while (path != anbtree_path_none) {
+    if (anbtree_is_allocated(alloc->tree, path)) {
+      uint64_t index = anbtree_path_local_index(path);
+      return (void *)((index * size) + (uint64_t)alloc->mem);
+    }
+    size <<= 1;
+    path = anbtree_path_parent(path);
+  }
+  return (void *)0;
+}
+
 /***********
  * Private *
  ***********/

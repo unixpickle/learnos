@@ -1,4 +1,4 @@
-CFILES=basic_alloc.c realloc.c
+CFILES=basic_alloc.c realloc.c mem_start.c
 
 all: ../build/test.o
 	for file in $(CFILES); do \
