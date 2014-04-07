@@ -52,10 +52,22 @@ void * malloc(size_t size) {
 int posix_memalign(void ** ptr, size_t align, size_t size) {
   // the data section is only aligned on a 4GB boundary, so we cannot align
   // things bigger than that without wasting a PHENOMENAL amount of memory.
-  if (size > 0xffffffff) {
-    return -1;
+  if (size > 0xffffffff) return -1;
+
+  uint64_t nextPower = 0;
+  for (nextPower = 0; (1 << nextPower) < align; nextPower++);
+
+  // if the alignment is a power of 2, this allocation is easy!
+  uint64_t grabSize = size < align ? align : size;
+  if ((1 << nextPower) == align) {
+    (*ptr) = malloc(grabSize);
+    return 0;
   }
-  return -1;
+
+  void * buff = malloc(grabSize + align);
+  uint64_t remainder = ((uint64_t)buff) % align;
+  (*ptr) = buff + (align - remainder);
+  return 0;
 }
 
 static void * _raw_alloc(size_t size) {
