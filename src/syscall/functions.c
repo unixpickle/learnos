@@ -53,7 +53,7 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_unsleep,
     (void *)syscall_self_uid,
     (void *)syscall_self_pid,
-    (void *)syscall_vm_read
+    (void *)syscall_self_vm_read
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;

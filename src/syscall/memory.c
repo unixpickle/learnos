@@ -2,6 +2,7 @@
 #include "functions.h"
 #include <anscheduler/task.h>
 #include <anscheduler/functions.h>
+#include <anscheduler/paging.h>
 #include <memory/kernpage.h>
 
 uint64_t syscall_allocate_page() {
@@ -150,7 +151,7 @@ uint64_t syscall_get_fault(syscall_pg_t * pg) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
   thread_t * thread = anscheduler_cpu_get_thread();
-  if (thread != anscheduler_pager_get) {
+  if (thread != anscheduler_pager_get()) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
   anscheduler_cpu_unlock();
@@ -161,9 +162,9 @@ uint64_t syscall_get_fault(syscall_pg_t * pg) {
   anscheduler_cpu_lock();
   pg->taskId = fault->task->pid;
   pg->threadId = fault->thread->stack;
-  pg->address = fault->ptr;
+  pg->address = (uint64_t)fault->ptr;
   pg->flags = fault->flags;
-  anscheduler_task_deference(fault->task);
+  anscheduler_task_dereference(fault->task);
   anscheduler_free(fault);
   anscheduler_cpu_unlock();
   return 1;
