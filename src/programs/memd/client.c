@@ -1,6 +1,7 @@
 #include "client.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <base/system.h>
 
 static client_t * clients = NULL;
 static uint64_t clientCount = 0;
@@ -16,7 +17,7 @@ client_t * client_get(uint64_t fd) {
   clients = realloc(clients, sizeof(client_t) * clientCount);
   client_t * cli = &clients[clientCount - 1];
   cli->fd = fd;
-  cli->pid = sys_get_pid(fd);
+  cli->pid = sys_remote_pid(fd);
   cli->pageCount = 0;
   cli->pages = NULL;
   return cli;
