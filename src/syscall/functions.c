@@ -20,7 +20,7 @@ uint64_t syscall_entry(uint64_t arg1,
                        uint64_t arg3,
                        uint64_t arg4) {
   void * functions[] = {
-    (void *)syscall_print,
+    (void *)syscall_print, // 0x0
     (void *)syscall_get_time,
     (void *)syscall_sleep,
     (void *)syscall_exit,
@@ -36,7 +36,7 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_remote_pid,
     (void *)syscall_remote_uid,
     (void *)syscall_in,
-    (void *)syscall_out,
+    (void *)syscall_out, // 0x10
     (void *)syscall_set_color,
     (void *)syscall_fork,
     (void *)syscall_mem_usage,
@@ -52,7 +52,8 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_thread_id,
     (void *)syscall_unsleep,
     (void *)syscall_self_uid,
-    (void *)syscall_self_pid,
+    (void *)syscall_self_pid, // 0x20
+    (void *)syscall_self_vm_read,
     (void *)syscall_become_pager,
     (void *)syscall_get_fault,
     (void *)syscall_self_vmmap,
