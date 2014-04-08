@@ -12,7 +12,7 @@ static int _lose_memory(uintptr_t amount);
 
 int brk(void * addr) {
   anlock_lock(&brkLock);
-  intptr_t len = (intptr_t)(ALLOC_DATA_BASE - addr);
+  intptr_t len = (intptr_t)(addr - ALLOC_DATA_BASE);
   intptr_t getAmount = len - brkSize;
   if (getAmount < -brkSize) {
     anlock_unlock(&brkLock);
@@ -67,6 +67,7 @@ int usleep(useconds_t time) {
 }
 
 static int _gain_memory(uintptr_t amount) {
+  printf("gaining %x bytes\n", amount);
   uint64_t firstByte = brkSize;
   uint64_t lastByte = brkSize + amount;
   uint64_t firstPage = (firstByte >> 12) + (firstByte & 0xfff ? 1 : 0);

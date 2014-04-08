@@ -48,7 +48,9 @@ void * malloc(size_t size) {
   anlock_lock(&allocLock);
   while (!(buf = _raw_alloc(size))) {
     // brk here and generate the next allocator
+    printf("calling _create_allocator()\n");
     if (!_create_allocator()) {
+      printf("failed to create allocator\n");
       anlock_unlock(&allocLock);
       return NULL;
     }

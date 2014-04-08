@@ -17,8 +17,9 @@ uint64_t syscall_allocate_page() {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
   uint64_t res = kernpage_alloc_virtual();
+  res = kernpage_calculate_physical(res) << 12;
   anscheduler_cpu_unlock();
-  return kernpage_calculate_physical(res) << 12;
+  return res;
 }
 
 uint64_t syscall_allocate_aligned(uint64_t pages) {

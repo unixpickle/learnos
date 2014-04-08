@@ -33,7 +33,7 @@ static bool _manual_alloc_pages(uint64_t idx, uint64_t count) {
       if (i > 0) _manual_free_pages(start, i);
       return false;
     }
-    sys_self_vmmap(i + start, (pg << 12) | vmFlags);
+    sys_self_vmmap(i + start, pg | vmFlags);
   }
   return true;
 }
