@@ -67,7 +67,6 @@ int usleep(useconds_t time) {
 }
 
 static int _gain_memory(uintptr_t amount) {
-  printf("gaining %x bytes\n", amount);
   uint64_t firstByte = brkSize;
   uint64_t lastByte = brkSize + amount;
   uint64_t firstPage = (firstByte >> 12) + (firstByte & 0xfff ? 1 : 0);
