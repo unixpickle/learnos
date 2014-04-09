@@ -33,6 +33,8 @@ int vprintf(const char * str, va_list list) {
     } else if (*str == 'x' || *str == 'X') {
       uint64_t num = va_arg(list, uint64_t);
       _print_hex(num, *str == 'X');
+    } else if (*str == 's') {
+      sys_print(va_arg(list, const char *));
     } else {
       return -1;
     }

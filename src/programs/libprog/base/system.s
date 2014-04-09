@@ -260,7 +260,7 @@ sys_get_fault:
 global sys_self_vmmap
 sys_self_vmmap:
   mov rdx, rsi
-  mov rsi, rdx
+  mov rsi, rdi
   mov rdi, 0x24
   syscall
   ret

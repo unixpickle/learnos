@@ -35,6 +35,7 @@ static bool _manual_alloc_pages(uint64_t idx, uint64_t count) {
     }
     sys_self_vmmap(i + start, pg | vmFlags);
   }
+  sys_self_invlpg();
   return true;
 }
 
