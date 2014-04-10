@@ -48,6 +48,7 @@ static void * _sbrk_no_lock(intptr_t increment) {
   if (increment < -brkSize) {
     return (void *)(-1);
   }
+  void * base = ALLOC_DATA_BASE + brkSize;
   if (increment < 0) {
     if (_lose_memory((uintptr_t)-increment)) {
       return (void *)(-1);
@@ -57,7 +58,7 @@ static void * _sbrk_no_lock(intptr_t increment) {
       return (void *)(-1);
     }
   }
-  return ALLOC_DATA_BASE + brkSize;
+  return base;
 }
 
 static int _gain_memory(uintptr_t amount) {

@@ -33,7 +33,7 @@ bool basic_lock_timedlock(basic_lock_t * lock, uint64_t micros) {
 void basic_lock_unlock(basic_lock_t * lock) {
   anlock_lock(&lock->lock);
   if (!lock->first) {
-    lock->isLocked = false;
+    lock->isLocked = 0;
     anlock_unlock(&lock->lock);
     return;
   }
