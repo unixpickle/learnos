@@ -1,11 +1,5 @@
 #include "malloc.h"
-#include <analloc.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <string.h>
-#include <anlock.h>
-#include <assert.h>
-#include <base/alloc.h>
+#include <anmalloc.h>
 
 static uint64_t allocatorCount = 0;
 static uint64_t allocLock __attribute__((aligned(8))) = 0;

@@ -10,8 +10,10 @@ int anmalloc_brk(const void * addr) {
 }
 
 void anmalloc_lock(anmalloc_lock_t * lock) {
+  basic_lock_lock(lock);
 }
 
 void anmalloc_unlock(anmalloc_lock_t * lock) {
+  basic_lock_unlock(lock);
 }
 
