@@ -2,8 +2,7 @@
 #include <unistd.h>
 
 void * anmalloc_sbrk(intptr_t incr) {
-  void * ret = sbrk(incr);
-  return ret;
+  return sbrk(incr);
 }
 
 int anmalloc_brk(const void * addr) {

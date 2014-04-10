@@ -27,7 +27,7 @@ void main() {
   for (i = 0; i < 10; i++) {
     sbrk(1);
     printf("broke one 0x%x\n", sys_mem_usage());
-    sbrk(-1);
+    sbrk(-1L);
     printf("broke minus one 0x%x\n", sys_mem_usage());
   }
 
