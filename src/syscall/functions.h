@@ -5,6 +5,7 @@
 
 #define FD_INVAL 0xffffffffffffffffL
 #define ANSCHEDULER_TASK_KILL_REASON_ACCESS 3
+#define ANSCHEDULER_TASK_KILL_REASON_ABORT 4
 
 typedef struct {
   uint64_t rax;
@@ -83,5 +84,10 @@ uint64_t syscall_self_uid();
  * Returns the process identifier of this task.
  */
 uint64_t syscall_self_pid();
+
+/**
+ * Exit the current task with the abort kill reason.
+ */
+void syscall_abort();
 
 #endif

@@ -74,7 +74,8 @@ void syscall_become_pager();
 
 /**
  * Get information on the next page fault that occurs. Returns 1 if a page fault
- * was read from the queue, or 0 if no faults were available.
+ * was read from the queue, or 0 if no faults were available. The fault is not
+ * removed from the queue: a separate call to syscall_shift_fault() is needed.
  */
 uint64_t syscall_get_fault(syscall_pg_t * pg);
 
@@ -103,3 +104,9 @@ void syscall_self_vmunmap(uint64_t vpage);
  * altered.
  */
 void syscall_self_invlpg();
+
+/**
+ * Pops the first page fault from the queue.
+ */
+void syscall_shift_fault();
+

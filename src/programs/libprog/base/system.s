@@ -277,3 +277,16 @@ sys_self_invlpg:
   mov rdi, 0x26
   syscall
   ret
+
+global sys_shift_fault
+sys_shift_fault:
+  mov rdi, 0x27
+  syscall
+  ret
+
+global sys_abort
+sys_abort:
+  mov rdi, 0x28
+  syscall
+  ret
+

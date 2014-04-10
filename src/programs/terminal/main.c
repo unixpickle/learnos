@@ -6,6 +6,8 @@
 #include "count.h"
 #include "mem.h"
 #include "sleep.h"
+#include "fault.h"
+#include "aborter.h"
 
 #define BUFF_SIZE 0xff
 
@@ -58,6 +60,17 @@ int main() {
       while (sys_read(taskFd, &msg)) {
         if (msg.type == 2) {
           sys_close(taskFd);
+
+          // possibly print out the kill reason
+          void * data = msg.message;
+          uint64_t killReason = *((uint64_t *)data);
+          if ((killReason & 1) && killReason != 1) {
+            sys_color(0x0c);
+            printf("[terminal]: task kill with code 0x%x\n", killReason >> 1);
+          } else if (!killReason) {
+            sys_color(0x0e);
+            printf("[terminal]: task closed link.\n");
+          }
           taskFd = 0xffffffffffffffffL;
           prompt();
           break;
@@ -108,8 +121,11 @@ static void process_cmd() {
     method = (uint64_t)command_memusage;
   } else if (is_command("sleep")) {
     method = (uint64_t)command_sleep;
+  } else if (is_command("fault")) {
+    method = (uint64_t)command_fault;
+  } else if (is_command("abort")) {
+    method = (uint64_t)command_abort;
   } else {
-    sys_color(0x7);
     printf("[terminal]: `%s` unknown command\n", buffer);
     prompt();
     return;

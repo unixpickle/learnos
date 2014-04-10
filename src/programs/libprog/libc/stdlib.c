@@ -2,7 +2,7 @@
 #include <base/system.h>
 
 void abort() {
-  sys_exit();
+  sys_abort();
 }
 
 int abs(int num) {

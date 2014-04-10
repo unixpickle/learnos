@@ -1,5 +1,6 @@
 #include "memory.h"
 #include "functions.h"
+#include "vm.h"
 #include <anscheduler/task.h>
 #include <anscheduler/functions.h>
 #include <anscheduler/paging.h>
@@ -128,6 +129,7 @@ void syscall_become_pager() {
 
 uint64_t syscall_get_fault(syscall_pg_t * pg) {
   anscheduler_cpu_lock();
+
   task_t * task = anscheduler_cpu_get_task();
   if (task->uid != 0) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
@@ -136,18 +138,23 @@ uint64_t syscall_get_fault(syscall_pg_t * pg) {
   if (thread != anscheduler_pager_get()) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
-  anscheduler_cpu_unlock();
-  page_fault_t * fault = anscheduler_pager_read();
-  if (!fault) return 0;
+
+  page_fault_t * fault = anscheduler_pager_peek();
+  if (!fault) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
 
   // copy out the information
-  anscheduler_cpu_lock();
-  pg->taskId = fault->task->pid;
-  pg->threadId = fault->thread->stack;
-  pg->address = (uint64_t)fault->ptr;
-  pg->flags = fault->flags;
-  anscheduler_task_dereference(fault->task);
-  anscheduler_free(fault);
+  syscall_pg_t thePg;
+  thePg.taskId = fault->task->pid;
+  thePg.threadId = fault->thread->stack;
+  thePg.address = (uint64_t)fault->ptr;
+  thePg.flags = fault->flags;
+  if (!task_copy_out(pg, &thePg, sizeof(syscall_pg_t))) {
+    anscheduler_abort("system pager passed invalid ptr to syscall_get_fault");
+  }
+
   anscheduler_cpu_unlock();
   return 1;
 }
@@ -205,6 +212,27 @@ void syscall_self_invlpg() {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
   anscheduler_cpu_notify_invlpg(task);
+  anscheduler_cpu_unlock();
+}
+
+void syscall_shift_fault() {
+  anscheduler_cpu_lock();
+
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid != 0) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  thread_t * thread = anscheduler_cpu_get_thread();
+  if (thread != anscheduler_pager_get()) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+
+  page_fault_t * f = anscheduler_pager_peek();
+  if (f) {
+    anscheduler_pager_shift();
+    anscheduler_task_dereference(f->task);
+    anscheduler_free(f);
+  }
   anscheduler_cpu_unlock();
 }
 

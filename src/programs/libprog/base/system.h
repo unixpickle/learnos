@@ -230,4 +230,14 @@ void sys_self_vmunmap(uint64_t vpage);
  */
 void sys_self_invlpg();
 
+/**
+ * Shift the fault queue. You must be the system pager.
+ */
+void sys_shift_fault();
+
+/**
+ * Abort the current task. Like sys_exit() except with the ABORT kill reason.
+ */
+void sys_abort();
+
 #endif

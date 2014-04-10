@@ -58,7 +58,9 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_get_fault,
     (void *)syscall_self_vmmap,
     (void *)syscall_self_vmunmap,
-    (void *)syscall_self_invlpg
+    (void *)syscall_self_invlpg,
+    (void *)syscall_shift_fault,
+    (void *)syscall_abort
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;
@@ -170,6 +172,11 @@ uint64_t syscall_self_pid() {
   uint64_t res = task->pid;
   anscheduler_cpu_unlock();
   return res;
+}
+
+void syscall_abort() {
+  anscheduler_cpu_lock();
+  anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ABORT);
 }
 
 static bool print_line(const char * ptr) {
