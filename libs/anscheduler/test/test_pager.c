@@ -78,8 +78,11 @@ void pager_thread() {
   bool mayDie = false;
   while (!mayDie) {
     sys_poll();
-    page_fault_t * fault = anscheduler_pager_read();
+    page_fault_t * fault = anscheduler_pager_peek();
+    
     while (fault) {
+      anscheduler_pager_shift();
+      
       // terminate the other task
       if (fault->ptr != (void *)0x1337) {
         printf("[error] fault pointer wasn't 0x1337\n");
@@ -93,7 +96,7 @@ void pager_thread() {
       if (!__sync_sub_and_fetch(&taskCount, 1)) {
         mayDie = true;
       }
-      fault = anscheduler_pager_read();
+      fault = anscheduler_pager_peek();
     }
   }
   

@@ -6,6 +6,7 @@
 static thread_t * pagerThread __attribute__((aligned(8))) = 0;
 static uint64_t lock __attribute__((aligned(8))) = 0;
 static page_fault_t * firstFault = 0;
+static page_fault_t * lastFault = 0;
 
 typedef struct {
   void * ptr;
@@ -76,29 +77,22 @@ void anscheduler_pager_set(thread_t * thread) {
   pagerThread = thread;
 }
 
-page_fault_t * anscheduler_pager_read() {
-  while (1) {
-    anscheduler_cpu_lock();
-    anscheduler_pager_lock();
-    page_fault_t * fault = firstFault;
-    if (fault) firstFault = fault->next;
-    anscheduler_pager_unlock();
-    if (!fault) {
-      anscheduler_cpu_unlock();
-      return NULL;
-    }
-    
-    if (!anscheduler_task_reference(fault->task)) {
-      anscheduler_task_dereference(fault->task);
-      anscheduler_free(fault);
-      anscheduler_cpu_unlock();
-      continue;
-    }
-    // the thing was already referenced anyway
-    anscheduler_task_dereference(fault->task);
-    anscheduler_cpu_unlock();
-    return fault;
+void anscheduler_pager_shift() {
+  anscheduler_pager_lock();
+  if (firstFault) {
+    firstFault = firstFault->next;
+    if (!firstFault) lastFault = NULL;
   }
+  anscheduler_pager_unlock();
+}
+
+page_fault_t * anscheduler_pager_peek() {
+  // technically, a read is atomic, but firstFault + lastFault aren't atomic
+  // together, so we still use the lock
+  anscheduler_pager_lock();
+  page_fault_t * value = firstFault;
+  anscheduler_pager_unlock();
+  return value;
 }
 
 void anscheduler_pager_lock() {
@@ -145,10 +139,15 @@ static bool _push_page_fault_cont(fault_info_t info) {
   fault->thread = curThread;
   fault->ptr = info.ptr;
   fault->flags = info.flags;
-  
+  fault->next = NULL;
+
   anscheduler_pager_lock();
-  fault->next = firstFault;
-  firstFault = fault;
+  if (lastFault) {
+    lastFault->next = fault;
+    lastFault = fault;
+  } else {
+    lastFault = (firstFault = fault);
+  }
   anscheduler_pager_unlock();
   
   // wakeup the system pager if possible

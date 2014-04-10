@@ -33,14 +33,18 @@ thread_t * anscheduler_pager_get();
 void anscheduler_pager_set(thread_t * thread);
 
 /**
- * Get the next page fault, or NULL if no page faults are left to handle. Note
- * that, while the fault returned does include a referenced task, it will be
- * returned in a noncritical section. This is because it is presumed that the
- * system pager will NEVER die, and thus that the reference will not be
- * leaked.
- * @noncritical
+ * Remove the top page fault from the list of faults.
+ * @critical
  */
-page_fault_t * anscheduler_pager_read();
+void anscheduler_pager_shift();
+
+/**
+ * Returns the next page fault without popping it from the queue. This should be
+ * called using a system call, which should then use anscheduler_pager_read to
+ * suck away the last fault.
+ * @critical
+ */
+page_fault_t * anscheduler_pager_peek();
 
 /**
  * Global lock for the pager functions. You usually do not have to call this
@@ -54,7 +58,8 @@ void anscheduler_pager_lock();
 void anscheduler_pager_unlock();
 
 /**
- * Call this after anscheduler_pager_lock().
+ * Call this after anscheduler_pager_lock(). As of now, this is the only function
+ * that will not call anscheduler_pager_lock() for you.
  * @return true if page faults are waiting in the queue; otherwise, false.
  */
 bool anscheduler_pager_waiting();
