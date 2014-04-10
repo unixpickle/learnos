@@ -24,6 +24,12 @@ void main() {
     free(buf);
     printf("free'd buffer 0x%x\n", sys_mem_usage());
   }
+  for (i = 0; i < 10; i++) {
+    sbrk(1);
+    printf("broke one 0x%x\n", sys_mem_usage());
+    sbrk(-1);
+    printf("broke minus one 0x%x\n", sys_mem_usage());
+  }
 
   while (1) {
     uint64_t fd = sys_poll();

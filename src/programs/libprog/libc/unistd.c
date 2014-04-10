@@ -79,7 +79,7 @@ static int _lose_memory(uintptr_t amount) {
   uint64_t firstByte = brkSize - amount;
   uint64_t lastByte = brkSize;
   uint64_t firstPage = (firstByte >> 12) + (firstByte & 0xfff ? 1 : 0);
-  uint64_t lastPage = (lastByte >> 12) - (lastByte & 0xfff ? 0 : 1);
+  uint64_t lastPage = (lastByte >> 12) + (lastByte & 0xfff ? 1 : 0);
   if (lastPage <= firstPage) return 0;
 
   uint64_t count = lastPage - firstPage;
