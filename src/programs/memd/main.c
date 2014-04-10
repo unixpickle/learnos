@@ -10,13 +10,6 @@ void handle_client_fault(client_t * cli, pgf_t * fault);
 void main() {
   sys_become_pager();
 
-  sys_sleep(0x100000);
-  printf("allocating a buffer, usage is 0x%x\n", sys_mem_usage());
-  char * buf = malloc(10);
-  printf("buffer is 0x%x, mem usage is 0x%x\n", buf, sys_mem_usage());
-  free(buf);
-  printf("free'd buffer 0x%x\n", sys_mem_usage());
-
   uint64_t i;
   for (i = 0; i < 10; i++) {
     buf = malloc(10);
