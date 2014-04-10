@@ -16,10 +16,14 @@ void main() {
   printf("buffer is 0x%x, mem usage is 0x%x\n", buf, sys_mem_usage());
   free(buf);
   printf("free'd buffer 0x%x\n", sys_mem_usage());
-  buf = malloc(10);
-  printf("new buffer is 0x%x, mem usage is 0x%x\n", buf, sys_mem_usage());
-  free(buf);
-  printf("free'd buffer 0x%x\n", sys_mem_usage());
+
+  uint64_t i;
+  for (i = 0; i < 10; i++) {
+    buf = malloc(10);
+    printf("new buffer is 0x%x, mem usage is 0x%x\n", buf, sys_mem_usage());
+    free(buf);
+    printf("free'd buffer 0x%x\n", sys_mem_usage());
+  }
 
   while (1) {
     uint64_t fd = sys_poll();
