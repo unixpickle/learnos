@@ -137,9 +137,8 @@ void int_interrupt_irq(uint64_t vec) {
 }
 
 void int_interrupt_ipi(uint64_t vec) {
-  if (vec == 0x31) {
-    print("GOT PAGE IPI\n");
-  }
+  // 0x31 is page IPI; getting this interrupt will already do a context 
+  // switch and update the CR3
   if (lapic_is_in_service(vec)) {
     lapic_send_eoi();
   }
