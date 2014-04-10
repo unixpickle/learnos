@@ -1,5 +1,5 @@
-#include <stddef.h>
 #include <stdint.h>
+#include <stddef.h>
 
 void free(void * buf);
 void * malloc(size_t size);
