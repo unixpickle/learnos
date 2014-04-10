@@ -1,10 +1,14 @@
 LIBS=CKeyedBits
+CFLAGS=-Wall -ffreestanding -fno-builtin -fno-stack-protector -O2 -fno-zero-initialized-in-bss -nostdinc -I../../libprog -I../../libprog/libc
 
-all:
+all: anmalloc/build
 	for dir in $(LIBS); do \
-		cd $$dir && $(MAKE) CFLAGS=-Wall\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss\ -nostdinc\ -I../../libprog\ -I../../libprog/libc; \
+		cd $$dir && $(MAKE) "CFLAGS=$(CFLAGS)"; \
 		cd -; \
 	done
+
+anmalloc/build:
+	cd anmalloc && $(MAKE) "CFLAGS=$(CFLAGS) -I../../libprog/bindings/include"
 
 v8_all: v8_deps v8_build
 
@@ -22,4 +26,5 @@ clean:
 		cd $$dir && make clean && cd -; \
 	done
 	cd v8 && make clean
+	cd anmalloc && make clean
 

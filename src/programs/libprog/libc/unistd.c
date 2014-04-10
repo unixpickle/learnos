@@ -7,46 +7,24 @@
 static intptr_t brkSize __attribute__((aligned(8))) = 0;
 static uint64_t brkLock __attribute__((aligned(8))) = 0;
 
+static void * _sbrk_no_lock(intptr_t amount);
 static int _gain_memory(uintptr_t amount);
 static int _lose_memory(uintptr_t amount);
 
-int brk(void * addr) {
+int brk(const void * addr) {
   anlock_lock(&brkLock);
   intptr_t len = (intptr_t)(addr - ALLOC_DATA_BASE);
-  intptr_t getAmount = len - brkSize;
-  if (getAmount < -brkSize) {
-    anlock_unlock(&brkLock);
-    return -1;
-  }
-  if (getAmount == 0) return 0;
-
-  int result = 0;
-  if (getAmount < 0) result = _lose_memory((uintptr_t)-getAmount);
-  else result = _gain_memory(getAmount);
+  intptr_t change = len - brkSize;
+  void * res = _sbrk_no_lock(change);
   anlock_unlock(&brkLock);
-  return result;
+  return res == (void *)-1 ? -1 : 0;
 }
 
 void * sbrk(intptr_t increment) {
   anlock_lock(&brkLock);
-  if (increment < -brkSize) {
-    anlock_unlock(&brkLock);
-    return (void *)(-1);
-  }
-  if (increment < 0) {
-    if (_lose_memory((uintptr_t)-increment)) {
-      anlock_unlock(&brkLock);
-      return (void *)(-1);
-    }
-  } else {
-    if (_gain_memory((uintptr_t)increment)) {
-      anlock_unlock(&brkLock);
-      return (void *)(-1);
-    }
-  }
-  void * result = ALLOC_DATA_BASE + brkSize;
+  void * res = _sbrk_no_lock(increment);
   anlock_unlock(&brkLock);
-  return result;
+  return res;
 }
 
 void _exit(int unused) {
@@ -64,6 +42,22 @@ unsigned int sleep(unsigned int secs) {
 int usleep(useconds_t time) {
   sys_sleep(time);
   return 0;
+}
+
+static void * _sbrk_no_lock(intptr_t increment) {
+  if (increment < -brkSize) {
+    return (void *)(-1);
+  }
+  if (increment < 0) {
+    if (_lose_memory((uintptr_t)-increment)) {
+      return (void *)(-1);
+    }
+  } else {
+    if (_gain_memory((uintptr_t)increment)) {
+      return (void *)(-1);
+    }
+  }
+  return ALLOC_DATA_BASE + brkSize;
 }
 
 static int _gain_memory(uintptr_t amount) {
