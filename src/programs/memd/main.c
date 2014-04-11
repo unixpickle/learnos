@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <keyedbits/buff_decoder.h>
+#include <keyedbits/buff_encoder.h>
 #include <keyedbits/validation.h>
 
 void handle_messages(uint64_t fd);
@@ -124,17 +125,19 @@ void handle_client_request(client_t * cli,
                            const char * action,
                            uint64_t start,
                            uint64_t count) {
-  bool res;
+  bool res = false;
   if (!strcmp(action, "alloc")) {
     res = handle_client_alloc(cli, start, count);
   } else if (!strcmp(action, "free")) {
     res = handle_client_free(cli, start, count);
-  } else return;
-  if (!res) {
-    handle_client_death(cli);
-    sys_close(cli->fd);
-    client_delete(cli);
   }
+
+  int64_t number = res ? 1 : 0;
+  char result[0x10];
+  kb_buff_t kb;
+  kb_buff_initialize_encode(&kb, result, 0x10);
+  kb_buff_write_int(&kb, number);
+  sys_write(cli->fd, result, kb.off);
 }
 
 bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
