@@ -1,36 +1,26 @@
-TESTS=test_basic.c
-CONFIG_TESTS=test_configs.c
-OBJECTS=../build/*.o $(wildcard ../libs/*/build/*.o)
-LIBS=anlock analloc anpages
-TEST_HEADERS=-I../include -I../libs/analloc/src -I../libs/anpages/src -I./include
+CFILES=anmalloc_bindings.c
+PROGRAMS=test_basic.c
+OBJS=../build/*.o ./build/*.o ../libs/analloc/build/*.o
+INCLUDES=-Iinclude -I../include -I../libs/analloc/src
 
-tests: build ../build libs_build
-	for test in $(TESTS); do \
-		gcc $(OBJECTS) $(TEST_HEADERS) $$test -o build/`basename $$test .c`; \
+all: ../build build ../libs/analloc/build
+	for file in $(CFILES); do \
+		gcc -c $(INCLUDES) $$file -o build/`basename $$file .c`.o; \
 	done
-
-config_tests: build buildconfig libs_build
-	for test in $(CONFIG_TESTS); do \
-		gcc $(OBJECTS) $(TEST_HEADERS) $$test -o build/`basename $$test .c`; \
-	done
-
-libs_build:
-	for lib in $(LIBS); do \
-		cd ../libs/$$lib && make && cd -; \
+	for file in $(PROGRAMS); do \
+		gcc $(INCLUDES) $(OBJS) $$file -o build/`basename $$file .c`; \
 	done
 
 ../build:
-	cd .. && make INCLUDES=-I./test/include CFLAGS=-DIGNORE_4GB_RULE=1
-
-buildconfig:
-	cd .. && make INCLUDES=-I./test/include
+	cd .. && $(MAKE) CFLAGS=-Itest/include
 
 build:
 	mkdir build
 
+../libs/analloc/build:
+	cd ../libs/analloc && $(MAKE)
+
 clean:
-	cd .. && make clean
-	rm -rf build
-	for lib in $(LIBS); do \
-		cd ../libs/$$lib && make clean && cd -; \
-	done
+	rm -rf build/
+	cd ../ && $(MAKE) clean
+	cd ../libs/analloc && $(MAKE) clean

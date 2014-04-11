@@ -1,30 +1,32 @@
-# Abstract
+# anmalloc
 
-*anmem* combines my three other projects, [analloc](https://github.com/unixpickle/analloc), [anpages](https://github.com/unixpickle/anpages), and [anlock](https://github.com/unixpickle/analloc) to make a multipurpose memory allocator for operating system kernels. This allocator provides page allocation for basic kernel structures, aligned block allocation for PCI buffers, and dynamic, easy to use free routines.
+This is an easy-to-use libc compatible memory allocator.
 
-# Requirements
+# Dependencies
 
-In order for *anmem* to work to its fullest capacity, you must use a kernel virtual memory mapping such that the system's physical memory is mapped (with no gaps) to linear virtual memory. Although *anmem* deals with a virtual memory mapping, it uses the information you pass it at configuration time to provide you with aligned *physical* addresses. This is to satisfy the PCI bus memory address requirements.
+Here's a list:
+ * `stdint.h` - requires `uint64_t`, `intptr_t`, etc.
+ * `assert.h` - used to ensure safe memory management
+ * `stdbool.h` - uses the standard `bool` type in C
+ * `stddef.h` - uses the `NULL` constant
+ * `string.h` - uses `memcpy()`
+ * *analloc* - used for internal management of free buffers
 
-# The Algorithm
+Additionally, you must create an API for *anmalloc* to link against, and provide a header through the name `anmalloc_bindings`. Here's what you'll need:
 
-When you initialize *anmem*, you provide a list of physical memory regions. You also provide the `maxControllable` size. *anmem* uses these arguments to find a chunk of memory of size `maxControllable` which is aligned on a boundary of `maxControllable`. It then sets up a buddy allocator in this chunk of memory so that any `n` page chunk of memory (where `n` is a power of 2) is aligned to `n` pages. This is just what PCI requires.
+The first two methods should follow the standard of the POSIX `brk` and `sbrk`:
 
-Take an example: when specify 128MB as `maxControllable`, *anmem* tries to find a 128MB chunk of memory aligned on a 128MB boundary. If no such region exists below 4GB (the "maximum" boundary for alignable PCI memory), then the configuration process begins to look for 64MB regions, and then 32MB regions, etc., until it has found a way to allocate aligned blocks. In a normal, modern 64-bit workstation, a 128MB aligned block of memory is usually present, so no splitting is necessary.
+    void * anmalloc_sbrk(intptr_t incr);
+    int anmalloc_brk(const void * addr);
 
-# Subtrees
+The next two methods should act like `pthread_mutex_lock` and `pthread_mutex_unlock` or similar.
 
-Subtrees were added like the following example for `analloc`
+**NOTE:** You may wish to use *anmalloc* in your POSIX threads implementation. If this is the case, you will want to provide a simpler locking mechanism for *anmalloc* which does **not** depend on *anmalloc*.
 
-    git remote add analloc https://github.com/unixpickle/analloc.git
-    git fetch analloc
-    git checkout -b analloc analloc/master
-    git checkout master
-    git read-tree --prefix=libs/analloc -u analloc
+    typedef anmalloc_lock_t ...;
+    #define ANMALLOC_LOCK_INITIALIZER ...
+    
+    void anmalloc_lock(anmalloc_lock_t * lock);
+    void anmalloc_unlock(anmalloc_lock_t * lock);
 
-Update subtrees as follows:
-
-    git checkout analloc
-    git pull
-    git checkout master
-    git merge --squash -s subtree --no-commit analloc
+With this interface, along with the libc dependencies listed above, *anmalloc* can work at your disposal! See the tests for detailed examples of usage.
