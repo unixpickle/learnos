@@ -236,9 +236,13 @@ void syscall_shift_fault() {
   anscheduler_cpu_unlock();
 }
 
-uint64_t syscall_mem_fault(uint64_t fd) {
+uint64_t syscall_mem_fault(uint64_t pid) {
   anscheduler_cpu_lock();
-  task_t * task = _get_remote_task(fd);
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  task = anscheduler_task_for_pid(pid);
   if (!task) {
     anscheduler_cpu_unlock();
     return 0;

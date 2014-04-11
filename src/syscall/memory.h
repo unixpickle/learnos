@@ -119,5 +119,5 @@ void syscall_shift_fault();
  * Terminate a task, marking it as having died because of a memory fault. This
  * may only be used by the system pager.
  */
-uint64_t syscall_mem_fault(uint64_t fd);
+uint64_t syscall_mem_fault(uint64_t pid);
 

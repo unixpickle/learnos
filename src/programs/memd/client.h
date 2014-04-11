@@ -14,7 +14,7 @@ typedef struct {
 
 /**
  * Lookup a client for a given file descriptor. If one does not exist, it will
- * be created.
+ * be created. May return NULL on certain race conditions.
  */
 client_t * client_get(uint64_t fd);
 

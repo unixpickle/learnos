@@ -13,11 +13,15 @@ client_t * client_get(uint64_t fd) {
       return &clients[i];
     }
   }
+
+  uint64_t pid = sys_remote_pid(fd);
+  if (!(pid + 1)) return NULL;
+
   clientCount++;
   clients = realloc(clients, sizeof(client_t) * clientCount);
   client_t * cli = &clients[clientCount - 1];
   cli->fd = fd;
-  cli->pid = sys_remote_pid(fd);
+  cli->pid = pid;
   cli->pageCount = 0;
   cli->pages = NULL;
   return cli;

@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <keyedbits/buff_decoder.h>
 #include <keyedbits/buff_encoder.h>
 #include <keyedbits/validation.h>
+
+#define ANSCHEDULER_TASK_DATA_PAGE 0x10200000
 
 void handle_messages(uint64_t fd);
 void handle_faults();
@@ -31,6 +34,7 @@ void main() {
 
 void handle_messages(uint64_t fd) {
   client_t * cli = client_get(fd);
+  if (!cli) return;
 
   msg_t msg;
   while (sys_read(fd, &msg)) {
@@ -67,14 +71,32 @@ void handle_faults() {
       continue;
     }
     handle_client_fault(client, &fault);
-    sys_shift_fault();
   }
 }
 
 void handle_client_fault(client_t * cli, pgf_t * fault) {
-  printf("client faulted because i'm a murderer.\n");
-  // just murder it brutally cause i'm lazy
-  sys_mem_fault(cli->pid);
+  uint64_t index = fault->address >> 12;
+  if (index < ANSCHEDULER_TASK_DATA_PAGE ||
+      index >= ANSCHEDULER_TASK_DATA_PAGE + cli->pageCount) {
+    sys_mem_fault(cli->pid);
+    sys_shift_fault();
+    return;
+  }
+
+  // if the page has already been allocated, just give up hope man
+  uint64_t pg = index - ANSCHEDULER_TASK_DATA_PAGE;
+  if (cli->pages[pg]) {
+    sys_mem_fault(cli->pid);
+    sys_shift_fault();
+  }
+  sys_shift_fault();
+
+  cli->pages[pg] = sys_alloc_page();
+  assert(cli->pages[pg]);
+  bool res = sys_vmmap(cli->fd, index, cli->pages[pg] | 7);
+  assert(res);
+
+  sys_wake_thread(cli->fd, fault->threadId);
 }
 
 const char * client_request(kb_buff_t * kb,
@@ -144,27 +166,38 @@ bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
   if (start != cli->pageCount) return false;
   cli->pageCount += count;
   cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
-  if (!cli->pages) return false;
+  assert(cli->pages != NULL);
 
   uint64_t i;
   for (i = 0; i < count; i++) {
     uint64_t pg = start + i;
     cli->pages[pg] = 0;
+    sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
   }
+  sys_invlpg(cli->fd);
   return true;
 }
 
 bool handle_client_free(client_t * cli, uint64_t start, uint64_t count) {
-  if (start > cli->pageCount) return false;
+  if (start + count != cli->pageCount) return false;
+  if (count > cli->pageCount) return false;
+
   uint64_t i;
   for (i = 0; i < count; i++) {
-    // TODO: unmap the page here
+    uint64_t pg = start + i;
+    sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
   }
-  // TODO: send invlpg message here
+  sys_invlpg(cli->fd);
   for (i = 0; i < count; i++) {
-    // TODO: free the page here
+    uint64_t pg = start + i;
+    if (cli->pages[pg]) {
+      sys_free_page(cli->pages[pg]);
+    }
   }
-  // TODO: shrink the page array in cli->pages
+
+  cli->pageCount -= count;
+  cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
+  assert(cli->pages != NULL);
   return true;
 }
 

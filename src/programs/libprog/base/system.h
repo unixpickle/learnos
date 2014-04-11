@@ -243,7 +243,7 @@ void sys_abort();
  * Cause a memory fault in a task which kills it.
  * @return true if the task was found and killed, false otherwise.
  */
-bool sys_mem_fault(uint64_t fd);
+bool sys_mem_fault(uint64_t pid);
 
 /**
  * Wakeup a PID and Thread ID. This requires that you are the system pager!
