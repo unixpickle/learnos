@@ -34,9 +34,9 @@ void handle_faults() {
     // map in the page or kill the task
     client_t * client = client_find(fault.taskId);
     if (!client) {
-      sys_kill(fault.taskId);
+      sys_mem_fault(fault.taskId);
       sys_shift_fault();
-      return;
+      continue;
     }
     handle_client_fault(client, &fault);
     sys_shift_fault();

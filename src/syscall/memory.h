@@ -1,3 +1,9 @@
+/**
+ * This is a suite of syscalls which are generally only to be used by the
+ * system pager. Some syscalls here will also be useful for hardware drivers
+ * which need to allocate memory for hardware.
+ */
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -37,28 +43,27 @@ void syscall_free_aligned(uint64_t addr, uint64_t pages);
 
 /**
  * Set an entry in a task's virtual memory table.
- * @param fd A socket descriptor which is connected to the remote task.
+ * @param pid The task process identifier
  * @param vpage The virtual page index to map
  * @param entry The entry to set in the page table
  * @return true if the mapping was successfully set; false if the socket was
  * closed or if the mapping could not be made for any other reason.
  */
-bool syscall_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry);
+bool syscall_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry);
 
 /**
  * Completely unmap an entry from a task's virtual page table.
- * @param fd A socket descriptor which is connected to the remote task.
+ * @param pid The task's PID
  * @param vpage The virtual page index to unmap
  * @return false if the socket was closed; otherwise, true
  */
-bool syscall_vmunmap(uint64_t fd, uint64_t vpage);
+bool syscall_vmunmap(uint64_t pid, uint64_t vpage);
 
 /**
  * Notify all CPUs running a certain task that its address space has been
  * altered.
- * @param fd A socket descriptor which is connected to the remote task.
  */
-bool syscall_invlpg(uint64_t fd);
+bool syscall_invlpg(uint64_t pid);
 
 /**
  * Useful only to the system pager. This call returns the physical mapping for
@@ -81,11 +86,11 @@ uint64_t syscall_get_fault(syscall_pg_t * pg);
 
 /**
  * Reschedule a thread which was removed from the queue because of a page fault.
- * @param fd A socket descriptor which is connected to the remote task.
+ * @param pid The owning task.
  * @param tid The thread identifier (stack index) to wake
  * @return false if the task has died; true otherwise
  */
-bool syscall_wake_thread(uint64_t fd, uint64_t tid);
+bool syscall_wake_thread(uint64_t pid, uint64_t tid);
 
 /**
  * Map a page in our address space to a physical entry. This can only be called
@@ -109,4 +114,10 @@ void syscall_self_invlpg();
  * Pops the first page fault from the queue.
  */
 void syscall_shift_fault();
+
+/**
+ * Terminate a task, marking it as having died because of a memory fault. This
+ * may only be used by the system pager.
+ */
+uint64_t syscall_mem_fault(uint64_t pid);
 

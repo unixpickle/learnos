@@ -157,21 +157,20 @@ void sys_free_pci(uint64_t addr, uint64_t pages);
 
 /**
  * Map a virtual page to a physical page in a task's page table.
- * @return false if the socket is closed or the map fails because of an
- * internal error.
+ * @return false if the task does not exist or the system is out of memory.
  */
-bool sys_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry);
+bool sys_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry);
 
 /**
  * Unmap a virtual page in a task's page table.
- * @return false if the socket is closed.
+ * @return false if the task does not exist.
  */
-bool sys_vmunmap(uint64_t fd, uint64_t vpage);
+bool sys_vmunmap(uint64_t pid, uint64_t vpage);
 
 /**
  * Notify every CPU running a task that it should flush its TLB cache.
  */
-bool sys_invlpg(uint64_t fd);
+bool sys_invlpg(uint64_t pid);
 
 /**
  * Launch a thread which will automatically exit when you return. The stack on
@@ -239,5 +238,18 @@ void sys_shift_fault();
  * Abort the current task. Like sys_exit() except with the ABORT kill reason.
  */
 void sys_abort();
+
+/**
+ * Cause a memory fault in a task which kills it.
+ * @return true if the task was found and killed, false otherwise.
+ */
+bool sys_mem_fault(uint64_t pid);
+
+/**
+ * Wakeup a PID and Thread ID. This requires that you are the system pager!
+ * After you call this method, you must not reference this TID anymore, because
+ * the thread may choose to exit the *instant* it begins executing.
+ */
+void sys_wake_thread(uint64_t pid, uint64_t tid);
 
 #endif

@@ -290,3 +290,18 @@ sys_abort:
   syscall
   ret
 
+global sys_mem_fault
+sys_mem_fault:
+  mov rsi, rdi
+  mov rdi, 0x29
+  syscall
+  ret
+
+global sys_wake_thread
+sys_wake_thread:
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x2a
+  syscall
+  ret
+

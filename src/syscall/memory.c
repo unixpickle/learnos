@@ -8,7 +8,7 @@
 #include <anscheduler/loop.h>
 #include <memory/kernpage.h>
 
-static task_t * _get_remote_task(uint64_t fd);
+static task_t * _get_remote_task(uint64_t pid);
 static bool _vmmap_call(task_t * task, uint64_t virt, uint64_t entry);
 
 uint64_t syscall_allocate_page() {
@@ -54,9 +54,9 @@ void syscall_free_aligned(uint64_t addr, uint64_t size) {
   anscheduler_cpu_unlock();
 }
 
-bool syscall_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry) {
+bool syscall_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry) {
   anscheduler_cpu_lock();
-  task_t * task = _get_remote_task(fd);
+  task_t * task = _get_remote_task(pid);
   if (!task) { 
     anscheduler_cpu_unlock();
     return false;
@@ -69,9 +69,9 @@ bool syscall_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry) {
   return res;
 }
 
-bool syscall_vmunmap(uint64_t fd, uint64_t vpage) {
+bool syscall_vmunmap(uint64_t pid, uint64_t vpage) {
   anscheduler_cpu_lock();
-  task_t * task = _get_remote_task(fd);
+  task_t * task = _get_remote_task(pid);
   if (!task) { 
     anscheduler_cpu_unlock();
     return false;
@@ -86,9 +86,9 @@ bool syscall_vmunmap(uint64_t fd, uint64_t vpage) {
   return true;
 }
 
-bool syscall_invlpg(uint64_t fd) {
+bool syscall_invlpg(uint64_t pid) {
   anscheduler_cpu_lock();
-  task_t * task = _get_remote_task(fd);
+  task_t * task = _get_remote_task(pid);
   if (!task) {
     anscheduler_cpu_unlock();
     return false;
@@ -159,9 +159,9 @@ uint64_t syscall_get_fault(syscall_pg_t * pg) {
   return 1;
 }
 
-bool syscall_wake_thread(uint64_t fd, uint64_t tid) {
+bool syscall_wake_thread(uint64_t pid, uint64_t tid) {
   anscheduler_cpu_lock();
-  task_t * task = _get_remote_task(fd);
+  task_t * task = _get_remote_task(pid);
   if (!task) {
     anscheduler_cpu_unlock();
     return false;
@@ -236,18 +236,37 @@ void syscall_shift_fault() {
   anscheduler_cpu_unlock();
 }
 
-static task_t * _get_remote_task(uint64_t fd) {
+uint64_t syscall_mem_fault(uint64_t pid) {
+  anscheduler_cpu_lock();
+  task_t * task = anscheduler_cpu_get_task();
+  if (task->uid != 0) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  thread_t * thread = anscheduler_cpu_get_thread();
+  if (thread != anscheduler_pager_get()) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  task = anscheduler_task_for_pid(pid);
+  if (!task) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  anscheduler_task_kill(task, ANSCHEDULER_TASK_KILL_REASON_MEMORY);
+  anscheduler_task_dereference(task);
+  anscheduler_cpu_unlock();
+  return 1;
+}
+
+static task_t * _get_remote_task(uint64_t pid) {
   task_t * thisTask = anscheduler_cpu_get_task();
   if (!thisTask) return false;
   if (thisTask->uid) {
     anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
   }
-  
-  socket_desc_t * desc = anscheduler_socket_for_descriptor(fd);
-  if (!desc) return NULL;
-  task_t * remote = anscheduler_socket_remote(desc);
-  anscheduler_socket_dereference(desc);
-  return remote;
+  if (anscheduler_cpu_get_thread() != anscheduler_pager_get()) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+  return anscheduler_task_for_pid(pid);
 }
 
 static bool _vmmap_call(task_t * task, uint64_t vpage, uint64_t entry) {
