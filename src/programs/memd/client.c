@@ -51,30 +51,3 @@ void client_delete(client_t * client) {
   assert(clients != NULL);
 }
 
-bool client_req_pages(client_t * cli, uint64_t start, uint64_t len) {
-  // TODO: enforce some sort of limits here
-  if (start != cli->pageCount) return false;
-
-  // allocate room for more pages from page faults
-  cli->pageCount += len;
-  cli->pages = (uint64_t *)realloc(cli->pages, 8 * cli->pageCount);
-  assert(cli->pages != NULL);
-  uint64_t i;
-  for (i = start; i < start + len; i++) {
-    cli->pages[i] = 0;
-  }
-  return true;
-}
-
-bool client_del_pages(client_t * cli, uint64_t start, uint64_t len) {
-  // TODO: enforce some sort of limits here
-  if (start + len != cli->pageCount) return false;
-
-  // deallocate some pages
-  cli->pageCount -= len;
-  cli->pages = (uint64_t *)realloc(cli->pages, 8 * cli->pageCount);
-
-  // TODO: here, unmap the pages
-  return true;
-}
-

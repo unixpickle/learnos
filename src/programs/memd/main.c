@@ -12,25 +12,34 @@ void main() {
 
   while (1) {
     uint64_t fd = sys_poll();
-    printf("[memd]: pull result 0x%x\n", fd);
     if (fd + 1) handle_messages(fd);
     handle_faults();
   }
 }
 
 void handle_messages(uint64_t fd) {
+  client_t * cli = client_get(fd);
+
   msg_t msg;
   while (sys_read(fd, &msg)) {
-    // TODO: something
+    if (msg.type == 2) {
+      client_delete(cli);
+      sys_close(fd);
+      return;
+    }
+    if (msg.type == 0) continue;
+
+    kb_buff_t kb;
+    kb_buff_initialize_decode(&kb, (void *)msg.message, msg.len);
+    
+    // TODO: parse the message here
+    printf("got client message, but who *really* cares, man\n");
   }
 }
 
 void handle_faults() {
-  printf("[memd]: entering get fault loop\n");
   pgf_t fault;
   while (sys_get_fault(&fault)) {
-    printf("[memd]: got fault for pid 0x%x\n", fault.taskId);
-
     // map in the page or kill the task
     client_t * client = client_find(fault.taskId);
     if (!client) {
@@ -45,7 +54,8 @@ void handle_faults() {
 }
 
 void handle_client_fault(client_t * cli, pgf_t * fault) {
+  printf("client faulted because i'm a murderer.\n");
   // just murder it brutally cause i'm lazy
-  sys_kill(cli->pid);
+  sys_mem_fault(cli->pid);
 }
 
