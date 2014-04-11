@@ -8,6 +8,7 @@
 #include "sleep.h"
 #include "fault.h"
 #include "aborter.h"
+#include "allocer.h"
 
 #define BUFF_SIZE 0xff
 
@@ -125,6 +126,8 @@ static void process_cmd() {
     method = (uint64_t)command_fault;
   } else if (is_command("abort")) {
     method = (uint64_t)command_abort;
+  } else if (is_command("allocer")) {
+    method = (uint64_t)command_allocer;
   } else {
     printf("[terminal]: `%s` unknown command\n", buffer);
     prompt();

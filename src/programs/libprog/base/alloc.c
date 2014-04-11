@@ -54,7 +54,7 @@ static bool _send_req(const char * type, uint64_t pageIndex, uint64_t count) {
   if (!(pageSocket + 1)) {
     pageSocket = sys_open();
     if (!(pageSocket + 1)) return false;
-    if (!sys_open(pageSocket, 0)) {
+    if (!sys_connect(pageSocket, 0)) {
       sys_close(pageSocket);
       return false;
     }

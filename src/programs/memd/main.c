@@ -33,8 +33,12 @@ void main() {
 }
 
 void handle_messages(uint64_t fd) {
+  printf("[msgd]: handling messages from %x\n", fd);
+
   client_t * cli = client_get(fd);
   if (!cli) return;
+
+  printf("[msgd]: got client %x\n", cli);
 
   msg_t msg;
   while (sys_read(fd, &msg)) {
