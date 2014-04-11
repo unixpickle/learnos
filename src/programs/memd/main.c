@@ -142,10 +142,14 @@ void handle_client_request(client_t * cli,
 
 bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
   if (start != cli->pageCount) return false;
-  // TODO: grow the page array in cli->pages
+  cli->pageCount += count;
+  cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
+  if (!cli->pages) return false;
+
   uint64_t i;
   for (i = 0; i < count; i++) {
-    // TODO: allocate the page here and map it
+    uint64_t pg = start + i;
+    cli->pages[pg] = 0;
   }
   return true;
 }

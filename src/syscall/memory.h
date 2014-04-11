@@ -43,27 +43,27 @@ void syscall_free_aligned(uint64_t addr, uint64_t pages);
 
 /**
  * Set an entry in a task's virtual memory table.
- * @param pid The task process identifier
+ * @param fd A link to the remote task.
  * @param vpage The virtual page index to map
  * @param entry The entry to set in the page table
  * @return true if the mapping was successfully set; false if the socket was
  * closed or if the mapping could not be made for any other reason.
  */
-bool syscall_vmmap(uint64_t pid, uint64_t vpage, uint64_t entry);
+bool syscall_vmmap(uint64_t fd, uint64_t vpage, uint64_t entry);
 
 /**
  * Completely unmap an entry from a task's virtual page table.
- * @param pid The task's PID
+ * @param fd A link to the remote task.
  * @param vpage The virtual page index to unmap
  * @return false if the socket was closed; otherwise, true
  */
-bool syscall_vmunmap(uint64_t pid, uint64_t vpage);
+bool syscall_vmunmap(uint64_t fd, uint64_t vpage);
 
 /**
  * Notify all CPUs running a certain task that its address space has been
  * altered.
  */
-bool syscall_invlpg(uint64_t pid);
+bool syscall_invlpg(uint64_t fd);
 
 /**
  * Useful only to the system pager. This call returns the physical mapping for
@@ -86,11 +86,11 @@ uint64_t syscall_get_fault(syscall_pg_t * pg);
 
 /**
  * Reschedule a thread which was removed from the queue because of a page fault.
- * @param pid The owning task.
+ * @param fd A link to the task.
  * @param tid The thread identifier (stack index) to wake
  * @return false if the task has died; true otherwise
  */
-bool syscall_wake_thread(uint64_t pid, uint64_t tid);
+bool syscall_wake_thread(uint64_t fd, uint64_t tid);
 
 /**
  * Map a page in our address space to a physical entry. This can only be called
@@ -119,5 +119,5 @@ void syscall_shift_fault();
  * Terminate a task, marking it as having died because of a memory fault. This
  * may only be used by the system pager.
  */
-uint64_t syscall_mem_fault(uint64_t pid);
+uint64_t syscall_mem_fault(uint64_t fd);
 
