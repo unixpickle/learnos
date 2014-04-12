@@ -24,7 +24,7 @@ bool anscheduler_vm_map(void * root,
                         uint64_t vpage,
                         uint64_t dpage,
                         uint16_t flags) {
-  uint64_t ptIndex = (vpage & 0x1ff);
+  uint64_t ptIndex = vpage & 0x1ff;
   uint64_t pdtIndex = (vpage >> 9) & 0x1ff;
   uint64_t pdptIndex = (vpage >> 18) & 0x1ff;
   uint64_t pml4Index = (vpage >> 27) & 0x1ff;
@@ -58,8 +58,8 @@ void anscheduler_vm_unmap(void * root, uint64_t vpage) {
 
   uint64_t indexInPT = vpage & 0x1ff;
   uint64_t indexInPDT = (vpage >> 9) & 0x1ff;
-  uint64_t indexInPDPT = (vpage >> 18) % 0x1ff;
-  uint64_t indexInPML4 = (vpage >> 27) % 0x1ff;
+  uint64_t indexInPDPT = (vpage >> 18) & 0x1ff;
+  uint64_t indexInPML4 = (vpage >> 27) & 0x1ff;
   uint64_t indices[4] = {indexInPML4, indexInPDPT, indexInPDT, indexInPT};
   uint64_t * tablePtrs[4] = {tablePtr, NULL, NULL, NULL};
   int i;
@@ -82,7 +82,7 @@ void anscheduler_vm_unmap(void * root, uint64_t vpage) {
 uint64_t anscheduler_vm_lookup(void * root,
                                uint64_t vpage,
                                uint16_t * flags) {
-  uint64_t ptIndex = (vpage & 0x1ff);
+  uint64_t ptIndex = vpage & 0x1ff;
   uint64_t pdtIndex = (vpage >> 9) & 0x1ff;
   uint64_t pdptIndex = (vpage >> 18) & 0x1ff;
   uint64_t pml4Index = (vpage >> 27) & 0x1ff;

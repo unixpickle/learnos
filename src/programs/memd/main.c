@@ -63,6 +63,7 @@ void handle_messages(uint64_t fd) {
 void handle_faults() {
   pgf_t fault;
   while (sys_get_fault(&fault)) {
+    printf("read a fault.\n");
     // map in the page or kill the task
     client_t * client = client_find(fault.taskId);
     if (!client) {
@@ -166,6 +167,8 @@ bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
   if (start != cli->pageCount) return false;
   if (!count) return true;
 
+  printf("starting alloc...\n");
+
   cli->pageCount += count;
   cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
   assert(cli->pages != NULL);
@@ -177,6 +180,8 @@ bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
     sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
   }
   sys_invlpg(cli->fd);
+
+  printf("done alloc...\n");
   return true;
 }
 
@@ -188,6 +193,7 @@ bool handle_client_free(client_t * cli, uint64_t start, uint64_t count) {
   uint64_t i;
   for (i = 0; i < count; i++) {
     uint64_t pg = start + i;
+    printf("unmapping page %x\n", pg);
     sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
   }
   sys_invlpg(cli->fd);
