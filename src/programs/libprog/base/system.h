@@ -258,4 +258,9 @@ void sys_wake_thread(uint64_t fd, uint64_t tid);
  */
 bool sys_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count);
 
+/**
+ * Allocate `count` pages. Output their addresses to a stack variable.
+ */
+void sys_batch_alloc(uint64_t * output, uint64_t count);
+
 #endif

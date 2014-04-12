@@ -314,3 +314,11 @@ sys_batch_vmunmap:
   syscall
   ret
 
+global sys_batch_alloc
+sys_batch_alloc:
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x2c
+  syscall
+  ret
+

@@ -84,19 +84,30 @@ void handle_client_fault(client_t * cli, pgf_t * fault) {
     return;
   }
 
-  // if the page has already been allocated, just give up hope man
-  uint64_t pg = index - ANSCHEDULER_TASK_DATA_PAGE;
-  if (cli->pages[pg]) {
-    sys_mem_fault(cli->pid);
-    sys_shift_fault();
-    return;
-  }
   sys_shift_fault();
 
-  cli->pages[pg] = sys_alloc_page();
-  assert(cli->pages[pg]);
-  sys_vmmap(cli->fd, index, cli->pages[pg] | 7);
+  // if the page has already been allocated, retry
+  uint64_t pg = index - ANSCHEDULER_TASK_DATA_PAGE;
+  if (cli->pages[pg]) return;
 
+  uint64_t grabCount;
+  uint64_t maxCount = 0x20;
+  if (cli->pageCount - pg < maxCount) maxCount = cli->pageCount - pg;
+
+  for (grabCount = 1; grabCount < maxCount; grabCount++) {
+    if (cli->pages[pg + grabCount]) break;
+  }
+
+  uint64_t addrs[0x20];
+  sys_batch_alloc(addrs, grabCount);
+
+  uint64_t i;
+  for (i = 0; i < grabCount; i++) {
+    cli->pages[pg + i] = addrs[i];
+    sys_vmmap(cli->fd, index + i, cli->pages[pg + i] | 7);
+  }
+
+  sys_invlpg(cli->fd);
   sys_wake_thread(cli->fd, fault->threadId);
 }
 

@@ -272,6 +272,26 @@ uint64_t syscall_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count) {
   return 1;
 }
 
+void syscall_batch_alloc(uint64_t listOut, uint64_t count) {
+  anscheduler_cpu_lock();
+  if (anscheduler_cpu_get_task()->uid) {
+    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
+  }
+
+  uint64_t i;
+  for (i = 0; i < count; i++) {
+    uint64_t page = kernpage_alloc_virtual();
+    if (!page) {
+      anscheduler_abort("failed to allocate page for syscall_batch_alloc()");
+    }
+    uint64_t phyAddr = kernpage_calculate_physical(page) << 12;
+    if (!task_copy_out((void *)(listOut + (i << 3)), &phyAddr, 8)) {
+      anscheduler_abort("failed to copy out for syscall_batch_alloc()");
+    }
+  }
+  anscheduler_cpu_unlock();
+}
+
 static task_t * _get_remote_task(uint64_t fd) {
   task_t * thisTask = anscheduler_cpu_get_task();
   if (!thisTask) return false;

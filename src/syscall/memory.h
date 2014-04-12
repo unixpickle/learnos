@@ -127,3 +127,9 @@ uint64_t syscall_mem_fault(uint64_t pid);
  */
 uint64_t syscall_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count);
 
+/**
+ * Batch allocate `count` pages and put pointers to their physical addresses in
+ * the virtual stack address `listOut`.
+ */
+void syscall_batch_alloc(uint64_t listOut, uint64_t count);
+
