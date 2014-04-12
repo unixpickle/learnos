@@ -121,3 +121,9 @@ void syscall_shift_fault();
  */
 uint64_t syscall_mem_fault(uint64_t pid);
 
+/**
+ * Unmap a list of virtual addresses in a remote task's address space.
+ * @return 0 if the socket is not open; 1 otherwise
+ */
+uint64_t syscall_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count);
+

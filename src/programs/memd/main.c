@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <assert.h>
 #include <keyedbits/buff_decoder.h>
 #include <keyedbits/buff_encoder.h>
@@ -169,14 +170,7 @@ bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
   cli->pageCount += count;
   cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
   assert(cli->pages != NULL);
-
-  uint64_t i;
-  for (i = 0; i < count; i++) {
-    uint64_t pg = start + i;
-    cli->pages[pg] = 0;
-    sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
-  }
-  sys_invlpg(cli->fd);
+  bzero(&cli->pages[start], 8 * count);
   return true;
 }
 
@@ -185,18 +179,26 @@ bool handle_client_free(client_t * cli, uint64_t start, uint64_t count) {
   if (count > cli->pageCount) return false;
   if (!count) return true;
 
-  uint64_t i;
-  for (i = 0; i < count; i++) {
+  uint64_t i = 0;
+  while (i < count) {
     uint64_t pg = start + i;
-    sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
+    if (i + 0x20 > count) {
+      sys_batch_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg, 0x20);
+      i += 0x20;
+    } else {
+      sys_vmunmap(cli->fd, ANSCHEDULER_TASK_DATA_PAGE + pg);
+      i += 1;
+    }
   }
   sys_invlpg(cli->fd);
+
   for (i = 0; i < count; i++) {
     uint64_t pg = start + i;
     if (cli->pages[pg]) {
       sys_free_page(cli->pages[pg]);
     }
   }
+  
 
   cli->pageCount -= count;
   if (!cli->pageCount && cli->pages) {

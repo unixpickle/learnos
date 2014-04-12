@@ -62,7 +62,8 @@ uint64_t syscall_entry(uint64_t arg1,
     (void *)syscall_shift_fault,
     (void *)syscall_abort,
     (void *)syscall_mem_fault,
-    (void *)syscall_wake_thread
+    (void *)syscall_wake_thread,
+    (void *)syscall_batch_vmunmap
   };
   if (arg1 >= sizeof(functions) / sizeof(void *)) {
     return 0;

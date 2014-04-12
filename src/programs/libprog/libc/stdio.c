@@ -1,9 +1,11 @@
 #include "stdio.h"
 #include <stdarg.h>
+#include <string.h>
 
 static void _print_hex(uint64_t number, bool caps);
 static void _print_dec(int64_t number);
 static void _print_udec(uint64_t number);
+static void _print_string(const char * str);
 
 int printf(const char * str, ...) {
   va_list list;
@@ -34,7 +36,8 @@ int vprintf(const char * str, va_list list) {
       uint64_t num = va_arg(list, uint64_t);
       _print_hex(num, *str == 'X');
     } else if (*str == 's') {
-      sys_print(va_arg(list, const char *));
+      const char * argument = va_arg(list, const char *);
+      _print_string(argument);
     } else {
       return -1;
     }
@@ -83,5 +86,25 @@ static void _print_udec(uint64_t number) {
   }
   buf[len] = 0;
   sys_print((const char *)buf);
+}
+
+static void _print_string(const char * str) {
+  char buf[0x80];
+  buf[0x7f] = 0;
+
+  uint64_t len = strlen(str);
+  uint64_t i = 0;
+  while (i < len) {
+    if (i + 0x7f < len) {
+      memcpy(buf, str, 0x7f);
+      sys_print(buf);
+      i += 0x7f;
+    } else {
+      memcpy(buf, str, len - i);
+      buf[len - i] = 0;
+      sys_print(buf);
+      break;
+    }
+  }
 }
 

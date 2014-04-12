@@ -254,6 +254,24 @@ uint64_t syscall_mem_fault(uint64_t pid) {
   return 1;
 }
 
+uint64_t syscall_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count) {
+  anscheduler_cpu_lock();
+  task_t * task = _get_remote_task(fd);
+  if (!task) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  uint64_t i;
+  for (i = 0; i < count; i++) {
+    anscheduler_lock(&task->vmLock);
+    anscheduler_vm_unmap(task->vm, i + start);
+    anscheduler_unlock(&task->vmLock);
+  }
+  anscheduler_task_dereference(task);
+  anscheduler_cpu_unlock();
+  return 1;
+}
+
 static task_t * _get_remote_task(uint64_t fd) {
   task_t * thisTask = anscheduler_cpu_get_task();
   if (!thisTask) return false;
@@ -277,3 +295,4 @@ static bool _vmmap_call(task_t * task, uint64_t vpage, uint64_t entry) {
   anscheduler_unlock(&task->vmLock);
   return res;
 }
+

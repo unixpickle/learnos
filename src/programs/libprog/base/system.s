@@ -305,3 +305,12 @@ sys_wake_thread:
   syscall
   ret
 
+global sys_batch_vmunmap
+sys_batch_vmunmap:
+  mov r8, rdx
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x2b
+  syscall
+  ret
+

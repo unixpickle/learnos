@@ -252,4 +252,10 @@ bool sys_mem_fault(uint64_t pid);
  */
 void sys_wake_thread(uint64_t fd, uint64_t tid);
 
+/**
+ * Allows the system pager to unmap a list of pages from a remote task's address
+ * space.
+ */
+bool sys_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count);
+
 #endif
