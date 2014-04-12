@@ -263,4 +263,10 @@ bool sys_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count);
  */
 void sys_batch_alloc(uint64_t * output, uint64_t count);
 
+/**
+ * Map a batch of addresses into a remote task's address space. The first item
+ * in `buf` is the starting virtual page index.
+ */
+bool sys_batch_vmmap(uint64_t fd, uint64_t * buf, uint64_t count);
+
 #endif

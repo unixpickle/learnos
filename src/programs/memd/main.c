@@ -98,15 +98,16 @@ void handle_client_fault(client_t * cli, pgf_t * fault) {
     if (cli->pages[pg + grabCount]) break;
   }
 
-  uint64_t addrs[0x20];
-  sys_batch_alloc(addrs, grabCount);
-
+  uint64_t addrs[0x21];
+  sys_batch_alloc(&addrs[1], grabCount);
   uint64_t i;
   for (i = 0; i < grabCount; i++) {
-    cli->pages[pg + i] = addrs[i];
-    sys_vmmap(cli->fd, index + i, cli->pages[pg + i] | 7);
+    cli->pages[pg + i] = addrs[i + 1];
+    addrs[i + 1] |= 7;
   }
+  addrs[0] = index;
 
+  sys_batch_vmmap(cli->fd, addrs, grabCount);
   sys_invlpg(cli->fd);
   sys_wake_thread(cli->fd, fault->threadId);
 }

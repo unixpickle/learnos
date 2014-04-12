@@ -292,6 +292,34 @@ void syscall_batch_alloc(uint64_t listOut, uint64_t count) {
   anscheduler_cpu_unlock();
 }
 
+uint64_t syscall_batch_vmmap(uint64_t fd, uint64_t list, uint64_t count) {
+  anscheduler_cpu_lock();
+  task_t * task = _get_remote_task(fd);
+  if (!task) {
+    anscheduler_cpu_unlock();
+    return 0;
+  }
+  uint64_t i;
+  uint64_t firstVpage;
+  if (!task_copy_in(&firstVpage, (void *)list, 8)) {
+    anscheduler_abort("syscall_batch_vmmap() failed to copy in address.\n");
+  }
+  for (i = 0; i < count; i++) {
+    uint64_t entry;
+    if (!task_copy_in(&entry, (void *)(list + ((i + 1) << 3)), 8)) {
+      anscheduler_abort("syscall_batch_vmmap() failed to copy in address.\n");
+    }
+    anscheduler_lock(&task->vmLock);
+    bool res = anscheduler_vm_map(task->vm, firstVpage + i,
+                                  entry >> 12, entry & 0xfff);
+    anscheduler_unlock(&task->vmLock);
+    if (!res) anscheduler_abort("syscall_batch_vmmap failed to map page.\n");
+  }
+  anscheduler_task_dereference(task);
+  anscheduler_cpu_unlock();
+  return 1;
+}
+
 static task_t * _get_remote_task(uint64_t fd) {
   task_t * thisTask = anscheduler_cpu_get_task();
   if (!thisTask) return false;

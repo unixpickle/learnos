@@ -322,3 +322,12 @@ sys_batch_alloc:
   syscall
   ret
 
+global sys_batch_vmmap
+sys_batch_vmmap:
+  mov r8, rdx
+  mov rdx, rsi
+  mov rsi, rdi
+  mov rdi, 0x2d
+  syscall
+  ret
+

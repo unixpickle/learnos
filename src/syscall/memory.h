@@ -133,3 +133,13 @@ uint64_t syscall_batch_vmunmap(uint64_t fd, uint64_t start, uint64_t count);
  */
 void syscall_batch_alloc(uint64_t listOut, uint64_t count);
 
+/**
+ * Maps a list of pages into the remote task.
+ * @param fd The link
+ * @param list The list of physical page entries. The first entry in the list
+ * is not counted in `count` and stores the starting virtual page in the task's
+ * address space.
+ * @param count The number of pages to map.
+ */
+uint64_t syscall_batch_vmmap(uint64_t fd, uint64_t list, uint64_t count);
+
