@@ -95,13 +95,13 @@ bool acpi_madt_has_8259_pic() {
 }
 
 uint64_t acpi_madt_count_ioapics() {
-  uint64_t count;
+  uint64_t count = 0;
   acpi_madt_iterate(&count, (madt_iterator_t)_ioapic_iterator);
   return count;
 }
 
 uint64_t acpi_madt_count_lapics() {
-  uint64_t count;
+  uint64_t count = 0;
   acpi_madt_iterate(&count, (madt_iterator_t)_lapic_count_iterator);
   return count;
 }

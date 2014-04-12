@@ -79,14 +79,16 @@ void configure_global_idt() {
 
 void int_interrupt_exception(uint64_t vec) {
   ensure_critical();
-  uint64_t retAddr;
-  __asm__("mov 0x98(%%rbp), %0" : "=r" (retAddr));
   print("Got exception vector ");
   printHex(vec);
-  print(" from 0x");
-  printHex(retAddr);
   print(" with thread 0x");
   printHex((uint64_t)anscheduler_cpu_get_thread());
+#ifdef __BT_ADDRESSES__
+  uint64_t retAddr;
+  __asm__("mov 0xa0(%%rbp), %0" : "=r" (retAddr));
+  print(" from ");
+  printHex(retAddr);
+#endif
   print("\n");
 
   __asm__("cli\nhlt");
@@ -95,8 +97,6 @@ void int_interrupt_exception(uint64_t vec) {
 
 void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
   ensure_critical();
-  uint64_t retAddr;
-  __asm__("mov 0xa0(%%rbp), %0" : "=r" (retAddr));
   if (vec == 0xe) {
     _page_fault_handler(code);
     return;
@@ -105,13 +105,16 @@ void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
   printHex(vec);
   print(" with code ");
   printHex(code);
-  print(" from ");
-  printHex(retAddr);
   print(" with thread 0x");
   printHex((uint64_t)anscheduler_cpu_get_thread());
+#ifdef __BT_ADDRESSES__
+  uint64_t retAddr;
+  __asm__("mov 0xa0(%%rbp), %0" : "=r" (retAddr));
+  print(" from ");
+  printHex(retAddr);
+#endif
   print("\n");
   __asm__("cli\nhlt");
-  // TODO: here, save task state and terminate it, or do a page fault
 }
 
 void int_interrupt_irq(uint64_t vec) {

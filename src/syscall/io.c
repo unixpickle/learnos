@@ -13,13 +13,16 @@ uint64_t syscall_in(uint64_t pin, uint64_t size) {
 
   switch (size) {
     case 1:
-      __asm__("inb %%dx, %%al" : "=a" (result) : "d" (pin));
+      __asm__("xor %%rax, %%rax\n"
+              "inb %%dx, %%al" : "=a" (result) : "d" (pin));
       break;
     case 2:
-      __asm__("inw %%dx, %%ax" : "=a" (result) : "d" (pin));
+      __asm__("xor %%rax, %%rax\n"
+              "inw %%dx, %%ax" : "=a" (result) : "d" (pin));
       break;
     case 4:
-      __asm__("inl %%dx, %%eax" : "=a" (result) : "d" (pin));
+      __asm__("xor %%rax, %%rax\n"
+              "inl %%dx, %%eax" : "=a" (result) : "d" (pin));
       break;
     default:
       break;

@@ -91,13 +91,13 @@ uint64_t lapic_calculate_bus_speed() {
   lapic_set_register(LAPIC_REG_LVT_TMR, 0xff);
   lapic_set_register(LAPIC_REG_TMRINITCNT, 0xffffffff);
   lapic_set_register(LAPIC_REG_TMRDIV, LAPIC_TIMER_DIV);
-  pit_sleep(1);
+  pit_sleep(10);
   uint64_t value = lapic_get_register(LAPIC_REG_TMRCURRCNT);
   lapic_set_register(LAPIC_REG_LVT_TMR, 0x10000);
   print(" value=0x");
   printHex(value);
   print("\n");
-  return (lapicBusSpeed = (uint64_t)(0xffffffffL - value) * 100L);
+  return (lapicBusSpeed = (uint64_t)(0xffffffffL - value) * 10L);
 }
 
 uint64_t lapic_get_bus_speed() {
