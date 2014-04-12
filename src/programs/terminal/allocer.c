@@ -2,11 +2,11 @@
 #include <stdio.h>
 
 void command_allocer() {
-  printf("allocating 0x10 bytes...\n");
   void * buf = malloc(0x10);
-  printf("got result: 0x%x\n", buf);
+  printf("allocated 0x10 bytes at 0x%x\n", buf);
   free(buf);
-  printf("free'd buffer.\n");
+  buf = malloc(0x1000000);
+  printf("free'd buffer; allocated 0x1000000 bytes at 0x%x\n", buf);
   sys_exit();
 }
 

@@ -175,8 +175,9 @@ bool syscall_wake_thread(uint64_t fd, uint64_t tid) {
   }
   anscheduler_unlock(&task->threadsLock);
   anscheduler_loop_push(thread);
+
+  anscheduler_task_dereference(task);
   anscheduler_cpu_unlock();
-  
   return true;
 }
 

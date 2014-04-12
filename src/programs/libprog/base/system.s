@@ -176,7 +176,7 @@ sys_free_aligned:
 
 global sys_vmmap
 sys_vmmap:
-  mov rcx, rdx
+  mov r8, rdx
   mov rdx, rsi
   mov rsi, rdi
   mov rdi, 0x19
@@ -200,7 +200,7 @@ sys_invlpg:
 
 global sys_launch_thread
 sys_launch_thread:
-  mov rcx, rsi
+  mov r8, rsi
   mov rdx, rdi
   mov rsi, .launchStub
   mov rdi, 0x1c

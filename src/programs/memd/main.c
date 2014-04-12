@@ -33,12 +33,8 @@ void main() {
 }
 
 void handle_messages(uint64_t fd) {
-  printf("[memd]: handling messages from %x\n", fd);
-
   client_t * cli = client_get(fd);
   if (!cli) return;
-
-  printf("[memd]: got client %x\n", cli);
 
   msg_t msg;
   while (sys_read(fd, &msg)) {
@@ -54,7 +50,6 @@ void handle_messages(uint64_t fd) {
     kb_buff_initialize_decode(&kb, (void *)msg.message, msg.len);
     uint64_t start, count;
     const char * type = client_request(&kb, &start, &count);
-    printf("[memd]: parsed type, ptr is 0x%x\n", type);
     if (!type) {
       handle_client_death(cli);
       client_delete(cli);
@@ -80,7 +75,6 @@ void handle_faults() {
 }
 
 void handle_client_fault(client_t * cli, pgf_t * fault) {
-  printf("[memd]: client 0x%x fault at 0x%x\n", cli, fault->address);
   uint64_t index = fault->address >> 12;
   if (index < ANSCHEDULER_TASK_DATA_PAGE ||
       index >= ANSCHEDULER_TASK_DATA_PAGE + cli->pageCount) {
@@ -94,13 +88,13 @@ void handle_client_fault(client_t * cli, pgf_t * fault) {
   if (cli->pages[pg]) {
     sys_mem_fault(cli->pid);
     sys_shift_fault();
+    return;
   }
   sys_shift_fault();
 
   cli->pages[pg] = sys_alloc_page();
   assert(cli->pages[pg]);
-  bool res = sys_vmmap(cli->fd, index, cli->pages[pg] | 7);
-  assert(res);
+  sys_vmmap(cli->fd, index, cli->pages[pg] | 7);
 
   sys_wake_thread(cli->fd, fault->threadId);
 }
@@ -138,7 +132,6 @@ const char * client_request(kb_buff_t * kb,
       if (header.typeField != KeyedBitsTypeInteger) return NULL;
       if (!kb_buff_read_int(kb, header.lenLen, &value)) return NULL;
       if (value < 0) return NULL;
-      printf("[memd]: got value %d for %s, %d\n", value, key, strcmp(key, "start"));
       if (!strcmp(key, "start")) *start = (uint64_t)value;
       else *count = (uint64_t)value;
     } else {
@@ -147,7 +140,6 @@ const char * client_request(kb_buff_t * kb,
   }
 
   if (found != 3) return NULL;
-  printf("[memd]: start=%x count=%x\n", *start, *count);
   return typeResult;
 }
 
@@ -171,8 +163,9 @@ void handle_client_request(client_t * cli,
 }
 
 bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
-  printf("[memd]: client_alloc(0x%x, 0x%x, 0x%x)\n", cli, start, count);
   if (start != cli->pageCount) return false;
+  if (!count) return true;
+
   cli->pageCount += count;
   cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
   assert(cli->pages != NULL);
@@ -190,6 +183,7 @@ bool handle_client_alloc(client_t * cli, uint64_t start, uint64_t count) {
 bool handle_client_free(client_t * cli, uint64_t start, uint64_t count) {
   if (start + count != cli->pageCount) return false;
   if (count > cli->pageCount) return false;
+  if (!count) return true;
 
   uint64_t i;
   for (i = 0; i < count; i++) {
@@ -205,8 +199,13 @@ bool handle_client_free(client_t * cli, uint64_t start, uint64_t count) {
   }
 
   cli->pageCount -= count;
-  cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
-  assert(cli->pages != NULL);
+  if (!cli->pageCount && cli->pages) {
+    free(cli->pages);
+    cli->pages = NULL;
+  } else {
+    cli->pages = realloc(cli->pages, sizeof(uint64_t) * cli->pageCount);
+    assert(cli->pages != NULL);
+  }
   return true;
 }
 
