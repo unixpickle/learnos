@@ -27,4 +27,3 @@ void pthread_mutex_init(pthread_mutex_t * mutex,
   bzero(mutex, sizeof(pthread_mutex_t));
 }
 
-#endif

@@ -5,9 +5,14 @@
 #include <stdbool.h>
 #include <pthread_mutex.h>
 
+#define PTHREAD_CREATE_JOINABLE 0
+#define PTHREAD_CREATE_DETACHED 1
+
 struct pthread {
   // only to be modified on the thread in question
   int errno, reserved1;
+  void * arg;
+  void * (* method)(void *);
 
   // fields locked by `lock`
   basic_lock_t lock;
@@ -38,6 +43,7 @@ int pthread_create(pthread_t * thread,
                    void * arg);
 int pthread_join(pthread_t thread, void ** retValue);
 int pthread_detach(pthread_t thread);
+void pthread_exit(void * value);
 
 pthread_t pthread_current();
 
