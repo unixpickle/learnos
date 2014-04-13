@@ -14,11 +14,10 @@
 struct pthread_mutex {
   basic_lock_t lock; // seize this to serialize holding of the lock
 
-  // fields contained by contentLock
-  uint64_t contentLock;
-  uint64_t holdingThread; // thread ID holding the lock
+  uint64_t holdingThread; // thread ID holding the lock, + 1; 0 is unheld
   uint64_t holdingCount; // number of levels of lock (0 = unlocked)
-  uint64_t type;
+
+  int64_t type;
 } __attribute__((packed));
 
 struct pthread_mutexattr {

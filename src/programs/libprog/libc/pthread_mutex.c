@@ -1,6 +1,7 @@
 #include <pthread_mutex.h>
 #include <errno.h>
 #include <strings.h>
+#include <system.h>
 
 int pthread_mutexattr_init(pthread_mutexattr_t * attr) {
   attr->type = 0;
@@ -25,18 +26,38 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type) {
 int pthread_mutex_init(pthread_mutex_t * mutex,
                        const pthread_mutexattr_t * attr) {
   bzero(mutex, sizeof(pthread_mutex_t));
+  if (attr) mutex->type = attr->type;
   return 0;
 }
 
 int pthread_mutex_lock(pthread_mutex_t * mutex) {
-  return EINVAL;
+  uint64_t threadId = sys_thread_id() + 1;
+  if (mutex->holdingThread == threadId) {
+    if (mutex->type != PTHREAD_MUTEX_RECURSIVE) {
+      return EDEADLK;
+    }
+    mutex->holdingCount++;
+    return 0;
+  }
+
+  basic_lock_lock(&mutex->lock);
+  mutex->holdingThread = threadId;
+  mutex->holdingCount = 0;
+  return 0;
 }
 
 int pthread_mutex_unlock(pthread_mutex_t * mutex) {
-  return EINVAL;
+  if (mutex->holdingThread != sys_thread_id() + 1) {
+    return EPERM;
+  }
+  if (!--mutex->holdingCount) {
+    mutex->holdingThread = 0;
+    basic_lock_unlock(&mutex->lock);
+  }
+  return 0;
 }
 
 int pthread_mutex_destroy(pthread_mutex_t * mutex) {
-  return EINVAL;
+  return 0;
 }
 

@@ -52,6 +52,7 @@ int pthread_join(pthread_t thread, void ** retValue) {
   basic_lock_lock(&thread->lock);
   thread->isReferenced = false;
   if (!thread->isRunning) {
+    if (retValue) *retValue = thread->retValue;
     _pop_thread(thread);
     free(thread);
     return 0;
@@ -63,6 +64,7 @@ int pthread_join(pthread_t thread, void ** retValue) {
     sys_sleep(0xffffffff);
     basic_lock_lock(&thread->lock);
     if (!thread->isRunning) {
+      if (retValue) *retValue = thread->retValue;
       _pop_thread(thread);
       free(thread);
       return 0;
