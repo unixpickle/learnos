@@ -22,7 +22,7 @@ struct pthread_mutex {
 } __attribute__((packed));
 
 struct pthread_mutexattr {
-  uint64_t type;
+  int64_t type;
 } __attribute__((packed));
 
 typedef struct pthread_mutex pthread_mutex_t;

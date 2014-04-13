@@ -7,8 +7,6 @@
 
 struct pthread {
   // only to be modified on the thread in question
-  pthread_mutex_t ** holding;
-  uint64_t holdingCount;
   int errno, reserved1;
 
   // fields locked by `lock`
@@ -23,10 +21,16 @@ struct pthread {
 } __attribute__((packed));
 
 struct pthread_attr {
+  bool detachState;
 } __attribute__((packed));
 
 typedef struct pthread * pthread_t;
 typedef struct pthread_attr pthread_attr_t;
+
+int pthread_attr_init(pthread_attr_t * attr);
+int pthread_attr_destroy(pthread_attr_t * attr);
+int pthread_attr_setdetachstate(pthread_attr_t * attr, int detach);
+int pthread_attr_getdetachstate(pthread_attr_t * attr, int * detach);
 
 int pthread_create(pthread_t * thread,
                    const pthread_attr_t * attr,
