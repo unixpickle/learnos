@@ -14,6 +14,10 @@
 #include <scheduler/cpu.h>
 #include <anlock.h>
 
+// only set if no optimization is being used so you know that stack frames will
+// be generated
+#define __BT_ADDRESSES__
+
 static void _initialize_idt(idt_entry_t * ptr);
 static void _page_fault_handler(uint64_t code);
 static void _call_page_fault(uint64_t args);

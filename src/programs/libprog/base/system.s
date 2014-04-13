@@ -207,8 +207,8 @@ sys_launch_thread:
   syscall
   ret
 .launchStub:
-  mov rax, rdx
-  mov rdx, rsi
+  mov rax, rdi
+  mov rdi, rsi
   call rax
   jmp sys_thread_exit
 

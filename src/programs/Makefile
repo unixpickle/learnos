@@ -1,4 +1,4 @@
-PROGRAMS=keyboard ticktock msgd intd terminal pcid memd
+PROGRAMS=keyboard timed msgd intd terminal pcid memd
 PROJECT_ROOT=../..
 OBJECTS=libs/CKeyedBits/build/*.o $(PROJECT_ROOT)/libs/anlock/build/*.o $(PROJECT_ROOT)/libs/anmem/libs/analloc/build/*.o libprog/build/*.o libs/anmalloc/build/*.o
 

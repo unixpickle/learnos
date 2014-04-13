@@ -39,7 +39,7 @@ int pthread_create(pthread_t * thread,
   pthread_t val = malloc(sizeof(struct pthread));
   if (!val) return ENOMEM;
   bzero(val, sizeof(struct pthread));
-  val->isReferenced = !attr->detachState;
+  val->isReferenced = attr ? !attr->detachState : 1;
   val->isRunning = true;
   val->arg = arg;
   val->method = start_routine;
@@ -50,7 +50,6 @@ int pthread_create(pthread_t * thread,
 
 int pthread_join(pthread_t thread, void ** retValue) {
   basic_lock_lock(&thread->lock);
-  thread->isReferenced = false;
   if (!thread->isRunning) {
     if (retValue) *retValue = thread->retValue;
     _pop_thread(thread);

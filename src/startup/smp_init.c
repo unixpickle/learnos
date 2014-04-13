@@ -33,6 +33,8 @@ extern void _binary_pcid_build_pcid_bin_start();
 extern void _binary_pcid_build_pcid_bin_end();
 extern void _binary_memd_build_memd_bin_start();
 extern void _binary_memd_build_memd_bin_end();
+extern void _binary_timed_build_timed_bin_start();
+extern void _binary_timed_build_timed_bin_end();
 
 static void copy_init_code();
 static void initialize_cpu(void * unused, uint64_t lapicId);
@@ -77,6 +79,10 @@ void smp_initialize() {
   taskEnd = (uint64_t)(_binary_pcid_build_pcid_bin_end);
   taskStart = (uint64_t)(_binary_pcid_build_pcid_bin_start);
   //start_task((void *)taskStart, taskEnd - taskStart);
+
+  taskEnd = (uint64_t)(_binary_timed_build_timed_bin_end);
+  taskStart = (uint64_t)(_binary_timed_build_timed_bin_start);
+  start_task((void *)taskStart, taskEnd - taskStart);
 
   proc_run_scheduler();
 }
