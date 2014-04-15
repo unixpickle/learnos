@@ -1,3 +1,6 @@
+#ifndef __LOCK_H__
+#define __LOCK_H__
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -22,3 +25,4 @@ void basic_lock_lock(basic_lock_t * lock);
 bool basic_lock_timedlock(basic_lock_t * lock, uint64_t micros);
 void basic_lock_unlock(basic_lock_t * lock);
 
+#endif
