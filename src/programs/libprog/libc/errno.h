@@ -10,5 +10,6 @@ int * __errno();
 #define	EDEADLK		11		/* Resource deadlock avoided */
 #define	ENOMEM		12		/* Cannot allocate memory */
 #define	EINVAL		22		/* Invalid argument */
+#define ETIMEDOUT       60              /* Operation timed out */
 
 #endif
