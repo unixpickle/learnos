@@ -5,7 +5,8 @@
 
 typedef struct {
   uint64_t lock;
-  _th_queue_t * queue;
+  _th_queue_t * first;
+  _th_queue_t * last;
   int64_t count;
 } __attribute__((packed)) semaphore_t;
 

@@ -4,6 +4,7 @@
 #include <system.h>
 #include <anlock.h>
 
+static void _push_node(semaphore_t * sem, _th_queue_t * node);
 static bool _wait_or_pop(semaphore_t * sem, uint64_t usec, bool popOnFail);
 
 int semaphore_init(semaphore_t * psem, int64_t count) {
@@ -25,9 +26,9 @@ int semaphore_wait(semaphore_t * psem) {
   }
   // push our thread to the queue
   _th_queue_t node;
-  node.next = psem->queue;
+  node.next = NULL;
   node.threadId = sys_thread_id();
-  psem->queue = &node;
+  _push_node(psem, &node);
   anlock_unlock(&psem->lock);
   while (!_wait_or_pop(psem, 0xffffffff, false));
   return 0;
@@ -42,9 +43,9 @@ int semaphore_timedwait(semaphore_t * psem, uint64_t usec) {
   }
   // push our thread to the queue
   _th_queue_t node;
-  node.next = psem->queue;
+  node.next = NULL;
   node.threadId = sys_thread_id();
-  psem->queue = &node;
+  _push_node(psem, &node);
   anlock_unlock(&psem->lock);
   if (!_wait_or_pop(psem, usec, true)) {
     errno = ETIMEDOUT;
@@ -56,13 +57,24 @@ int semaphore_timedwait(semaphore_t * psem, uint64_t usec) {
 int semaphore_signal(semaphore_t * psem) {
   anlock_lock(&psem->lock);
   psem->count++;
-  if (psem->count && psem->queue) {
-    _th_queue_t * wakeup = psem->queue;
-    psem->queue = wakeup->next;
+  if (psem->count && psem->first) {
+    _th_queue_t * wakeup = psem->first;
+    if (!(psem->first = wakeup->next)) {
+      psem->last = NULL;
+    }
     sys_unsleep(wakeup->threadId);
   }
   anlock_unlock(&psem->lock);
   return 0;
+}
+
+static void _push_node(semaphore_t * sem, _th_queue_t * node) {
+  if (sem->last) {
+    sem->last->next = node;
+    sem->last = node;
+  } else {
+    sem->first = (sem->last = node);
+  }
 }
 
 static bool _wait_or_pop(semaphore_t * sem, uint64_t usec, bool popOnFail) {
@@ -70,13 +82,15 @@ static bool _wait_or_pop(semaphore_t * sem, uint64_t usec, bool popOnFail) {
   uint64_t threadId = sys_thread_id();
 
   anlock_lock(&sem->lock);
-  _th_queue_t * obj = sem->queue;
+  _th_queue_t * obj = sem->first;
   _th_queue_t * last = NULL;
   while (obj) {
     if (obj->threadId == threadId) {
       if (popOnFail) {
         if (last) last->next = obj->next;
-        else sem->queue = obj->next;
+        else if (!(sem->first = obj->next)) {
+          sem->last = NULL;
+        }
       }
       anlock_unlock(&sem->lock);
       return false;
