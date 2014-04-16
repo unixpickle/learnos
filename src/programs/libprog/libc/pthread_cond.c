@@ -1,4 +1,6 @@
 #include "pthread_cond.h"
+#include <system.h>
+#include <strings.h>
 
 static bool _cond_contains(pthread_cond_t * cond);
 
@@ -48,7 +50,12 @@ int pthread_cond_signal(pthread_cond_t * c) {
 }
 
 int pthread_cond_broadcast(pthread_cond_t * c) {
-  // TODO: this should be easy enough
+  while (c->first) {
+    sys_unsleep(c->first->threadId);
+    c->first = c->first->next;
+  }
+  c->first = (c->last = NULL);
+  return 0;
 }
 
 static bool _cond_contains(pthread_cond_t * cond) {

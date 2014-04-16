@@ -93,16 +93,16 @@ static void handle_chars(const char * chrs, uint64_t len) {
   for (i = 0; i < len; i++) {
     char ch = chrs[i];
     if (ch == '\n') {
-      sys_print("\n");
+      putc('\n');
       process_cmd();
     } else if (ch == '\b') {
       if (!bufferCount) continue;
       bufferCount--;
-      sys_print("\b");
+      putc('\b');
     } else {
       if (bufferCount == BUFF_SIZE) continue;
       buffer[bufferCount++] = ch;
-      printf("%c", chrs[i]);
+      putc(chrs[i]);
     }
   }
 }
@@ -149,9 +149,9 @@ static void process_cmd() {
 static void prompt() {
   bufferCount = 0;
   sys_color(0x7);
-  sys_print("[terminal] $");
+  printf("[terminal] $");
   sys_color(0xf);
-  sys_print(" ");
+  printf(" ");
 }
 
 static bool is_command(const char * cmd) {

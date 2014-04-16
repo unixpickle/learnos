@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <base/msgd.h>
+#include <string.h>
 
 static uint64_t * clients = NULL;
 static uint64_t clientCount = 0;
@@ -55,7 +56,6 @@ int main() {
     if (bufferCount > 0) {
       buffer_flush();
     }
-
     uint64_t fd = sys_poll();
     if (!(fd + 1)) continue;
     if (fd != intd) {
@@ -249,8 +249,10 @@ static void buffer_put(char ch) {
 
 static void buffer_flush() {
   uint64_t i;
+  char writeBuf[bufferCount];
+  memcpy(writeBuf, buffer, bufferCount);
   for (i = 0; i < clientCount; i++) {
-    sys_write(clients[i], buffer, bufferCount);
+    sys_write(clients[i], writeBuf, bufferCount);
   }
   bufferCount = 0;
 }

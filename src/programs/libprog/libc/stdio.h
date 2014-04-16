@@ -3,4 +3,5 @@
 
 int printf(const char * str, ...);
 int vprintf(const char * str, va_list list);
+void putc(char c);
 

@@ -24,7 +24,7 @@ int vprintf(const char * str, va_list list) {
     }
     str++;
     if (*str == '%') {
-      sys_print("%");
+      putc('%');
     } else if (*str == 'c') {
       char buf[2] = {(char)va_arg(list, int), 0};
       sys_print(buf);
@@ -43,6 +43,11 @@ int vprintf(const char * str, va_list list) {
     }
   }
   return 0;
+}
+
+void putc(char c) {
+  char buf[2] = {c, 0};
+  sys_print(buf);
 }
 
 static void _print_hex(uint64_t number, bool caps) {
@@ -66,7 +71,7 @@ static void _print_hex(uint64_t number, bool caps) {
 
 static void _print_dec(int64_t number) {
   if (number < 0) {
-    sys_print("-");
+    putc('-');
     return _print_udec((uint64_t)-number);
   }
   _print_udec((uint64_t)number);
