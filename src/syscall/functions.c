@@ -4,6 +4,7 @@
 #include "io.h"
 #include "exec.h"
 #include "memory.h"
+#include "time.h"
 #include <stdio.h>
 #include <memory/kernpage.h>
 #include <shared/addresses.h>
@@ -104,25 +105,6 @@ void syscall_print(void * ptr) {
   while (print_line(ptr)) {
     ptr += 0x50;
   }
-}
-
-uint64_t syscall_get_time() {
-  anscheduler_cpu_lock();
-  uint64_t ts = anscheduler_get_time();
-  // provide a decent timestamp, but not perfect
-  uint64_t res = 1000 * ts / (anscheduler_second_length() / 1000);
-  anscheduler_cpu_unlock();
-  return res;
-}
-
-void syscall_sleep(uint64_t usec) {
-  anscheduler_cpu_lock();
-  uint64_t units = (anscheduler_second_length() * usec) / 1000000L;
-  uint64_t destTime = anscheduler_get_time() + units;
-  thread_t * thread = anscheduler_cpu_get_thread();
-  thread->nextTimestamp = destTime;
-  anscheduler_loop_save_and_resign();
-  anscheduler_cpu_unlock();
 }
 
 void syscall_exit() {

@@ -32,16 +32,6 @@ void syscall_return(restore_regs * regs);
 void syscall_print(void * ptr);
 
 /**
- * Return the current system time in microseconds.
- */
-uint64_t syscall_get_time();
-
-/**
- * Sleep for a specified number of microseconds.
- */
-void syscall_sleep(uint64_t until);
-
-/**
  * Terminate the current task.
  */
 void syscall_exit();

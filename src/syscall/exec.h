@@ -25,9 +25,3 @@ void syscall_thread_launch(uint64_t rip, uint64_t arg1, uint64_t arg2);
  */
 uint64_t syscall_thread_id();
 
-/**
- * Find the thread with a given thread ID, and remove any sleep timeout it may
- * have set.
- */
-void syscall_unsleep(uint64_t thread);
-

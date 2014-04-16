@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <pthread_mutex.h>
 #include <pthread_sem.h>
+#include <pthread_cond.h>
 
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1

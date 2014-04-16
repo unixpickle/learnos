@@ -105,19 +105,3 @@ uint64_t syscall_thread_id() {
   return ident;
 }
 
-void syscall_unsleep(uint64_t thread) {
-  anscheduler_cpu_lock();
-  task_t * task = anscheduler_cpu_get_task();
-  anscheduler_lock(&task->threadsLock);
-  thread_t * target = task->firstThread;
-  while (target) {
-    if (target->stack == thread) break;
-    target = target->next;
-  }
-  anscheduler_unlock(&task->threadsLock);
-  if (target) {
-    target->nextTimestamp = 0;
-  }
-  anscheduler_cpu_unlock();
-}
-
