@@ -16,12 +16,3 @@ void syscall_sleep(uint64_t until);
  */
 void syscall_unsleep(uint64_t thread);
 
-/**
- * Atomically checks the value at the virtual address pointed to by condPtr. If
- * the address contains a 1, it is set to 0 and the thread is slept. Otherwise,
- * the value remains 0 and the thread is not slept.
- * @return 1 when the thread was slept, 0 when it was already woken up
- * @discussion The pointer you pass must be 8-byte aligned or else you will die.
- */
-uint64_t syscall_atomic_sleep(uint64_t usec, uint64_t condPtr);
-

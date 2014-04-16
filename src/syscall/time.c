@@ -42,36 +42,3 @@ void syscall_unsleep(uint64_t thread) {
   anscheduler_cpu_unlock();
 }
 
-uint64_t syscall_atomic_sleep(uint64_t usec, uint64_t condPtr) {
-  anscheduler_cpu_lock();
-  if (condPtr & 8) {
-    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
-  }
-  thread_t * thread = anscheduler_cpu_get_thread();
-  volatile uint64_t * valPtr;
-  if (!task_get_virtual((void *)condPtr, (void **)&valPtr)) {
-    anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_MEMORY);
-  }
-
-  // while sleep lock is held, check if we should really sleep at all
-  anscheduler_lock(&thread->state.sleepLock);
-  uint64_t val = __sync_fetch_and_and(valPtr, 0);
-  if (val) {
-    _sleep_method(thread, usec);
-  } else {
-    anscheduler_unlock(&thread->state.sleepLock);
-  }
-  anscheduler_cpu_unlock();
-  return val ? 1 : 0;
-}
-
-static void _sleep_method(thread_t * th, uint64_t usec) {
-  uint64_t units = (anscheduler_second_length() * usec) / 1000000L;
-  uint64_t now = anscheduler_get_time();
-  uint64_t destTime = now + units;
-  if (destTime < now) destTime = 0xffffffffffffffffL;
-  th->nextTimestamp = destTime;
-  anscheduler_unlock(&th->state.sleepLock);
-  anscheduler_loop_save_and_resign();
-}
-

@@ -47,6 +47,9 @@ typedef struct {
 
   syscall_code callCode;
   uint64_t sleepLock;
+  bool unsleepReq;
+  bool isSleeping;
+  char alignment[6];
 } __attribute__((packed)) anscheduler_state;
 
 typedef struct {
