@@ -331,3 +331,9 @@ sys_batch_vmmap:
   syscall
   ret
 
+global sys_clear_unsleep
+sys_clear_unsleep:
+  mov rdi, 0x2e
+  syscall
+  ret
+

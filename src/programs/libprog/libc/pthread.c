@@ -60,7 +60,7 @@ int pthread_join(pthread_t thread, void ** retValue) {
   thread->joiningThread = sys_thread_id();
   basic_lock_unlock(&thread->lock);
   while (1) {
-    sys_sleep(0xffffffff);
+    sys_sleep(UINT64_MAX);
     basic_lock_lock(&thread->lock);
     if (!thread->isRunning) {
       if (retValue) *retValue = thread->retValue;

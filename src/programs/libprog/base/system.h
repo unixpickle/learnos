@@ -269,4 +269,6 @@ void sys_batch_alloc(uint64_t * output, uint64_t count);
  */
 bool sys_batch_vmmap(uint64_t fd, uint64_t * buf, uint64_t count);
 
+void sys_clear_unsleep();
+
 #endif

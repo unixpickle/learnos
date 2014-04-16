@@ -34,12 +34,14 @@ void _exit(int unused) {
 unsigned int sleep(unsigned int secs) {
   uint64_t start = sys_get_time();
   // sleep and then return the amount of time we missed
+  sys_clear_unsleep();
   sys_sleep(secs * 1000000);
   uint64_t delayed = sys_get_time() - start;
   return delayed / 1000000;
 }
 
 int usleep(useconds_t time) {
+  sys_clear_unsleep();
   sys_sleep(time);
   return 0;
 }

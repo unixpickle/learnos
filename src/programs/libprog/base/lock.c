@@ -20,13 +20,16 @@ void basic_lock_lock(basic_lock_t * lock) {
   if (_lock_try_or_add(lock)) return;
   while (!_lock_check_or_have(lock, false)) {
     // this thread will be woken on unlock anyway
-    sys_sleep(0xffffffff);
+    sys_sleep(0xffffffffffffffff);
   }
 }
 
 bool basic_lock_timedlock(basic_lock_t * lock, uint64_t micros) {
+  sys_clear_unsleep(); // prevent a spurrious wakeup
+
   if (_lock_try_or_add(lock)) return true;
   sys_sleep(micros);
+
   return _lock_check_or_have(lock, true);
 }
 

@@ -36,9 +36,44 @@ void syscall_unsleep(uint64_t thread) {
   anscheduler_unlock(&task->threadsLock);
   if (target) {
     anscheduler_lock(&target->state.sleepLock);
-    target->nextTimestamp = 0;
+    if (target->state.isSleeping) {
+      target->nextTimestamp = 0;
+      target->state.isSleeping = false;
+    } else {
+      target->state.unsleepReq = 1;
+    }
     anscheduler_unlock(&target->state.sleepLock);
   }
   anscheduler_cpu_unlock();
+}
+
+void syscall_clear_unsleep() {
+  anscheduler_cpu_lock();
+  thread_t * th = anscheduler_cpu_get_thread();
+  anscheduler_lock(&th->state.sleepLock);
+  th->state.unsleepReq = false;
+  anscheduler_unlock(&th->state.sleepLock);
+  anscheduler_cpu_unlock();
+}
+
+static void _sleep_method(thread_t * th, uint64_t usec) {
+  if (th->state.unsleepReq) {
+    th->state.unsleepReq = false;
+    anscheduler_unlock(&th->state.sleepLock);
+    return;
+  }
+  uint64_t units = (anscheduler_second_length() * usec) / 1000000L;
+  uint64_t now = anscheduler_get_time();
+  uint64_t destTime = now + units;
+  if (destTime < now) destTime = 0xffffffffffffffffL;
+  th->nextTimestamp = destTime;
+  th->state.isSleeping = true;
+  anscheduler_unlock(&th->state.sleepLock);
+
+  anscheduler_loop_save_and_resign();
+
+  anscheduler_lock(&th->state.sleepLock);
+  th->state.isSleeping = false;
+  anscheduler_unlock(&th->state.sleepLock);
 }
 

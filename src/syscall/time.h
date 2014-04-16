@@ -16,3 +16,5 @@ void syscall_sleep(uint64_t until);
  */
 void syscall_unsleep(uint64_t thread);
 
+void syscall_clear_unsleep();
+
