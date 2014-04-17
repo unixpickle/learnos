@@ -5,7 +5,7 @@
 /**
  * Returns `true` if the lock was able to be locked, false if added but waiting.
  */
-static bool _lock_try_or_add(basic_lock_t * lock);
+static bool _lock_try_or_add(_th_queue_t * queue, basic_lock_t * lock);
 
 /**
  * Go through each thread in the waiting queue and see if we are one of them. If
@@ -17,7 +17,8 @@ static bool _lock_try_or_add(basic_lock_t * lock);
 static bool _lock_check_or_have(basic_lock_t * lock, bool remove);
 
 void basic_lock_lock(basic_lock_t * lock) {
-  if (_lock_try_or_add(lock)) return;
+  _th_queue_t thisQueue = {0, sys_thread_id()};
+  if (_lock_try_or_add(&thisQueue, lock)) return;
   while (!_lock_check_or_have(lock, false)) {
     // this thread will be woken on unlock anyway
     sys_sleep(0xffffffffffffffff);
@@ -27,7 +28,8 @@ void basic_lock_lock(basic_lock_t * lock) {
 bool basic_lock_timedlock(basic_lock_t * lock, uint64_t micros) {
   sys_clear_unsleep(); // prevent a spurrious wakeup
 
-  if (_lock_try_or_add(lock)) return true;
+  _th_queue_t thisQueue = {0, sys_thread_id()};
+  if (_lock_try_or_add(&thisQueue, lock)) return true;
   sys_sleep(micros);
 
   return _lock_check_or_have(lock, true);
@@ -48,7 +50,7 @@ void basic_lock_unlock(basic_lock_t * lock) {
   anlock_unlock(&lock->lock);
 }
 
-static bool _lock_try_or_add(basic_lock_t * lock) {
+static bool _lock_try_or_add(_th_queue_t * queue, basic_lock_t * lock) {
   anlock_lock(&lock->lock);
   if (!lock->isLocked) {
     lock->isLocked = 1;
@@ -56,11 +58,10 @@ static bool _lock_try_or_add(basic_lock_t * lock) {
     return true;
   }
   // push ourself to the waiting queue
-  _th_queue_t thisQueue = {NULL, sys_thread_id()};
   if (lock->last) {
-    lock->last = (lock->last->next = &thisQueue);
+    lock->last = (lock->last->next = queue);
   } else {
-    lock->first = (lock->last = &thisQueue);
+    lock->first = (lock->last = queue);
   }
   anlock_unlock(&lock->lock);
   return false;

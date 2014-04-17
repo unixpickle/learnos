@@ -134,6 +134,7 @@ static void _pop_thread(pthread_t thread) {
     runningCount = 0;
     free(runningThreads);
     runningThreads = NULL;
+    basic_lock_unlock(&runningLock);
     return;
   }
 
