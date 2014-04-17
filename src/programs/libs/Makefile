@@ -25,6 +25,6 @@ clean:
 	for dir in $(LIBS); do \
 		cd $$dir && make clean && cd -; \
 	done
-	cd v8 && make clean
-	cd anmalloc && make clean
+	cd anmalloc && make clean && cd -
+	# cd v8 && make clean && cd -
 
