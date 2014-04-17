@@ -2,6 +2,8 @@
 #include <anscheduler/functions.h>
 #include <anscheduler/task.h>
 
+#define DO_STACK_VALIDATION
+
 static bool _validate_stack_addr(const void * tPtr);
 
 bool task_copy_in(void * kPointer, const void * tPointer, uint64_t len) {
@@ -122,10 +124,14 @@ bool task_get_virtual(const void * tPtr, void ** out) {
 }
 
 static bool _validate_stack_addr(const void * tPtr) {
+#ifndef DO_STACK_VALIDATION
+  return true;
+#else
   thread_t * th = anscheduler_cpu_get_thread();
   uint64_t idx = th->stack;
   uint64_t base = (idx << 8) + ANSCHEDULER_TASK_USER_STACKS_PAGE;
   uint64_t thePage = ((uint64_t)tPtr) >> 12;
   return thePage >= base && thePage < base + 0x100;
+#endif
 }
 
