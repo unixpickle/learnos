@@ -296,6 +296,10 @@ void _finalize_thread_exit(thread_t * thread) {
   }
   anscheduler_unlock(&task->threadsLock);
   
+  anscheduler_lock(&task->stacksLock);
+  anidxset_put(&task->stacks, thread->stack);
+  anscheduler_unlock(&task->stacksLock);
+  
   void * stack = anscheduler_thread_kernel_stack(task, thread);
   anscheduler_free(stack);
   anscheduler_free(thread);
