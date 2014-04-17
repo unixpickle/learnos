@@ -45,10 +45,10 @@ void anscheduler_zero(void * buf, int len) {
 }
 
 void anscheduler_inc(uint64_t * ptr) {
-  __asm__("incq (%0)" : : "r" (ptr));
+  __asm__("lock incq (%0)" : : "r" (ptr));
 }
 
 void anscheduler_or_32(uint32_t * ptr, uint32_t flag) {
-  __asm__("orl %0, (%1)" : : "r" (flag), "r" (ptr) : "memory");
+  __asm__("lock orl %0, (%1)" : : "r" (flag), "r" (ptr) : "memory");
 }
 
