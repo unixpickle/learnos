@@ -42,7 +42,7 @@ int pthread_mutex_lock(pthread_mutex_t * mutex) {
 
   basic_lock_lock(&mutex->lock);
   mutex->holdingThread = threadId;
-  mutex->holdingCount = 0;
+  mutex->holdingCount = 1;
   return 0;
 }
 

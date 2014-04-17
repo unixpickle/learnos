@@ -16,6 +16,7 @@ static void * test_mutex_thread(void * arg);
 void command_threadtest() {
   printf("testing basic pthreads... ");
   test_basic();
+  test_basic();
   printf("passed!\n");
   printf("testing pthread_mutex... ");
   test_mutex();
@@ -44,11 +45,12 @@ static void test_mutex() {
 
   pthread_t threadList[0x20];
   int i;
-  for (i = 0; i < 0x20; i++) {
-    pthread_create(&threadList[i], NULL, test_mutex_thread, &info);
+  for (i = 0; i < 1; i++) {
+    int res = pthread_create(&threadList[i], NULL, test_mutex_thread, &info);
+    printf("launched thread with ret value %x\n", res);
+    assert(!res);
   }
-  printf("waiting for completion... ");
-  for (i = 0; i < 0x20; i++) {
+  for (i = 0; i < 1; i++) {
     pthread_join(threadList[i], NULL);
   }
   printf("number is %d\n", info.number);
@@ -58,13 +60,15 @@ static void test_mutex() {
 
 static void * test_mutex_thread(void * arg) {
   mutex_test_info * info = (mutex_test_info *)arg;
+  printf("argument is %x\n", arg);
   int i;
   for (i = 0; i < 41; i++) {
+    printf("trying to lock...\n");
     pthread_mutex_lock(&info->mutex);
+    printf("locked it downnnnnnnn!\n");
     uint64_t number = info->number;
     sys_sleep(1);
     info->number = number + 1;
-    printf("incremented a number.\n");
     pthread_mutex_unlock(&info->mutex);
   }
   return NULL;
