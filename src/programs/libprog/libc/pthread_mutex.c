@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <strings.h>
 #include <system.h>
+#include <assert.h>
 
 int pthread_mutexattr_init(pthread_mutexattr_t * attr) {
   attr->type = 0;
@@ -58,6 +59,7 @@ int pthread_mutex_unlock(pthread_mutex_t * mutex) {
 }
 
 int pthread_mutex_destroy(pthread_mutex_t * mutex) {
+  assert(mutex->holdingCount == 0);
   return 0;
 }
 
