@@ -45,7 +45,11 @@ typedef struct {
   uint64_t cs;
   uint64_t ss;
 
+  uint64_t reserved;
+  char fxState[0x200];
+
   syscall_code callCode;
+
   uint64_t sleepLock;
   bool unsleepReq;
   bool isSleeping;

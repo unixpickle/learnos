@@ -38,6 +38,9 @@ anscheduler_save_return_state:
   mov ax, ss
   mov [rdi + 0xA0], rax
 
+  ; all the XMM registers
+  fxsave [rdi + 0xB0]
+
   mov rdi, rsi
   call rdx ; should never return
 
@@ -49,6 +52,9 @@ thread_run_state:
   mov rsp, rax
   mov rdi, rbx
   add rdi, 0x40
+
+  ; load XMM regs
+  fxrstor [rdi + 0xb0]
 
   ; state for iretq
 

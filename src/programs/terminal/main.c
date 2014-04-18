@@ -10,6 +10,7 @@
 #include "aborter.h"
 #include "allocer.h"
 #include "threadtest.h"
+#include "floattest.h"
 
 #define BUFF_SIZE 0xff
 
@@ -131,6 +132,8 @@ static void process_cmd() {
     method = (uint64_t)command_allocer;
   } else if (is_command("threadtest")) {
     method = (uint64_t)command_threadtest;
+  } else if (is_command("floattest")) {
+    method = (uint64_t)command_floattest;
   } else {
     printf("[terminal]: `%s` unknown command\n", buffer);
     prompt();
