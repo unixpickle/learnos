@@ -1,3 +1,6 @@
+#ifndef __ALLOC_H__
+#define __ALLOC_H__
+
 /**
  * This provides an (IPC Based) allocation mechanism. If the current process
  * identifier is 0, then memory will be allocated synchronously with system
@@ -32,3 +35,9 @@ bool alloc_pages(uint64_t pageIndex, uint64_t count);
  */
 bool free_pages(uint64_t pageIndex, uint64_t count);
 
+/**
+ * Returns the number of pages which have been allocated in this task.
+ */
+uint64_t count_pages_allocated();
+
+#endif

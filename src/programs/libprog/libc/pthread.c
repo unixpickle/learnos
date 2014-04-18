@@ -112,6 +112,7 @@ pthread_t pthread_current() {
   uint64_t selfId = sys_thread_id();
   for (i = 0; i < runningCount; i++) {
     if (runningThreads[i]->threadId == selfId) {
+      if (!runningThreads[i]->isRunning) continue;
       basic_lock_unlock(&runningLock);
       return runningThreads[i];
     }

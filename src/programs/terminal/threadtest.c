@@ -26,9 +26,6 @@ typedef struct {
   uint32_t count;
 } sem_test_info;
 
-static pthread_mutex_t printLock __attribute__((aligned(8)))
-  = PTHREAD_MUTEX_INITIALIZER;
-
 static pthread_mutex_t overarchingLock __attribute__((aligned(8)))
   = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t overarchingCond __attribute__((aligned(8)));
@@ -77,7 +74,6 @@ void command_threadtest() {
   printf("passed!\n");
 
   pthread_join(th1, NULL);
-
   pthread_cond_signal(&overarchingCond);
   pthread_join(th2, NULL);
 
@@ -236,11 +232,12 @@ static void * test_condition_signal_th(void * arg) {
 
 static void test_semaphore() {
   pthread_t threads[0x20];
-  sem_test_info test;
+  sem_test_info test = {0};
   int i;
 
   int res = sem_init(&test.semaphore, 0, 8);
   assert(!res);
+
   for (i = 0; i < 0x10; i++) {
     res = pthread_create(&threads[i], NULL, test_semaphore_th, (void *)&test);
     assert(!res);
@@ -248,13 +245,9 @@ static void test_semaphore() {
   uint64_t counts[8] = {0};
   for (i = 0; i < 0x10; i++) {
     void * ret = NULL;
-    printf("joining thread... %x\n", threads[i]);
     res = pthread_join(threads[i], &ret);
     assert(!res);
     uint64_t theCount = (uint64_t)ret;
-    pthread_mutex_lock(&printLock);
-    printf("got result %x\n", ret);
-    pthread_mutex_unlock(&printLock);
     assert(theCount < 8);
     counts[theCount]++;
   }
@@ -266,20 +259,13 @@ static void test_semaphore() {
 }
 
 static void * test_semaphore_th(void * arg) {
-  /*sem_test_info * info = arg;
+  sem_test_info * info = arg;
   int result = sem_wait(&info->semaphore);
   assert(!result);
   uint64_t res = (uint64_t)__sync_fetch_and_add(&info->count, 1);
   sys_sleep(0x10000);
   __sync_fetch_and_sub(&info->count, 1);
   sem_post(&info->semaphore);
-
-  pthread_mutex_lock(&printLock);
-  threadsDied++;
-  printf("posted sem 0x%x\n", threadsDied);
-  pthread_mutex_unlock(&printLock);
   return (void *)res;
- */
-  return NULL;
 }
 
