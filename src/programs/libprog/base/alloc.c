@@ -47,7 +47,6 @@ static bool _manual_free_pages(uint64_t idx, uint64_t count) {
     sys_free_page(entry & 0xFFFFFFFFFFFFF000);
     sys_self_vmunmap(start + i);
   }
-  __sync_fetch_and_sub(
   return true;
 }
 

@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <anmalloc/anmalloc.h>
 
 typedef struct {
   pthread_mutex_t mutex;
@@ -76,6 +77,8 @@ void command_threadtest() {
   pthread_join(th1, NULL);
   pthread_cond_signal(&overarchingCond);
   pthread_join(th2, NULL);
+
+  assert(anmalloc_used() == 0);
 
   // otherwise things will happen...bad things...
   sys_exit();
@@ -232,11 +235,12 @@ static void * test_condition_signal_th(void * arg) {
 
 static void test_semaphore() {
   pthread_t threads[0x20];
-  sem_test_info test = {0};
+  sem_test_info test;
   int i;
 
   int res = sem_init(&test.semaphore, 0, 8);
   assert(!res);
+  test.count = 0;
 
   for (i = 0; i < 0x10; i++) {
     res = pthread_create(&threads[i], NULL, test_semaphore_th, (void *)&test);
