@@ -24,9 +24,23 @@ void proc_configure_basics() {
 }
 
 void proc_run_scheduler() {
+  // before we run the scheduler, we MUST have SSE enabled
+  __asm__("mov %cr0, %rax\n"
+          "and $0xfffb, %ax\n"
+          "or $2, %ax\n"
+          "mov %rax, %cr0\n"
+          "mov %cr4, %rax\n"
+          "or $0x600, %ax\n"
+          "mov %rax, %cr4");
+
+  // setup other CPU registers
   load_new_gdt();
   load_tss();
+
+  // initialize syscall registers
   syscall_initialize();
+
+  // run the loop; never returns
   anscheduler_loop_run();
 }
 
