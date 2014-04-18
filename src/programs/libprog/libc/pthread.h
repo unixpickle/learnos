@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <pthread_mutex.h>
-#include <pthread_sem.h>
 #include <pthread_cond.h>
 
 #define PTHREAD_CREATE_JOINABLE 0
