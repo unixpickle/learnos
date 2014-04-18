@@ -9,7 +9,7 @@
 #define PTHREAD_MUTEX_NORMAL 0
 #define PTHREAD_MUTEX_ERRORCHECK 1
 #define PTHREAD_MUTEX_RECURSIVE 2
-#define PTHREAD_MUTEX_INITIALIZER {BASIC_LOCK_INITIALIZER, 0, 0, 0, 0}
+#define PTHREAD_MUTEX_INITIALIZER {BASIC_LOCK_INITIALIZER, 0, 0, 0}
 
 struct pthread_mutex {
   basic_lock_t lock; // seize this to serialize holding of the lock

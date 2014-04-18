@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 typedef struct {
   pthread_mutex_t mutex;
@@ -20,6 +21,20 @@ typedef struct {
   bool hasNotified;
 } cond_signal_info;
 
+typedef struct {
+  sem_t semaphore;
+  uint32_t count;
+} sem_test_info;
+
+static pthread_mutex_t printLock __attribute__((aligned(8)))
+  = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_mutex_t overarchingLock __attribute__((aligned(8)))
+  = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t overarchingCond __attribute__((aligned(8)));
+
+static void * overarching_thread(void * arg);
+
 static void test_basic();
 static void * test_basic_thread(void * arg);
 
@@ -27,26 +42,54 @@ static void test_mutex();
 static void * test_mutex_thread(void * arg);
 
 static void test_condition_bcast();
-static void * test_condition_bcast_th(void * arg);
-
 static void test_condition_signal();
+static void * test_condition_bcast_th(void * arg);
 static void * test_condition_signal_th(void * arg);
 
+static void test_semaphore();
+static void * test_semaphore_th(void * arg);
+
 void command_threadtest() {
+  pthread_cond_init(&overarchingCond, NULL);
+  pthread_t th1, th2;
+  pthread_create(&th1, NULL, overarching_thread, NULL);
+  pthread_create(&th2, NULL, overarching_thread, (void *)1);
+
   printf("testing basic pthreads... ");
   test_basic();
-  test_basic();
+  test_basic(); // test that launching *another* thread works
   printf("passed!\n");
+
   printf("testing pthread_mutex... ");
   test_mutex();
   printf("passed!\n");
+
   printf("testing pthread_cond_broadcast()... ");
   test_condition_bcast();
   printf("passed!\n");
+
   printf("testing pthread_cond_signal()... ");
   test_condition_signal();
   printf("passed!\n");
+
+  printf("testing semaphores... ");
+  test_semaphore();
+  printf("passed!\n");
+
+  pthread_join(th1, NULL);
+
+  pthread_cond_signal(&overarchingCond);
+  pthread_join(th2, NULL);
+
+  // otherwise things will happen...bad things...
   sys_exit();
+}
+
+static void * overarching_thread(void * arg) {
+  if (!arg) return NULL;
+  pthread_mutex_lock(&overarchingLock);
+  pthread_cond_wait(&overarchingCond, &overarchingLock);
+  return NULL;
 }
 
 static void test_basic() {
@@ -144,6 +187,7 @@ static void test_condition_signal() {
                              test_condition_signal_th,
                              (void *)&info);
     assert(!res);
+    pthread_detach(threads[i]);
   }
   for (i = 0; i < 0x20; i++) {
     pthread_mutex_lock(&lock);
@@ -187,6 +231,55 @@ static void * test_condition_signal_th(void * arg) {
     pthread_cond_wait(info->cond, info->mutex);
   }
   pthread_mutex_unlock(info->mutex);
+  return NULL;
+}
+
+static void test_semaphore() {
+  pthread_t threads[0x20];
+  sem_test_info test;
+  int i;
+
+  int res = sem_init(&test.semaphore, 0, 8);
+  assert(!res);
+  for (i = 0; i < 0x10; i++) {
+    res = pthread_create(&threads[i], NULL, test_semaphore_th, (void *)&test);
+    assert(!res);
+  }
+  uint64_t counts[8] = {0};
+  for (i = 0; i < 0x10; i++) {
+    void * ret = NULL;
+    printf("joining thread... %x\n", threads[i]);
+    res = pthread_join(threads[i], &ret);
+    assert(!res);
+    uint64_t theCount = (uint64_t)ret;
+    pthread_mutex_lock(&printLock);
+    printf("got result %x\n", ret);
+    pthread_mutex_unlock(&printLock);
+    assert(theCount < 8);
+    counts[theCount]++;
+  }
+  for (i = 0; i < 8; i++) {
+    assert(counts[i] > 0);
+  }
+  sem_destroy(&test.semaphore);
+  assert(test.count == 0);
+}
+
+static void * test_semaphore_th(void * arg) {
+  /*sem_test_info * info = arg;
+  int result = sem_wait(&info->semaphore);
+  assert(!result);
+  uint64_t res = (uint64_t)__sync_fetch_and_add(&info->count, 1);
+  sys_sleep(0x10000);
+  __sync_fetch_and_sub(&info->count, 1);
+  sem_post(&info->semaphore);
+
+  pthread_mutex_lock(&printLock);
+  threadsDied++;
+  printf("posted sem 0x%x\n", threadsDied);
+  pthread_mutex_unlock(&printLock);
+  return (void *)res;
+ */
   return NULL;
 }
 

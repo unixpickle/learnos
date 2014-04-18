@@ -1,3 +1,6 @@
+#ifndef __PTHREAD_COND_H__
+#define __PTHREAD_COND_H__
+
 #include "pthread_mutex.h"
 
 #define PTHREAD_COND_INITIALIZER {NULL, NULL, 0}
@@ -20,3 +23,4 @@ int pthread_cond_signal(pthread_cond_t * c);
 int pthread_cond_broadcast(pthread_cond_t * c);
 int pthread_cond_destroy(pthread_cond_t * c);
 
+#endif

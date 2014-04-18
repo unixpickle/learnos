@@ -1,3 +1,6 @@
+#ifndef __SEM_H__
+#define __SEM_H__
+
 #include <pthread_cond.h>
 #include <pthread_mutex.h>
 
@@ -15,3 +18,4 @@ int sem_trywait(sem_t * sem);
 int sem_post(sem_t * sem);
 int sem_getvalue(sem_t * sem, int * val);
 
+#endif
