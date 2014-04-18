@@ -67,3 +67,9 @@ void thread_switch_to_kernpage();
  */
 void thread_save_state(uint64_t fieldCount);
 
+/**
+ * Initialize the SSE state of a thread. This can be called from anywhere.
+ * @critical or @noncritical
+ */
+void thread_fxstate_init(thread_t * thread);
+

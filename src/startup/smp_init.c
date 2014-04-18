@@ -10,6 +10,7 @@
 
 #include <scheduler/cpu.h>
 #include <scheduler/code.h>
+#include <scheduler/context.h>
 #include <anscheduler/loop.h>
 #include <anscheduler/task.h>
 #include <anscheduler/thread.h>
@@ -156,7 +157,7 @@ static void start_task(void * ptr, uint64_t len) {
   thread->state.cs = 0x1b;
   thread->state.ss = 0x23;
   syscall_initialize_thread(thread);
-
+  thread_fxstate_init(thread);
   anscheduler_thread_add(task, thread);
   anscheduler_task_dereference(task);
 }

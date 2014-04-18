@@ -3,6 +3,7 @@
 #include <anscheduler/socket.h>
 #include <anscheduler/functions.h>
 #include <syscall/config.h>
+#include <scheduler/context.h>
 
 uint64_t syscall_fork(uint64_t rip) {
   anscheduler_cpu_lock();
@@ -50,6 +51,7 @@ uint64_t syscall_fork(uint64_t rip) {
   thread->state.cs = 0x1b;
   thread->state.ss = 0x23;
   syscall_initialize_thread(thread);
+  thread_fxstate_init(thread);
   anscheduler_thread_add(fork, thread);
 
   anscheduler_task_dereference(fork);
@@ -93,6 +95,7 @@ void syscall_thread_launch(uint64_t rip, uint64_t arg1, uint64_t arg2) {
   thread->state.cs = 0x1b;
   thread->state.ss = 0x23;
   syscall_initialize_thread(thread);
+  thread_fxstate_init(thread);
   anscheduler_thread_add(task, thread);
   anscheduler_cpu_unlock();
 }
