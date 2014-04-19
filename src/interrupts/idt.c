@@ -11,7 +11,7 @@
 #include <anscheduler/paging.h>
 #include <anscheduler/task.h>
 #include <memory/kernpage.h>
-#include <scheduler/cpu.h>
+#include <syscall/functions.h>
 #include <anlock.h>
 
 // only set if no optimization is being used so you know that stack frames will
@@ -83,20 +83,18 @@ void configure_global_idt() {
 
 void int_interrupt_exception(uint64_t vec) {
   ensure_critical();
+#ifdef __BT_ADDRESSES__
   print("Got exception vector ");
   printHex(vec);
   print(" with thread 0x");
   printHex((uint64_t)anscheduler_cpu_get_thread());
-#ifdef __BT_ADDRESSES__
   uint64_t retAddr;
   __asm__("mov 0xa0(%%rbp), %0" : "=r" (retAddr));
   print(" from ");
   printHex(retAddr);
-#endif
   print("\n");
-
-  __asm__("cli\nhlt");
-  // TODO: here, save task state and terminate it
+#endif
+  anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
 }
 
 void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
@@ -105,20 +103,20 @@ void int_interrupt_exception_code(uint64_t vec, uint64_t code) {
     _page_fault_handler(code);
     return;
   }
+#ifdef __BT_ADDRESSES__
   print("Got exception vector ");
   printHex(vec);
   print(" with code ");
   printHex(code);
   print(" with thread 0x");
   printHex((uint64_t)anscheduler_cpu_get_thread());
-#ifdef __BT_ADDRESSES__
   uint64_t retAddr;
   __asm__("mov 0xa0(%%rbp), %0" : "=r" (retAddr));
   print(" from ");
   printHex(retAddr);
-#endif
   print("\n");
-  __asm__("cli\nhlt");
+#endif
+  anscheduler_task_exit(ANSCHEDULER_TASK_KILL_REASON_ACCESS);
 }
 
 void int_interrupt_irq(uint64_t vec) {
