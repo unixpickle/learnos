@@ -1,8 +1,8 @@
-PROGRAMS=keyboard timed msgd intd terminal pcid memd
+PROGRAMS=keyboard timed msgd intd terminal pcid memd jsc
 PROJECT_ROOT=../..
 OBJECTS=libs/CKeyedBits/build/*.o $(PROJECT_ROOT)/libs/anlock/build/*.o $(PROJECT_ROOT)/libs/anmem/libs/analloc/build/*.o libprog/build/*.o libs/anmalloc/build/*.o
 
-programs: libprog/build build
+programs: libprog/build jsc/build build
 	for dir in $(PROGRAMS); do \
 		cd $$dir && $(MAKE); \
 		cd ..; \
@@ -12,6 +12,9 @@ programs: libprog/build build
 
 libprog/build:
 	cd libprog && $(MAKE)
+
+jsc/build:
+	cd jsc && $(MAKE)
 
 build:
 	mkdir build

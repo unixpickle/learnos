@@ -18,7 +18,7 @@ v8_deps:
 v8_build:
 	# here, we'll set -DOS=learnos
 	export GYP_DEFINES=-DOS=mac\ -Ddebuggersupport=off\ ; \
-	export CXX=g++\ -nostdinc\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss\ -I`pwd`/../libprog\ -I`pwd`/../libprog/libc; \
+	export CXX=g++\ -nostdinc\ -ffreestanding\ -fno-builtin\ -fno-stack-protector\ -O2\ -fno-zero-initialized-in-bss\ -I`pwd`/../libprog\ -I`pwd`/../libprog/libc\ -D\ learnos\ -U\ __linux__; \
 	cd v8 && make x64.release
 
 clean:

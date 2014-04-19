@@ -23,7 +23,7 @@ struct tm {
 
 clock_t clock();
 double difftime(time_t end, time_t start);
-time_t mktime(struct tm * ptr);
 time_t time(time_t * timer);
 
 #endif
+
